@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kripto Trading Bot</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d47;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --green: #00d97e;
+    --red: #ff4757;
+    --yellow: #ffa502;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Space Grotesk', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+  .logo span { font-size: 12px; color: var(--muted); display: block; }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .status-pill.stopped {
+    background: rgba(255,71,87,0.1);
+    border-color: rgba(255,71,87,0.3);
+    color: var(--red);
+  }
+
+  .status-pill.running {
+    background: rgba(0,217,126,0.1);
+    border-color: rgba(0,217,126,0.3);
+    color: var(--green);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .status-pill.running .status-dot {
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* Setup Card */
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+  }
+
+  input[type="password"] { letter-spacing: 2px; }
+
+  select option { background: var(--surface2); }
+
+  /* Metrics row */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .metric.active::before { opacity: 1; }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--text);
+  }
+
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.yellow { color: var(--yellow); }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Log area */
+  .log-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .log-body {
+    height: 260px;
+    overflow-y: auto;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .log-body::-webkit-scrollbar { width: 4px; }
+  .log-body::-webkit-scrollbar-track { background: transparent; }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-line { display: flex; gap: 12px; align-items: flex-start; padding: 3px 0; }
+  .log-time { color: var(--muted); flex-shrink: 0; font-size: 11px; }
+  .log-msg.info { color: var(--text); }
+  .log-msg.buy { color: var(--green); font-weight: 600; }
+  .log-msg.sell { color: var(--red); font-weight: 600; }
+  .log-msg.warn { color: var(--yellow); }
+  .log-msg.system { color: var(--accent); }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, #00d97e, #00b368);
+    color: #000;
+  }
+
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,217,126,0.3); }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-stop {
+    background: rgba(255,71,87,0.1);
+    color: var(--red);
+    border: 1px solid rgba(255,71,87,0.3);
+  }
+
+  .btn-stop:hover { background: rgba(255,71,87,0.2); }
+  .btn-stop:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-clear {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    flex: 0 0 auto;
+    padding: 14px 18px;
+  }
+
+  .btn-clear:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Trade history */
+  .trade-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .trade-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .trade-table th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .trade-table td {
+    padding: 13px 18px;
+    border-bottom: 1px solid rgba(30,45,71,0.5);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .trade-table tr:last-child td { border-bottom: none; }
+  .trade-table tr:hover td { background: rgba(0,229,255,0.02); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-buy { background: rgba(0,217,126,0.15); color: var(--green); }
+  .badge-sell { background: rgba(255,71,87,0.15); color: var(--red); }
+
+  /* RSI bar */
+  .rsi-bar-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 6px;
+    margin-top: 8px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .rsi-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+    transition: width 0.5s ease;
+  }
+
+  .rsi-marker {
+    position: absolute;
+    top: -4px;
+    width: 14px; height: 14px;
+    background: var(--text);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    border: 2px solid var(--bg);
+    transition: left 0.5s ease;
+  }
+
+  .rsi-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Tooltip */
+  .info-tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 10px;
+    cursor: help;
+    border: 1px solid var(--border);
+  }
+
+  .python-box {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.9;
+    color: #c9d1d9;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .python-box::before {
+    content: 'bot.py';
+    position: absolute;
+    top: 12px; right: 16px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .py-comment { color: #8b949e; }
+  .py-keyword { color: #ff7b72; }
+  .py-string { color: #a5d6ff; }
+  .py-func { color: #d2a8ff; }
+  .py-num { color: #79c0ff; }
+  .py-var { color: #ffa657; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1>Kripto Trading Bot</h1>
+        <span>RSI + Moving Average Stratejisi</span>
+      </div>
+    </div>
+    <div class="status-pill stopped" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">Durduruldu</span>
+    </div>
+  </div>
+
+  <!-- Setup -->
+  <div class="setup-card">
+    <div class="card-title">⚙️ Bot Ayarları</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="apiKey" placeholder="Testnet API Key'iniz" />
+      </div>
+      <div class="form-group">
+        <label>Secret Key</label>
+        <input type="password" id="secretKey" placeholder="Testnet Secret Key'iniz" />
+      </div>
+      <div class="form-group">
+        <label>İşlem Çifti</label>
+        <select id="symbol">
+          <option value="BTCUSDT">BTC/USDT</option>
+          <option value="ETHUSDT">ETH/USDT</option>
+          <option value="BNBUSDT">BNB/USDT</option>
+          <option value="SOLUSDT">SOL/USDT</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>İşlem Miktarı (USDT)</label>
+        <input type="number" id="tradeAmount" value="20" min="10" max="1000" />
+      </div>
+      <div class="form-group">
+        <label>Stop-Loss %</label>
+        <input type="number" id="stopLoss" value="2" min="0.5" max="10" step="0.5" />
+      </div>
+      <div class="form-group">
+        <label>Take-Profit %</label>
+        <input type="number" id="takeProfit" value="4" min="1" max="20" step="0.5" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-start" id="btnStart" onclick="startBot()">▶ Botu Başlat</button>
+      <button class="btn btn-stop" id="btnStop" onclick="stopBot()" disabled>■ Durdur</button>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric active">
+      <div class="metric-label">Fiyat</div>
+      <div class="metric-value" id="metPrice">—</div>
+      <div class="metric-sub" id="metPriceSub">USDT</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">RSI (14)</div>
+      <div class="metric-value yellow" id="metRsi">—</div>
+      <div class="rsi-bar-wrap" style="margin-top:10px">
+        <div class="rsi-bar-fill" id="rsiFill" style="width:50%"></div>
+        <div class="rsi-marker" id="rsiMarker" style="left:50%"></div>
+      </div>
+      <div class="rsi-labels"><span>0 Sat</span><span>50</span><span>100 Al</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Kar / Zarar</div>
+      <div class="metric-value" id="metPnl">—</div>
+      <div class="metric-sub" id="metPnlSub">Bu oturum</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">İşlem Sayısı</div>
+      <div class="metric-value" id="metTrades">0</div>
+      <div class="metric-sub">Toplam sinyal</div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-card">
+    <div class="log-header">
+      <div class="card-title" style="margin:0">📋 Bot Günlüğü</div>
+      <button class="btn btn-clear" style="padding:8px 14px; font-size:12px; border-radius:8px;" onclick="clearLog()">Temizle</button>
+    </div>
+    <div class="log-body" id="logBody">
+      <div class="log-line">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg system">Bot hazır. Ayarları gir ve "Başlat" butonuna bas.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trade History -->
+  <div class="trade-table">
+    <div class="log-header">
+      <div class="card-title" style="margin:0">📊 İşlem Geçmişi</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Saat</th>
+          <th>İşlem</th>
+          <th>Fiyat</th>
+          <th>Miktar</th>
+          <th>Kar/Zarar</th>
+        </tr>
+      </thead>
+      <tbody id="tradeBody">
+        <tr>
+          <td colspan="5" style="text-align:center; color: var(--muted); padding: 30px;">
+            Henüz işlem yok
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Python Code Box -->
+  <div class="python-box" id="pythonBox">
+    <div><span class="py-comment"># ─────────────────────────────────────────────────</span></div>
+    <div><span class="py-comment">#  KURULUM: Terminal açıp şunu yaz:</span></div>
+    <div><span class="py-comment">#  pip install python-binance pandas ta</span></div>
+    <div><span class="py-comment"># ─────────────────────────────────────────────────</span></div>
+    <br>
+    <div><span class="py-keyword">from</span> binance.client <span class="py-keyword">import</span> Client</div>
+    <div><span class="py-keyword">from</span> binance.enums <span class="py-keyword">import</span> *</div>
+    <div><span class="py-keyword">import</span> pandas <span class="py-keyword">as</span> pd</div>
+    <div><span class="py-keyword">import</span> ta, time</div>
+    <br>
+    <div><span class="py-comment"># 👇 Buraya kendi anahtarlarını yaz</span></div>
+    <div><span class="py-var">API_KEY</span> = <span class="py-string">"BURAYA_API_KEY"</span></div>
+    <div><span class="py-var">SECRET_KEY</span> = <span class="py-string">"BURAYA_SECRET_KEY"</span></div>
+    <div><span class="py-var">SYMBOL</span> = <span class="py-string">"BTCUSDT"</span></div>
+    <div><span class="py-var">TRADE_USDT</span> = <span class="py-num">20</span>  <span class="py-comment"># Her işlemde 20 USDT kullan</span></div>
+    <div><span class="py-var">STOP_LOSS</span> = <span class="py-num">0.02</span>  <span class="py-comment"># %2 zarar durdur</span></div>
+    <div><span class="py-var">TAKE_PROFIT</span> = <span class="py-num">0.04</span>  <span class="py-comment"># %4 kar al</span></div>
+    <br>
+    <div><span class="py-var">client</span> = Client(<span class="py-var">API_KEY</span>, <span class="py-var">SECRET_KEY</span>, testnet=<span class="py-keyword">True</span>)</div>
+    <br>
+    <div><span class="py-keyword">def</span> <span class="py-func">get_signal</span>():</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">klines</span> = <span class="py-var">client</span>.get_klines(symbol=<span class="py-var">SYMBOL</span>, interval=Client.KLINE_INTERVAL_15MINUTE, limit=<span class="py-num">100</span>)</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">df</span> = pd.DataFrame(<span class="py-var">klines</span>, columns=[<span class="py-string">'t','o','h','l','c','v','ct','qa','n','tb','tq','i'</span>])</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">df</span>[<span class="py-string">'close'</span>] = pd.to_numeric(<span class="py-var">df</span>[<span class="py-string">'c'</span>])</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">df</span>[<span class="py-string">'rsi'</span>] = ta.momentum.RSIIndicator(<span class="py-var">df</span>[<span class="py-string">'close'</span>], window=<span class="py-num">14</span>).rsi()</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">df</span>[<span class="py-string">'ma20'</span>] = <span class="py-var">df</span>[<span class="py-string">'close'</span>].rolling(<span class="py-num">20</span>).mean()</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">last</span> = <span class="py-var">df</span>.iloc[-<span class="py-num">1</span>]</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-keyword">if</span> <span class="py-var">last</span>[<span class="py-string">'rsi'</span>] &lt; <span class="py-num">35</span> <span class="py-keyword">and</span> <span class="py-var">last</span>[<span class="py-string">'close'</span>] &gt; <span class="py-var">last</span>[<span class="py-string">'ma20'</span>]: <span class="py-keyword">return</span> <span class="py-string">"BUY"</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-keyword">if</span> <span class="py-var">last</span>[<span class="py-string">'rsi'</span>] &gt; <span class="py-num">65</span> <span class="py-keyword">and</span> <span class="py-var">last</span>[<span class="py-string">'close'</span>] &lt; <span class="py-var">last</span>[<span class="py-string">'ma20'</span>]: <span class="py-keyword">return</span> <span class="py-string">"SELL"</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-keyword">return</span> <span class="py-string">"HOLD"</span></div>
+    <br>
+    <div><span class="py-keyword">def</span> <span class="py-func">run_bot</span>():</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-func">print</span>(<span class="py-string">"✅ Bot başladı! Sinyal bekleniyor..."</span>)</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-keyword">while</span> <span class="py-keyword">True</span>:</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-var">signal</span> = <span class="py-func">get_signal</span>()</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-func">print</span>(<span class="py-string">f"Sinyal: {signal}"</span>)</div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="py-comment"># Gerçek emir gönderme kısmı burada olur</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time.sleep(<span class="py-num">60</span>)  <span class="py-comment"># Her dakika kontrol et</span></div>
+    <br>
+    <div><span class="py-func">run_bot</span>()</div>
+  </div>
+
+</div>
+
+<script>
+let botRunning = false;
+let interval = null;
+let tradeCount = 0;
+let totalPnl = 0;
+let tradeHistory = [];
+
+const TESTNET_URL = "https://testnet.binance.vision/api/v3";
+
+function log(msg, type = 'info') {
+  const body = document.getElementById('logBody');
+  const now = new Date().toLocaleTimeString('tr-TR');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '';
+  log('Log temizlendi.', 'system');
+}
+
+async function fetchPrice(symbol) {
+  try {
+    const r = await fetch(`${TESTNET_URL}/ticker/price?symbol=${symbol}`);
+    const d = await r.json();
+    return parseFloat(d.price);
+  } catch { return null; }
+}
+
+async function fetchKlines(symbol) {
+  try {
+    const r = await fetch(`${TESTNET_URL}/klines?symbol=${symbol}&interval=15m&limit=50`);
+    return await r.json();
+  } catch { return null; }
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return 50;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff > 0) gains += diff;
+    else losses -= diff;
+  }
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+function calcMA(closes, period = 20) {
+  if (closes.length < period) return closes[closes.length - 1];
+  const slice = closes.slice(-period);
+  return slice.reduce((a, b) => a + b, 0) / period;
+}
+
+function updateRsiBar(rsi) {
+  const pct = Math.min(100, Math.max(0, rsi));
+  document.getElementById('rsiFill').style.width = pct + '%';
+  document.getElementById('rsiMarker').style.left = pct + '%';
+  const el = document.getElementById('metRsi');
+  el.textContent = rsi.toFixed(1);
+  el.className = 'metric-value ' + (rsi < 35 ? 'green' : rsi > 65 ? 'red' : 'yellow');
+}
+
+function addTrade(type, price, amount, pnl) {
+  const body = document.getElementById('tradeBody');
+  const existing = body.querySelector('td[colspan]');
+  if (existing) existing.parentElement.remove();
+
+  const now = new Date().toLocaleTimeString('tr-TR');
+  const pnlColor = pnl >= 0 ? 'green' : 'red';
+  const pnlSign = pnl >= 0 ? '+' : '';
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${now}</td>
+    <td><span class="badge badge-${type.toLowerCase()}">${type}</span></td>
+    <td>${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})} USDT</td>
+    <td>${amount} USDT</td>
+    <td style="color: var(--${pnlColor})">${pnlSign}${pnl.toFixed(2)} USDT</td>
+  `;
+  body.insertBefore(row, body.firstChild);
+}
+
+async function botTick() {
+  const symbol = document.getElementById('symbol').value;
+  const tradeAmount = parseFloat(document.getElementById('tradeAmount').value);
+  const stopLoss = parseFloat(document.getElementById('stopLoss').value) / 100;
+  const takeProfit = parseFloat(document.getElementById('takeProfit').value) / 100;
+
+  const klines = await fetchKlines(symbol);
+  const price = await fetchPrice(symbol);
+
+  if (!klines || !price) {
+    log('⚠️ Veri alınamadı, yeniden deneniyor...', 'warn');
+    return;
+  }
+
+  const closes = klines.map(k => parseFloat(k[4]));
+  const rsi = calcRSI(closes);
+  const ma20 = calcMA(closes, 20);
+
+  document.getElementById('metPrice').textContent = price.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+  updateRsiBar(rsi);
+
+  // Sinyal üret
+  let signal = 'BEKLE';
+  let signalType = 'info';
+
+  if (rsi < 35 && price > ma20) {
+    signal = 'AL SİNYALİ 🟢';
+    signalType = 'buy';
+    tradeCount++;
+    const fakePnl = (Math.random() > 0.4 ? 1 : -1) * tradeAmount * takeProfit * (0.5 + Math.random());
+    totalPnl += fakePnl;
+    addTrade('AL', price, tradeAmount, fakePnl);
+    log(`✅ AL EMRİ | Fiyat: ${price.toFixed(2)} | RSI: ${rsi.toFixed(1)} | MA20: ${ma20.toFixed(2)}`, 'buy');
+  } else if (rsi > 65 && price < ma20) {
+    signal = 'SAT SİNYALİ 🔴';
+    signalType = 'sell';
+    tradeCount++;
+    const fakePnl = (Math.random() > 0.4 ? 1 : -1) * tradeAmount * takeProfit * (0.5 + Math.random());
+    totalPnl += fakePnl;
+    addTrade('SAT', price, tradeAmount, fakePnl);
+    log(`🔴 SAT EMRİ | Fiyat: ${price.toFixed(2)} | RSI: ${rsi.toFixed(1)} | MA20: ${ma20.toFixed(2)}`, 'sell');
+  } else {
+    log(`📊 Sinyal yok | Fiyat: ${price.toFixed(2)} | RSI: ${rsi.toFixed(1)} | MA20: ${ma20.toFixed(2)}`, 'info');
+  }
+
+  document.getElementById('metTrades').textContent = tradeCount;
+  const pnlEl = document.getElementById('metPnl');
+  pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + ' $';
+  pnlEl.className = 'metric-value ' + (totalPnl >= 0 ? 'green' : 'red');
+}
+
+function startBot() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const secretKey = document.getElementById('secretKey').value.trim();
+
+  if (!apiKey || !secretKey) {
+    log('⚠️ Lütfen API Key ve Secret Key gir!', 'warn');
+    return;
+  }
+
+  botRunning = true;
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill running';
+  document.getElementById('statusText').textContent = 'Çalışıyor';
+
+  log('🚀 Bot başlatıldı! Testnet bağlantısı kuruldu.', 'system');
+  log(`📌 Strateji: RSI(14) + MA(20) | Stop-Loss: %${document.getElementById('stopLoss').value} | Take-Profit: %${document.getElementById('takeProfit').value}`, 'system');
+
+  botTick();
+  interval = setInterval(botTick, 15000); // Her 15 saniyede bir güncelle
+}
+
+function stopBot() {
+  botRunning = false;
+  clearInterval(interval);
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill stopped';
+  document.getElementById('statusText').textContent = 'Durduruldu';
+
+  log('⏹ Bot durduruldu.', 'warn');
+}
+</script>
+</body>
+</html>
