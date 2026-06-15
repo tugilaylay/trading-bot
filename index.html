@@ -555,6 +555,7 @@
   <div class="trade-table">
     <div class="log-header">
       <div class="card-title" style="margin:0">📊 İşlem Geçmişi</div>
+      <button class="btn btn-clear" style="padding:8px 14px; font-size:12px; border-radius:8px; color: var(--red); border-color: rgba(255,71,87,0.3);" onclick="resetHistory()">Sıfırla</button>
     </div>
     <table>
       <thead>
@@ -630,6 +631,74 @@ let totalPnl = 0;
 let tradeHistory = [];
 
 const TESTNET_URL = "https://testnet.binance.vision/api/v3";
+const STORAGE_KEY = "tugay_bot_trades";
+const STORAGE_PNL = "tugay_bot_pnl";
+const STORAGE_COUNT = "tugay_bot_count";
+
+// Verileri kaydet
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tradeHistory));
+    localStorage.setItem(STORAGE_PNL, totalPnl.toString());
+    localStorage.setItem(STORAGE_COUNT, tradeCount.toString());
+  } catch(e) {}
+}
+
+// Verileri yükle
+function loadFromStorage() {
+  try {
+    const trades = localStorage.getItem(STORAGE_KEY);
+    const pnl = localStorage.getItem(STORAGE_PNL);
+    const count = localStorage.getItem(STORAGE_COUNT);
+    if (trades) tradeHistory = JSON.parse(trades);
+    if (pnl) totalPnl = parseFloat(pnl);
+    if (count) tradeCount = parseInt(count);
+  } catch(e) {}
+}
+
+// Geçmiş işlemleri ekrana yükle
+function renderStoredTrades() {
+  if (tradeHistory.length === 0) return;
+  const body = document.getElementById('tradeBody');
+  const existing = body.querySelector('td[colspan]');
+  if (existing) existing.parentElement.remove();
+  // En son 20 işlemi göster
+  const recent = tradeHistory.slice(-20).reverse();
+  recent.forEach(t => {
+    const pnlColor = t.pnl >= 0 ? 'green' : 'red';
+    const pnlSign = t.pnl >= 0 ? '+' : '';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${t.time}</td>
+      <td><span class="badge badge-${t.type.toLowerCase()}">${t.type}</span></td>
+      <td>${parseFloat(t.price).toLocaleString('tr-TR', {minimumFractionDigits: 2})} USDT</td>
+      <td>${t.amount} USDT</td>
+      <td style="color: var(--${pnlColor})">${pnlSign}${parseFloat(t.pnl).toFixed(2)} USDT</td>
+    `;
+    body.appendChild(row);
+  });
+
+  // PnL güncelle
+  const pnlEl = document.getElementById('metPnl');
+  pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + ' $';
+  pnlEl.className = 'metric-value ' + (totalPnl >= 0 ? 'green' : 'red');
+  document.getElementById('metTrades').textContent = tradeCount;
+}
+
+// Tüm geçmişi sıfırla
+function resetHistory() {
+  if (!confirm('Tüm işlem geçmişi ve kar/zarar sıfırlanacak. Emin misin?')) return;
+  tradeHistory = [];
+  totalPnl = 0;
+  tradeCount = 0;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_PNL);
+  localStorage.removeItem(STORAGE_COUNT);
+  document.getElementById('tradeBody').innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted); padding: 30px;">Henüz işlem yok</td></tr>';
+  document.getElementById('metPnl').textContent = '—';
+  document.getElementById('metTrades').textContent = '0';
+  log('🗑️ İşlem geçmişi sıfırlandı.', 'warn');
+}
 
 function log(msg, type = 'info') {
   const body = document.getElementById('logBody');
@@ -696,18 +765,23 @@ function addTrade(type, price, amount, pnl) {
   const existing = body.querySelector('td[colspan]');
   if (existing) existing.parentElement.remove();
 
-  const now = new Date().toLocaleTimeString('tr-TR');
+  const now = new Date().toLocaleString('tr-TR');
   const pnlColor = pnl >= 0 ? 'green' : 'red';
   const pnlSign = pnl >= 0 ? '+' : '';
   const row = document.createElement('tr');
   row.innerHTML = `
-    <td>${now}</td>
+    <td style="font-size:11px">${now}</td>
     <td><span class="badge badge-${type.toLowerCase()}">${type}</span></td>
     <td>${price.toLocaleString('tr-TR', {minimumFractionDigits: 2})} USDT</td>
     <td>${amount} USDT</td>
     <td style="color: var(--${pnlColor})">${pnlSign}${pnl.toFixed(2)} USDT</td>
   `;
   body.insertBefore(row, body.firstChild);
+
+  // Kalıcı kaydet
+  tradeHistory.push({ time: now, type, price, amount, pnl });
+  if (tradeHistory.length > 200) tradeHistory.shift(); // Max 200 işlem sakla
+  saveToStorage();
 }
 
 async function botTick() {
@@ -759,6 +833,7 @@ async function botTick() {
   const pnlEl = document.getElementById('metPnl');
   pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + ' $';
   pnlEl.className = 'metric-value ' + (totalPnl >= 0 ? 'green' : 'red');
+  saveToStorage();
 }
 
 function startBot() {
@@ -779,11 +854,21 @@ function startBot() {
   document.getElementById('statusText').textContent = 'Çalışıyor';
 
   log('🚀 Bot başlatıldı! Testnet bağlantısı kuruldu.', 'system');
+  if (tradeHistory.length > 0) log(`📂 ${tradeHistory.length} işlem geçmişten yüklendi.`, 'system');
   log(`📌 Strateji: RSI(14) + MA(20) | Stop-Loss: %${document.getElementById('stopLoss').value} | Take-Profit: %${document.getElementById('takeProfit').value}`, 'system');
 
   botTick();
-  interval = setInterval(botTick, 15000); // Her 15 saniyede bir güncelle
+  interval = setInterval(botTick, 15000);
 }
+
+// Sayfa açılınca geçmişi otomatik yükle
+window.addEventListener('load', () => {
+  loadFromStorage();
+  renderStoredTrades();
+  if (tradeHistory.length > 0) {
+    log(`📂 ${tradeHistory.length} işlem geçmişten yüklendi. Toplam K/Z: ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)} $`, 'system');
+  }
+});
 
 function stopBot() {
   botRunning = false;
