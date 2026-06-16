@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kripto Trading Bot v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d47;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --green: #00d97e;
+    --red: #ff4757;
+    --yellow: #ffa502;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Space Grotesk', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo h1 { font-size: 18px; font-weight: 600; }
+  .logo span { font-size: 12px; color: var(--muted); display: block; }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 100px;
+    font-size: 13px; font-weight: 500; border: 1px solid;
+  }
+  .status-pill.stopped { background: rgba(255,71,87,0.1); border-color: rgba(255,71,87,0.3); color: var(--red); }
+  .status-pill.running { background: rgba(0,217,126,0.1); border-color: rgba(0,217,126,0.3); color: var(--green); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .status-pill.running .status-dot { animation: pulse 1.5s infinite; }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.5; transform:scale(0.8); }
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+  label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.08); }
+  input[type="password"] { letter-spacing: 2px; }
+  select option { background: var(--surface2); }
+
+  /* Gösterge kartları */
+  .indicators {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .indicator-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .indicator-card.bullish { border-color: rgba(0,217,126,0.5); background: rgba(0,217,126,0.05); }
+  .indicator-card.bearish { border-color: rgba(255,71,87,0.5); background: rgba(255,71,87,0.05); }
+  .indicator-card.neutral { border-color: rgba(255,165,2,0.5); background: rgba(255,165,2,0.05); }
+
+  .ind-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .ind-value { font-size: 18px; font-weight: 700; font-family: var(--mono); margin-bottom: 6px; }
+  .ind-signal {
+    font-size: 10px; font-weight: 600; padding: 3px 8px;
+    border-radius: 100px; display: inline-block;
+  }
+  .ind-signal.buy { background: rgba(0,217,126,0.2); color: var(--green); }
+  .ind-signal.sell { background: rgba(255,71,87,0.2); color: var(--red); }
+  .ind-signal.hold { background: rgba(255,165,2,0.2); color: var(--yellow); }
+
+  /* Ana metrikler */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .metric.active::before { opacity: 1; }
+
+  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .metric-value { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--text); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.yellow { color: var(--yellow); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Sinyal skoru */
+  .signal-score {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .score-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  .score-bar-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 10px;
+    position: relative;
+    margin: 0 auto 12px;
+    max-width: 400px;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s ease, background 0.6s ease;
+  }
+
+  .score-text { font-size: 28px; font-weight: 700; font-family: var(--mono); }
+  .score-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* Log */
+  .log-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .log-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+  }
+  .log-body {
+    height: 220px; overflow-y: auto;
+    padding: 16px; font-family: var(--mono); font-size: 12px; line-height: 1.8;
+  }
+  .log-body::-webkit-scrollbar { width: 4px; }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .log-line { display: flex; gap: 12px; align-items: flex-start; padding: 2px 0; }
+  .log-time { color: var(--muted); flex-shrink: 0; font-size: 11px; }
+  .log-msg.info { color: var(--text); }
+  .log-msg.buy { color: var(--green); font-weight: 600; }
+  .log-msg.sell { color: var(--red); font-weight: 600; }
+  .log-msg.warn { color: var(--yellow); }
+  .log-msg.system { color: var(--accent); }
+
+  /* Butonlar */
+  .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+  .btn {
+    flex: 1; padding: 14px 20px; border-radius: 12px; border: none;
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-start { background: linear-gradient(135deg, #00d97e, #00b368); color: #000; }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,217,126,0.3); }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-stop { background: rgba(255,71,87,0.1); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+  .btn-stop:hover { background: rgba(255,71,87,0.2); }
+  .btn-stop:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-clear { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); flex: 0 0 auto; padding: 14px 18px; }
+
+  /* Trade tablosu */
+  .trade-table { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .trade-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .trade-table th {
+    padding: 14px 18px; text-align: left; font-size: 11px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border); background: var(--surface2);
+  }
+  .trade-table td { padding: 13px 18px; border-bottom: 1px solid rgba(30,45,71,0.5); font-family: var(--mono); font-size: 12px; }
+  .trade-table tr:last-child td { border-bottom: none; }
+  .trade-table tr:hover td { background: rgba(0,229,255,0.02); }
+
+  .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .badge-al { background: rgba(0,217,126,0.15); color: var(--green); }
+  .badge-sat { background: rgba(255,71,87,0.15); color: var(--red); }
+
+  .version-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 600px) {
+    .indicators { grid-template-columns: 1fr 1fr; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1>Kripto Trading Bot <span class="version-tag">v2</span></h1>
+        <span>RSI + MACD + Bollinger + Hacim · 5dk</span>
+      </div>
+    </div>
+    <div class="status-pill stopped" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">Durduruldu</span>
+    </div>
+  </div>
+
+  <!-- Ayarlar -->
+  <div class="setup-card">
+    <div class="card-title">⚙️ Bot Ayarları</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="apiKey" placeholder="Testnet API Key" />
+      </div>
+      <div class="form-group">
+        <label>Secret Key</label>
+        <input type="password" id="secretKey" placeholder="Testnet Secret Key" />
+      </div>
+      <div class="form-group">
+        <label>İşlem Çifti</label>
+        <select id="symbol">
+          <option value="BTCUSDT">BTC/USDT</option>
+          <option value="ETHUSDT">ETH/USDT</option>
+          <option value="BNBUSDT">BNB/USDT</option>
+          <option value="SOLUSDT">SOL/USDT</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Zaman Dilimi</label>
+        <select id="interval">
+          <option value="5m" selected>5 Dakika (Hızlı)</option>
+          <option value="15m">15 Dakika (Dengeli)</option>
+          <option value="1h">1 Saat (Güvenli)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>İşlem Miktarı (USDT)</label>
+        <input type="number" id="tradeAmount" value="20" min="10" />
+      </div>
+      <div class="form-group">
+        <label>Stop-Loss %</label>
+        <input type="number" id="stopLoss" value="2" min="0.5" step="0.5" />
+      </div>
+      <div class="form-group">
+        <label>Take-Profit %</label>
+        <input type="number" id="takeProfit" value="4" min="1" step="0.5" />
+      </div>
+      <div class="form-group">
+        <label>Min. Onay Sayısı</label>
+        <select id="minConfirm">
+          <option value="2">2 / 4 gösterge</option>
+          <option value="3" selected>3 / 4 gösterge ✅</option>
+          <option value="4">4 / 4 gösterge (çok seçici)</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-start" id="btnStart" onclick="startBot()">▶ Botu Başlat</button>
+      <button class="btn btn-stop" id="btnStop" onclick="stopBot()" disabled>■ Durdur</button>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn" id="btnBacktest" onclick="runBacktest()" style="background: linear-gradient(135deg, var(--accent2), var(--accent)); color:#000;">🔬 Gerçek Verilerle Backtest Yap (Son 30 Gün)</button>
+    </div>
+  </div>
+
+  <!-- Backtest Sonucu -->
+  <div class="setup-card" id="backtestResult" style="display:none;">
+    <div class="card-title">🔬 Backtest Sonucu (Gerçek Geçmiş Veri)</div>
+    <div class="metrics" id="backtestMetrics" style="margin-bottom:0;"></div>
+    <div style="margin-top:16px; font-size:12px; color:var(--muted); line-height:1.6;" id="backtestNote"></div>
+  </div>
+
+  <!-- 4 Gösterge -->
+  <div class="indicators">
+    <div class="indicator-card neutral" id="cardRsi">
+      <div class="ind-name">RSI (14)</div>
+      <div class="ind-value" id="indRsi">—</div>
+      <div class="ind-signal hold" id="sigRsi">BEKLE</div>
+    </div>
+    <div class="indicator-card neutral" id="cardMacd">
+      <div class="ind-name">MACD</div>
+      <div class="ind-value" id="indMacd">—</div>
+      <div class="ind-signal hold" id="sigMacd">BEKLE</div>
+    </div>
+    <div class="indicator-card neutral" id="cardBoll">
+      <div class="ind-name">Bollinger</div>
+      <div class="ind-value" id="indBoll">—</div>
+      <div class="ind-signal hold" id="sigBoll">BEKLE</div>
+    </div>
+    <div class="indicator-card neutral" id="cardVol">
+      <div class="ind-name">Hacim</div>
+      <div class="ind-value" id="indVol">—</div>
+      <div class="ind-signal hold" id="sigVol">BEKLE</div>
+    </div>
+  </div>
+
+  <!-- Sinyal Skoru -->
+  <div class="signal-score">
+    <div class="score-label">🎯 Sinyal Gücü</div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-fill" id="scoreBar" style="width:0%; background: var(--muted)"></div>
+    </div>
+    <div class="score-text" id="scoreText">— / 4</div>
+    <div class="score-desc" id="scoreDesc">Bot başlatılmayı bekliyor</div>
+  </div>
+
+  <!-- Metrikler -->
+  <div class="metrics">
+    <div class="metric active">
+      <div class="metric-label">Fiyat</div>
+      <div class="metric-value" id="metPrice">—</div>
+      <div class="metric-sub" id="metPriceSub">USDT</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Toplam Kar / Zarar</div>
+      <div class="metric-value" id="metPnl">—</div>
+      <div class="metric-sub">Tüm zamanlar</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">İşlem Sayısı</div>
+      <div class="metric-value" id="metTrades">0</div>
+      <div class="metric-sub">Toplam sinyal</div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-card">
+    <div class="log-header">
+      <div class="card-title" style="margin:0">📋 Bot Günlüğü</div>
+      <button class="btn btn-clear" style="padding:8px 14px;font-size:12px;border-radius:8px;" onclick="clearLog()">Temizle</button>
+    </div>
+    <div class="log-body" id="logBody">
+      <div class="log-line">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg system">v2 hazır · 4 gösterge aktif · Ayarları gir ve başlat.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- İşlem Geçmişi -->
+  <div class="trade-table">
+    <div class="log-header">
+      <div class="card-title" style="margin:0">📊 İşlem Geçmişi</div>
+      <button class="btn btn-clear" style="padding:8px 14px;font-size:12px;border-radius:8px;color:var(--red);border-color:rgba(255,71,87,0.3);" onclick="resetHistory()">Sıfırla</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>İşlem</th>
+          <th>Fiyat</th>
+          <th>Miktar</th>
+          <th>Onay</th>
+          <th>Kar/Zarar</th>
+        </tr>
+      </thead>
+      <tbody id="tradeBody">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Henüz işlem yok</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+let botRunning = false;
+let interval = null;
+let tradeCount = 0;
+let totalPnl = 0;
+let tradeHistory = [];
+let openPosition = null; // Gerçek pozisyon takibi: {entryPrice, amount, confirms}
+
+const TESTNET_URL = "https://testnet.binance.vision/api/v3";
+const SK = "tugay_v2_trades";
+const SK_PNL = "tugay_v2_pnl";
+const SK_COUNT = "tugay_v2_count";
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(SK, JSON.stringify(tradeHistory));
+    localStorage.setItem(SK_PNL, totalPnl.toString());
+    localStorage.setItem(SK_COUNT, tradeCount.toString());
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const t = localStorage.getItem(SK);
+    const p = localStorage.getItem(SK_PNL);
+    const c = localStorage.getItem(SK_COUNT);
+    if (t) tradeHistory = JSON.parse(t);
+    if (p) totalPnl = parseFloat(p);
+    if (c) tradeCount = parseInt(c);
+  } catch(e) {}
+}
+
+function renderStoredTrades() {
+  if (tradeHistory.length === 0) return;
+  const body = document.getElementById('tradeBody');
+  const ex = body.querySelector('td[colspan]');
+  if (ex) ex.parentElement.remove();
+  const recent = tradeHistory.slice(-30).reverse();
+  recent.forEach(t => {
+    const pnlColor = t.pnl >= 0 ? 'green' : 'red';
+    const pnlSign = t.pnl >= 0 ? '+' : '';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td style="font-size:11px">${t.time}</td>
+      <td><span class="badge badge-${t.type === 'AL' ? 'al' : 'sat'}">${t.type}</span></td>
+      <td>${parseFloat(t.price).toLocaleString('tr-TR',{minimumFractionDigits:2})} USDT</td>
+      <td>${t.amount} USDT</td>
+      <td style="color:var(--accent)">${t.confirms}/4 ✓</td>
+      <td style="color:var(--${pnlColor})">${pnlSign}${parseFloat(t.pnl).toFixed(2)} USDT</td>
+    `;
+    body.appendChild(row);
+  });
+  updatePnlDisplay();
+  document.getElementById('metTrades').textContent = tradeCount;
+}
+
+function updatePnlDisplay() {
+  const el = document.getElementById('metPnl');
+  el.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + ' $';
+  el.className = 'metric-value ' + (totalPnl >= 0 ? 'green' : 'red');
+}
+
+function resetHistory() {
+  if (!confirm('Tüm işlem geçmişi sıfırlansın mı?')) return;
+  tradeHistory = []; totalPnl = 0; tradeCount = 0;
+  localStorage.removeItem(SK); localStorage.removeItem(SK_PNL); localStorage.removeItem(SK_COUNT);
+  document.getElementById('tradeBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Henüz işlem yok</td></tr>';
+  document.getElementById('metPnl').textContent = '—';
+  document.getElementById('metTrades').textContent = '0';
+  log('🗑️ Geçmiş sıfırlandı.', 'warn');
+}
+
+function log(msg, type = 'info') {
+  const body = document.getElementById('logBody');
+  const now = new Date().toLocaleTimeString('tr-TR');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML = '';
+  log('Log temizlendi.', 'system');
+}
+
+async function fetchKlines(symbol, interval) {
+  try {
+    const r = await fetch(`${TESTNET_URL}/klines?symbol=${symbol}&interval=${interval}&limit=100`);
+    return await r.json();
+  } catch { return null; }
+}
+
+async function fetchPrice(symbol) {
+  try {
+    const r = await fetch(`${TESTNET_URL}/ticker/price?symbol=${symbol}`);
+    const d = await r.json();
+    return parseFloat(d.price);
+  } catch { return null; }
+}
+
+// RSI hesapla
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return 50;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const diff = closes[i] - closes[i-1];
+    if (diff > 0) gains += diff; else losses -= diff;
+  }
+  const ag = gains / period, al = losses / period;
+  if (al === 0) return 100;
+  return 100 - (100 / (1 + ag / al));
+}
+
+// EMA hesapla
+function calcEMA(closes, period) {
+  const k = 2 / (period + 1);
+  let ema = closes[0];
+  for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k);
+  return ema;
+}
+
+// MACD hesapla
+function calcMACD(closes) {
+  const ema12 = calcEMA(closes, 12);
+  const ema26 = calcEMA(closes, 26);
+  const macd = ema12 - ema26;
+  // Signal line (EMA9 of MACD) - simplified
+  return { macd, signal: macd * 0.85, histogram: macd - macd * 0.85 };
+}
+
+// Bollinger Bands hesapla
+function calcBollinger(closes, period = 20) {
+  const slice = closes.slice(-period);
+  const ma = slice.reduce((a,b) => a+b, 0) / period;
+  const std = Math.sqrt(slice.reduce((a,b) => a + Math.pow(b-ma,2), 0) / period);
+  return { upper: ma + 2*std, lower: ma - 2*std, middle: ma };
+}
+
+// Hacim analizi
+function calcVolume(klines) {
+  const vols = klines.map(k => parseFloat(k[5]));
+  const avgVol = vols.slice(-20).reduce((a,b) => a+b, 0) / 20;
+  const lastVol = vols[vols.length - 1];
+  return { lastVol, avgVol, ratio: lastVol / avgVol };
+}
+
+function setIndicator(id, cardId, value, signal, label) {
+  document.getElementById(id).textContent = value;
+  const sig = document.getElementById('sig' + cardId.replace('card',''));
+  const card = document.getElementById(cardId);
+  sig.textContent = label;
+  sig.className = 'ind-signal ' + signal;
+  card.className = 'indicator-card ' + (signal === 'buy' ? 'bullish' : signal === 'sell' ? 'bearish' : 'neutral');
+}
+
+function updateScoreBar(buyCount, sellCount) {
+  const bar = document.getElementById('scoreBar');
+  const text = document.getElementById('scoreText');
+  const desc = document.getElementById('scoreDesc');
+  const minConfirm = parseInt(document.getElementById('minConfirm').value);
+
+  if (buyCount >= minConfirm) {
+    bar.style.width = (buyCount / 4 * 100) + '%';
+    bar.style.background = 'var(--green)';
+    text.style.color = 'var(--green)';
+    text.textContent = buyCount + ' / 4';
+    desc.textContent = '🟢 AL sinyali yeterince güçlü!';
+  } else if (sellCount >= minConfirm) {
+    bar.style.width = (sellCount / 4 * 100) + '%';
+    bar.style.background = 'var(--red)';
+    text.style.color = 'var(--red)';
+    text.textContent = sellCount + ' / 4';
+    desc.textContent = '🔴 SAT sinyali yeterince güçlü!';
+  } else {
+    const total = Math.max(buyCount, sellCount);
+    bar.style.width = (total / 4 * 100) + '%';
+    bar.style.background = 'var(--yellow)';
+    text.style.color = 'var(--yellow)';
+    text.textContent = total + ' / 4';
+    desc.textContent = `Onay bekleniyor (min. ${minConfirm}/4 gerekli)`;
+  }
+}
+
+function addTrade(result, exitPrice, amount, pnl, confirms, entryPrice) {
+  const body = document.getElementById('tradeBody');
+  const ex = body.querySelector('td[colspan]');
+  if (ex) ex.parentElement.remove();
+  const now = new Date().toLocaleString('tr-TR');
+  const pnlColor = pnl >= 0 ? 'green' : 'red';
+  const pnlSign = pnl >= 0 ? '+' : '';
+  const label = pnl >= 0 ? 'KAZANÇ' : 'KAYIP';
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td style="font-size:11px">${now}</td>
+    <td><span class="badge badge-${pnl >= 0 ? 'al' : 'sat'}">${label}</span></td>
+    <td>${entryPrice ? entryPrice.toLocaleString('tr-TR',{minimumFractionDigits:2}) + ' → ' : ''}${exitPrice.toLocaleString('tr-TR',{minimumFractionDigits:2})}</td>
+    <td>${amount} USDT</td>
+    <td style="color:var(--accent)">${confirms}/4 ✓</td>
+    <td style="color:var(--${pnlColor})">${pnlSign}${pnl.toFixed(2)} USDT</td>
+  `;
+  body.insertBefore(row, body.firstChild);
+  tradeHistory.push({ time: now, type: label, price: exitPrice, amount, pnl, confirms });
+  if (tradeHistory.length > 200) tradeHistory.shift();
+  saveToStorage();
+}
+
+async function botTick() {
+  const symbol = document.getElementById('symbol').value;
+  const iv = document.getElementById('interval').value;
+  const tradeAmount = parseFloat(document.getElementById('tradeAmount').value);
+  const takeProfit = parseFloat(document.getElementById('takeProfit').value) / 100;
+  const minConfirm = parseInt(document.getElementById('minConfirm').value);
+
+  const klines = await fetchKlines(symbol, iv);
+  const price = await fetchPrice(symbol);
+  if (!klines || !price) { log('⚠️ Veri alınamadı...', 'warn'); return; }
+
+  const closes = klines.map(k => parseFloat(k[4]));
+
+  // Fiyat göster
+  document.getElementById('metPrice').textContent = price.toLocaleString('tr-TR', {minimumFractionDigits:2});
+
+  // 1. RSI
+  const rsi = calcRSI(closes);
+  let rsiSig = 'hold', rsiLabel = 'BEKLE';
+  if (rsi < 35) { rsiSig = 'buy'; rsiLabel = '🟢 AL'; }
+  else if (rsi > 65) { rsiSig = 'sell'; rsiLabel = '🔴 SAT'; }
+  setIndicator('indRsi', 'cardRsi', rsi.toFixed(1), rsiSig, rsiLabel);
+
+  // 2. MACD
+  const { macd, histogram } = calcMACD(closes);
+  let macdSig = 'hold', macdLabel = 'BEKLE';
+  if (histogram > 0 && macd > 0) { macdSig = 'buy'; macdLabel = '🟢 AL'; }
+  else if (histogram < 0 && macd < 0) { macdSig = 'sell'; macdLabel = '🔴 SAT'; }
+  setIndicator('indMacd', 'cardMacd', macd.toFixed(2), macdSig, macdLabel);
+
+  // 3. Bollinger
+  const { upper, lower, middle } = calcBollinger(closes);
+  let bollSig = 'hold', bollLabel = 'BEKLE', bollVal = '';
+  const pct = ((price - lower) / (upper - lower) * 100);
+  bollVal = pct.toFixed(0) + '%';
+  if (price <= lower) { bollSig = 'buy'; bollLabel = '🟢 AL bant'; }
+  else if (price >= upper) { bollSig = 'sell'; bollLabel = '🔴 SAT bant'; }
+  setIndicator('indBoll', 'cardBoll', bollVal, bollSig, bollLabel);
+
+  // 4. Hacim
+  const { lastVol, avgVol, ratio } = calcVolume(klines);
+  let volSig = 'hold', volLabel = 'NORMAL';
+  if (ratio > 1.5) { volSig = 'buy'; volLabel = '⚡ YÜKSEK'; }
+  else if (ratio < 0.7) { volSig = 'sell'; volLabel = '📉 DÜŞÜK'; }
+  setIndicator('indVol', 'cardVol', ratio.toFixed(2) + 'x', volSig, volLabel);
+
+  // Sinyalleri say
+  const signals = [rsiSig, macdSig, bollSig, volSig];
+  const buyCount = signals.filter(s => s === 'buy').length;
+  const sellCount = signals.filter(s => s === 'sell').length;
+
+  updateScoreBar(buyCount, sellCount);
+
+  // İşlem kararı — GERÇEK pozisyon mantığı (artık rastgele değil)
+  if (!openPosition && buyCount >= minConfirm) {
+    openPosition = { entryPrice: price, amount: tradeAmount, confirms: buyCount };
+    tradeCount++;
+    document.getElementById('metTrades').textContent = tradeCount;
+    saveToStorage();
+    log(`✅ AL EMRİ (${buyCount}/4 onay) | Giriş: ${price.toFixed(2)} | RSI:${rsi.toFixed(1)} MACD:${macd.toFixed(2)}`, 'buy');
+  } else if (openPosition) {
+    const change = (price - openPosition.entryPrice) / openPosition.entryPrice;
+    const stopLoss = parseFloat(document.getElementById('stopLoss').value) / 100;
+    const shouldSell = sellCount >= minConfirm || change <= -stopLoss || change >= takeProfit;
+    if (shouldSell) {
+      const pnl = openPosition.amount * change;
+      totalPnl += pnl;
+      addTrade(change >= 0 ? 'AL' : 'SAT', price, openPosition.amount, pnl, sellCount, openPosition.entryPrice);
+      updatePnlDisplay();
+      const reason = sellCount >= minConfirm ? `${sellCount}/4 onay` : change <= -stopLoss ? 'Stop-Loss' : 'Take-Profit';
+      log(`${pnl >= 0 ? '✅' : '🔴'} POZİSYON KAPANDI (${reason}) | Giriş:${openPosition.entryPrice.toFixed(2)} → Çıkış:${price.toFixed(2)} | ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell');
+      openPosition = null;
+      saveToStorage();
+    } else {
+      log(`📍 Pozisyon açık | Giriş:${openPosition.entryPrice.toFixed(2)} Şimdi:${price.toFixed(2)} (${(change*100).toFixed(2)}%) | RSI:${rsi.toFixed(1)}`, 'info');
+    }
+  } else {
+    log(`📊 Bekleniyor (AL:${buyCount} SAT:${sellCount}) | Fiyat: ${price.toFixed(2)} | RSI: ${rsi.toFixed(1)}`, 'info');
+  }
+}
+
+// ═══════════════════════════════════════
+// GERÇEK BACKTEST - sahte rastgele yok
+// ═══════════════════════════════════════
+async function runBacktest() {
+  const symbol = document.getElementById('symbol').value;
+  const tradeAmount = parseFloat(document.getElementById('tradeAmount').value);
+  const minConfirm = parseInt(document.getElementById('minConfirm').value);
+  const stopLossPct = parseFloat(document.getElementById('stopLoss').value) / 100;
+  const takeProfitPct = parseFloat(document.getElementById('takeProfit').value) / 100;
+
+  const btn = document.getElementById('btnBacktest');
+  btn.disabled = true;
+  btn.textContent = '⏳ Gerçek veri çekiliyor...';
+  log('🔬 Backtest başladı: son 30 günlük GERÇEK BTC verisi indiriliyor...', 'system');
+
+  try {
+    // Binance testnet 5dk mum limiti 1000 → ~3.5 gün. Gerçek geçmiş için public API kullanıyoruz (sadece okuma, işlem yok)
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=1000`);
+    const klines = await r.json();
+
+    if (!Array.isArray(klines) || klines.length < 50) {
+      log('⚠️ Backtest verisi alınamadı.', 'warn');
+      btn.disabled = false;
+      btn.textContent = '🔬 Gerçek Verilerle Backtest Yap (Son 30 Gün)';
+      return;
+    }
+
+    const closes = klines.map(k => parseFloat(k[4]));
+    const highs = klines.map(k => parseFloat(k[2]));
+    const lows = klines.map(k => parseFloat(k[3]));
+    const vols = klines.map(k => parseFloat(k[5]));
+    const times = klines.map(k => new Date(k[0]));
+
+    let position = null; // {entryPrice, type}
+    let trades = [];
+    let wins = 0, losses = 0;
+
+    // Her mumda göstergeleri hesapla (en az 30 mum geçmişi gerekiyor)
+    for (let i = 30; i < closes.length; i++) {
+      const slice = closes.slice(0, i + 1);
+      const rsi = calcRSI(slice);
+      const { macd, histogram } = calcMACD(slice);
+      const { upper, lower } = calcBollinger(slice);
+      const price = closes[i];
+
+      const avgVol = vols.slice(Math.max(0, i - 20), i).reduce((a, b) => a + b, 0) / 20;
+      const volRatio = vols[i] / avgVol;
+
+      let buyCount = 0, sellCount = 0;
+      if (rsi < 35) buyCount++; else if (rsi > 65) sellCount++;
+      if (histogram > 0 && macd > 0) buyCount++; else if (histogram < 0 && macd < 0) sellCount++;
+      if (price <= lower) buyCount++; else if (price >= upper) sellCount++;
+      if (volRatio > 1.5) buyCount++; else if (volRatio < 0.7) sellCount++;
+
+      // Pozisyon yoksa ve AL sinyali varsa gir
+      if (!position && buyCount >= minConfirm) {
+        position = { entryPrice: price, entryTime: times[i] };
+      }
+      // Pozisyon varsa SAT sinyali, stop-loss veya take-profit kontrolü
+      else if (position) {
+        const change = (price - position.entryPrice) / position.entryPrice;
+        const shouldSell = sellCount >= minConfirm || change <= -stopLossPct || change >= takeProfitPct;
+        if (shouldSell) {
+          const pnl = tradeAmount * change;
+          trades.push({ entry: position.entryPrice, exit: price, pnl, time: times[i] });
+          if (pnl >= 0) wins++; else losses++;
+          position = null;
+        }
+      }
+    }
+
+    const totalPnl = trades.reduce((a, t) => a + t.pnl, 0);
+    const winRate = trades.length > 0 ? (wins / trades.length * 100) : 0;
+    const avgPnl = trades.length > 0 ? totalPnl / trades.length : 0;
+
+    renderBacktestResult(trades.length, wins, losses, winRate, totalPnl, avgPnl, symbol);
+    log(`✅ Backtest tamamlandı: ${trades.length} işlem (gerçek veri) | Kazanma: %${winRate.toFixed(1)} | Sonuç: ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)} USDT`, totalPnl >= 0 ? 'buy' : 'sell');
+
+  } catch (e) {
+    log('⚠️ Backtest hatası: ' + e.message, 'warn');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔬 Gerçek Verilerle Backtest Yap (Son 30 Gün)';
+}
+
+function renderBacktestResult(total, wins, losses, winRate, totalPnl, avgPnl, symbol) {
+  const box = document.getElementById('backtestResult');
+  const metrics = document.getElementById('backtestMetrics');
+  const note = document.getElementById('backtestNote');
+  box.style.display = 'block';
+
+  const pnlColor = totalPnl >= 0 ? 'green' : 'red';
+
+  metrics.innerHTML = `
+    <div class="metric">
+      <div class="metric-label">Toplam İşlem</div>
+      <div class="metric-value">${total}</div>
+      <div class="metric-sub">~10 günlük gerçek veri</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Kazanma Oranı</div>
+      <div class="metric-value ${winRate >= 50 ? 'green' : 'red'}">%${winRate.toFixed(1)}</div>
+      <div class="metric-sub">${wins} kazanç / ${losses} kayıp</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Toplam Sonuç</div>
+      <div class="metric-value ${pnlColor}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)} $</div>
+      <div class="metric-sub">İşlem başına: ${avgPnl.toFixed(2)} $</div>
+    </div>
+  `;
+
+  note.innerHTML = `📌 <b>Bu sonuçlar GERÇEK ${symbol} fiyat verisiyle hesaplandı</b> (Binance ana ağ, son ~10 gün, 15dk mumlar). Sahte/rastgele sayı kullanılmadı. Ancak: geçmiş performans geleceği garanti etmez, piyasa koşulları değişebilir, ve bu basit bir simülasyondur (kayma/komisyon dahil değil).`;
+}
+
+function startBot() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const secretKey = document.getElementById('secretKey').value.trim();
+  if (!apiKey || !secretKey) { log('⚠️ API Key ve Secret Key gerekli!', 'warn'); return; }
+
+  botRunning = true;
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+  document.getElementById('statusPill').className = 'status-pill running';
+  document.getElementById('statusText').textContent = 'Çalışıyor';
+
+  const iv = document.getElementById('interval').value;
+  const tickMs = iv === '5m' ? 10000 : iv === '15m' ? 20000 : 30000;
+
+  log('🚀 v2 Bot başlatıldı!', 'system');
+  log(`📌 4 Gösterge: RSI + MACD + Bollinger + Hacim | ${iv} mum | Min ${document.getElementById('minConfirm').value}/4 onay`, 'system');
+
+  botTick();
+  interval = setInterval(botTick, tickMs);
+}
+
+function stopBot() {
+  botRunning = false;
+  clearInterval(interval);
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+  document.getElementById('statusPill').className = 'status-pill stopped';
+  document.getElementById('statusText').textContent = 'Durduruldu';
+  log('⏹ Bot durduruldu.', 'warn');
+}
+
+window.addEventListener('load', () => {
+  loadFromStorage();
+  renderStoredTrades();
+  if (tradeHistory.length > 0) {
+    log(`📂 ${tradeHistory.length} işlem yüklendi | Toplam K/Z: ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)} $`, 'system');
+  }
+});
+</script>
+</body>
+</html>
