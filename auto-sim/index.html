@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>TUGAY × QUANT · OTO-SİM v4.1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #C7C0A4; --surface: #D6D0B4; --surface2: #CEC8AC; --surface3: #C1BA9C;
+    --border: #A69E7C; --accent: #9C6F0A; --accent2: #4E3690; --green: #0C6B40; --red: #A93226;
+    --yellow: #A97705; --text: #1C1A10; --muted: #57523F; --chip-ink: #E9E5D2; --input-bg: #D6D0B4;
+    --font: 'IBM Plex Mono', monospace; --display: 'Archivo', sans-serif;
+    color-scheme: light; transition: background-color .35s ease, color .35s ease;
+  }
+  html[data-theme="dark"] {
+    --bg: #14120C; --surface: #1C1911; --surface2: #221E14; --surface3: #292418;
+    --border: #3A3424; --accent: #D9A441; --accent2: #8B6FD9; --green: #3FBE80; --red: #E2685C;
+    --yellow: #E0B23A; --text: #F1EAD9; --muted: #9C9478; --chip-ink: #14120C; --input-bg: #221E14;
+    color-scheme: dark;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); padding:12px; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 820px; margin:0 auto; }
+
+  .warn { background:var(--surface2); border:1px solid var(--border); border-left:4px solid var(--yellow);
+    padding:10px 14px; font-size:11px; line-height:1.6; color:var(--muted); margin-bottom:10px; }
+  .warn b { color:var(--text); }
+
+  .mast { border:1px solid var(--text); background:var(--surface); margin-bottom:10px; }
+  .mast-row1 { display:flex; align-items:center; gap:12px; padding:11px 14px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .mast-mark { width:30px; height:30px; background:var(--text); color:var(--surface); font-family:var(--display); font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .mast-name { font-family:var(--display); font-weight:800; font-size:13.5px; letter-spacing:.05em; }
+  .mast-sub { font-size:8.5px; color:var(--muted); letter-spacing:.1em; margin-top:2px; }
+  .status-chip { margin-left:auto; font-size:9.5px; font-weight:700; letter-spacing:.1em; padding:4px 9px; background:var(--surface3); border:1px solid var(--border); color:var(--muted); }
+  .status-chip.on { background:var(--green); color:var(--chip-ink); border-color:var(--green); }
+  .theme-btn { font-family:var(--mono); font-size:9px; font-weight:700; padding:4px 9px; cursor:pointer; background:var(--surface2); border:1px solid var(--border); color:var(--text); letter-spacing:.06em; }
+  .mast-row2 { display:flex; gap:6px; padding:7px 14px; flex-wrap:wrap; font-size:9px; color:var(--muted); font-weight:600; letter-spacing:.08em; background:var(--surface2); }
+
+  .controls { display:flex; gap:8px; margin-bottom:10px; }
+  button.ctl { flex:1; font-family:var(--mono); font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:12px; border:1px solid var(--text); cursor:pointer; font-size:11.5px; }
+  .btn-start { background:var(--green); color:var(--chip-ink); }
+  .btn-start:disabled, .btn-stop:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-stop { background:var(--surface); color:var(--red); border-color:var(--red); }
+  .btn-mini { flex:0 0 auto; background:var(--surface2); color:var(--muted); border:1px solid var(--border); font-family:var(--mono); font-size:9.5px; padding:12px 11px; cursor:pointer; letter-spacing:.05em; }
+
+  .totals { background:var(--surface); border:1px solid var(--border); text-align:center; padding:20px 14px; margin-bottom:10px; }
+  .totals-label { font-size:9px; letter-spacing:.18em; color:var(--muted); font-weight:700; margin-bottom:6px; }
+  .totals-num { font-family:var(--mono); font-size:clamp(30px,7.5vw,42px); font-weight:700; }
+  .totals-num.pos{color:var(--green);} .totals-num.neg{color:var(--red);} .totals-num.zero{color:var(--text);}
+  .totals-sub { font-size:10.5px; color:var(--muted); margin-top:5px; }
+  .stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:10px; }
+  .stat-box { background:var(--surface); border:1px solid var(--border); padding:8px 5px; text-align:center; }
+  .stat-box .l { font-size:7.5px; letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:3px; text-transform:uppercase; }
+  .stat-box .v { font-family:var(--mono); font-size:13px; font-weight:700; }
+
+  /* Coin kartları */
+  .coin-grid { display:grid; grid-template-columns:1fr; gap:9px; margin-bottom:10px; }
+  .coin-card { background:var(--surface); border:1px solid var(--border); padding:11px 13px; }
+  .coin-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .coin-name { font-family:var(--display); font-weight:800; font-size:13px; }
+  .coin-price { font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .coin-badge { margin-left:auto; font-size:8.5px; font-weight:700; padding:2px 7px; border:1px solid var(--border); color:var(--muted); letter-spacing:.05em; }
+  .coin-badge.pos-open { background:var(--accent); color:var(--chip-ink); border-color:var(--accent); }
+  .coin-bal { font-family:var(--mono); font-size:19px; font-weight:700; }
+  .coin-bal.pos{color:var(--green);} .coin-bal.neg{color:var(--red);} .coin-bal.zero{color:var(--text);}
+  .coin-pnl-sub { font-size:9.5px; color:var(--muted); margin-bottom:8px; }
+  .vote-row { display:flex; gap:3px; flex-wrap:wrap; margin-bottom:6px; }
+  .vote-chip { font-size:7.8px; font-family:var(--mono); font-weight:700; padding:2px 5px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); }
+  .vote-chip.up { background:var(--green); color:var(--chip-ink); border-color:var(--green); }
+  .vote-chip.down { background:var(--red); color:var(--chip-ink); border-color:var(--red); }
+  .score-line { font-size:9px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .prot-row { display:flex; gap:5px; flex-wrap:wrap; font-size:8px; }
+  .prot-chip { padding:2px 6px; border:1px solid var(--border); color:var(--muted); background:var(--surface2); }
+  .prot-chip.active { border-color:var(--yellow); color:var(--yellow); font-weight:700; }
+  .pos-mini { margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); font-size:10px; display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+  .pos-mini span { display:block; font-size:7.5px; color:var(--muted); margin-bottom:1px; }
+  .pos-mini b { font-family:var(--mono); }
+
+  /* Ayarlar / Telegram / Yedekleme */
+  .settings { background:var(--surface); border:1px solid var(--border); margin-bottom:10px; }
+  .settings summary { cursor:pointer; padding:10px 14px; font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--muted); list-style:none; }
+  .settings[open] summary { color:var(--text); border-bottom:1px solid var(--border); }
+  .settings-body { padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .settings-row label { font-size:9.5px; color:var(--muted); display:block; margin-bottom:4px; letter-spacing:.04em; }
+  .settings-row input { width:100%; padding:8px 9px; background:var(--input-bg); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:11px; }
+  .settings-btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-small { font-family:var(--mono); font-size:9.5px; font-weight:700; padding:8px 12px; border:1px solid var(--text); background:var(--surface2); color:var(--text); cursor:pointer; letter-spacing:.05em; }
+
+  .log-wrap { background:var(--surface); border:1px solid var(--border); }
+  .log-head { display:flex; justify-content:space-between; align-items:center; font-size:9.5px; font-weight:700; letter-spacing:.08em; color:var(--muted); padding:10px 14px; border-bottom:1px solid var(--border); }
+  .log-body { max-height:280px; overflow-y:auto; }
+  table { width:100%; border-collapse:collapse; font-size:10px; }
+  th { text-align:left; padding:6px 8px; font-size:8px; letter-spacing:.05em; color:var(--muted); text-transform:uppercase; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); }
+  td { padding:5px 8px; border-bottom:1px solid rgba(23,23,15,.06); font-family:var(--mono); }
+  td.win{color:var(--green);font-weight:700;} td.loss{color:var(--red);font-weight:700;}
+  .empty-log { padding:18px; text-align:center; color:var(--muted); font-size:10.5px; }
+  footer { text-align:center; font-size:9px; color:var(--muted); padding:14px 0; letter-spacing:.05em; }
+
+  /* Bot Günlüğü — canlı olay akışı */
+  .activity-wrap { background:var(--surface); border:1px solid var(--border); margin-top:10px; }
+  .activity-body { max-height:260px; overflow-y:auto; padding:6px 0; }
+  .act-row { display:flex; gap:8px; padding:6px 14px; font-size:10px; border-bottom:1px solid rgba(23,23,15,.05); align-items:baseline; }
+  .act-time { font-family:var(--mono); color:var(--muted); font-size:9px; flex-shrink:0; width:38px; }
+  .act-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:3px; background:var(--muted); }
+  .act-row.open .act-dot { background:var(--accent); }
+  .act-row.win .act-dot { background:var(--green); }
+  .act-row.loss .act-dot { background:var(--red); }
+  .act-row.protect .act-dot { background:var(--yellow); }
+  .act-row.win { color:var(--green); }
+  .act-row.loss { color:var(--red); }
+  .act-row.scan { color:var(--muted); }
+  .act-text { flex:1; line-height:1.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="warn">
+    ⚠️ <b>OTO-SİM v4.1</b> — ana bottan bağımsız, deneysel çoklu-coin sanal motor. Gerçek para <b>kesinlikle</b> kullanmaz.
+    Sekme <b>açık kaldığı sürece</b> çalışır. 4 coin'i <b>aynı anda</b>, 12 gösterge oylamasıyla (VWAP, SuperTrend, MFI, MACD uyuşmazlığı dahil) 12 saniyede bir derin tarar; açık pozisyonların stop/hedefini ise <b>3 saniyede bir</b> anlık fiyatla takip eder. 
+    <b>Kaldıraç dinamik ve oynaklık frenli:</b> sinyal güçlüyse 2x–5x arası kendi seçer, piyasa çok dalgalıysa otomatik kısılır; kayıp asla yatırılan marjini aşmaz. Durum otomatik kaydedilir.
+  </div>
+
+  <div class="mast">
+    <div class="mast-row1">
+      <div class="mast-mark">S</div>
+      <div>
+        <div class="mast-name">TUGAY <span style="color:var(--accent);">×</span> OTO-SİM <span style="font-size:8px;border:1px solid var(--border);padding:1px 5px;margin-left:4px;color:var(--muted);">v4.1</span></div>
+        <div class="mast-sub">4 COIN · 12 GÖSTERGE · DİNAMİK KALDIRAÇ · 3sn NABIZ</div>
+      </div>
+      <div class="status-chip" id="statusChip">DURDU</div>
+      <button class="theme-btn" id="themeBtn">☾ GECE</button>
+    </div>
+    <div class="mast-row2">
+      <span id="cycleInfo">Döngü: —</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ctl btn-start" id="btnStart">▶ Başlat</button>
+    <button class="ctl btn-stop" id="btnStop" disabled>■ Durdur</button>
+    <button class="btn-mini" id="btnReset">↺ Sıfırla</button>
+  </div>
+
+  <div class="totals">
+    <div class="totals-label">TOPLAM SANAL BAKİYE (4 COIN)</div>
+    <div class="totals-num zero" id="totalBal">$1,000.00</div>
+    <div class="totals-sub" id="totalSub">Toplam K/Z: $0.00 (%0.00)</div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="l">Toplam İşlem</div><div class="v" id="statTrades">0</div></div>
+    <div class="stat-box"><div class="l">Kazanma</div><div class="v" id="statWin">—</div></div>
+    <div class="stat-box"><div class="l">Açık Poz.</div><div class="v" id="statOpen">0</div></div>
+    <div class="stat-box"><div class="l">Son Tarama</div><div class="v" id="statLast" style="font-size:9px;">—</div></div>
+  </div>
+
+  <div class="coin-grid" id="coinGrid"></div>
+
+  <details class="settings">
+    <summary>⚙ TELEGRAM BİLDİRİMLERİ (opsiyonel)</summary>
+    <div class="settings-body">
+      <div class="settings-row">
+        <label>Bot Token</label>
+        <input type="password" id="tgToken" placeholder="123456:ABC-DEF..." autocomplete="off" />
+      </div>
+      <div class="settings-row">
+        <label>Chat ID</label>
+        <input type="text" id="tgChatId" placeholder="123456789" autocomplete="off" />
+      </div>
+      <div class="settings-btns">
+        <button class="btn-small" id="btnTgSave">Kaydet</button>
+        <button class="btn-small" id="btnTgTest">Test Mesajı Gönder</button>
+      </div>
+      <div style="font-size:9px;color:var(--muted);line-height:1.5;">Doldurulursa her işlem açılış/kapanışında Telegram'a anlık mesaj gönderilir. Boş bırakılırsa bildirim gönderilmez. Bilgiler yalnızca bu cihazda saklanır.</div>
+    </div>
+  </details>
+
+  <details class="settings">
+    <summary>💾 YEDEKLEME</summary>
+    <div class="settings-body">
+      <div class="settings-btns">
+        <button class="btn-small" id="btnExportJson">⬇ Durumu İndir (.json)</button>
+        <button class="btn-small" id="btnExportCsv">⬇ İşlem Günlüğü (.csv)</button>
+        <button class="btn-small" id="btnImportJson">⬆ Yedekten Geri Yükle</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" />
+      </div>
+      <div id="backupStatus" style="font-size:9px;color:var(--muted);"></div>
+    </div>
+  </details>
+
+  <div class="log-wrap">
+    <div class="log-head"><span>İŞLEM GÜNLÜĞÜ (TÜM COİNLER)</span></div>
+    <div class="log-body">
+      <table>
+        <thead><tr><th>Saat</th><th>Coin</th><th>Giriş Skoru</th><th>Kaldıraç</th><th>Sebep</th><th>Giriş</th><th>Çıkış</th><th>K/Z</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div class="empty-log" id="emptyLog">Henüz kapanmış işlem yok</div>
+    </div>
+  </div>
+
+  <div class="activity-wrap">
+    <div class="log-head"><span>◂ BOT GÜNLÜĞÜ (CANLI)</span><span id="actClear" style="cursor:pointer;font-weight:400;">Temizle</span></div>
+    <div class="activity-body" id="activityBody">
+      <div class="empty-log">Henüz kayıt yok — bot çalışmaya başlayınca burada her tarama ve karar görünecek</div>
+    </div>
+  </div>
+
+  <footer>tugilaylay/trading-bot · auto-sim v4.1 · veri: Binance public API</footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const STORAGE_KEY = 'qtOtoSimState_v4';
+  const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT'];
+  const NAMES = { BTCUSDT:'BTC', ETHUSDT:'ETH', SOLUSDT:'SOL', BNBUSDT:'BNB' };
+  const RISK_PCT = 0.20;
+  const ATR_SL_MULT = 1.5, ATR_TP_MULT = 2.5;
+  const MAX_LEVERAGE = 5;
+  const ENTRY_SCORE = 7;   // 12 göstergenin en az 7'si aynı yönde olmalı
+  const EXIT_SCORE = -5;   // tersine 5+ dönerse pozisyon kapanır
+  function calcLeverage(score, adxVal, atrPct){
+    // Skor ne kadar yüksekse (giriş eşiği 7/12, tavan 12/12), o kadar cesur.
+    let lev;
+    if (score >= 11) lev = 5;
+    else if (score >= 9) lev = 4;
+    else if (score >= 8) lev = 3;
+    else lev = 2; // eşik: 7/12
+    if (adxVal >= 35) lev = Math.min(MAX_LEVERAGE, lev + 1); // güçlü trend bonusu
+    // Oynaklık freni: piyasa çok dalgalıysa skor ne kadar mükemmel olursa olsun kaldıraç kısıtlanır
+    const cap = atrPct > 0.006 ? 2 : atrPct > 0.004 ? 3 : MAX_LEVERAGE;
+    return Math.min(lev, cap);
+  }
+  const SCAN_MS = 12000;   // derin gösterge taraması (12 gösterge, ağır hesap) — yeni giriş kararları burada
+  const TICK_MS = 3000;    // hızlı fiyat nabzı — açık pozisyonların stop/hedef takibi burada, neredeyse anlık
+  const START_BAL = 250;   // coin başına — toplamda 4x250 = $1000
+
+
+  // ── Tema ──
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeBtn');
+  function setTheme(name, persist){
+    root.setAttribute('data-theme', name);
+    themeBtn.textContent = name === 'dark' ? '☀ GÜNDÜZ' : '☾ GECE';
+    if (persist !== false) try{ localStorage.setItem('qtOtoSimTheme', name); }catch(e){}
+  }
+  let savedTheme = 'paper'; try{ savedTheme = localStorage.getItem('qtOtoSimTheme') || 'paper'; }catch(e){}
+  setTheme(savedTheme, false);
+  themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme')==='dark' ? 'paper' : 'dark'));
+
+  // ── Durum ──
+  function defaultCoinState(){
+    return {
+      balance: START_BAL, startBalance: START_BAL, position: null, trades: [], equity: [{t:Date.now(), v:START_BAL}],
+      dayKey: new Date().toISOString().slice(0,10), dayStartBalance: START_BAL, dailyLocked: false,
+      consecutiveLosses: 0, cooldownUntil: 0, breakerUntil: 0, lastScore: null, lastVotes: null, lastAdx: null, lastPrice: null
+    };
+  }
+  function defaultState(){
+    const coins = {}; SYMBOLS.forEach(s => coins[s] = defaultCoinState());
+    return { running:false, coins, tgToken:'', tgChatId:'', botLog: [] };
+  }
+  let state = loadState();
+  function loadState(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw){
+        const parsed = JSON.parse(raw);
+        const base = defaultState();
+        base.running = !!parsed.running;
+        base.tgToken = parsed.tgToken || ''; base.tgChatId = parsed.tgChatId || '';
+        base.botLog = Array.isArray(parsed.botLog) ? parsed.botLog : [];
+        SYMBOLS.forEach(s => { if (parsed.coins && parsed.coins[s]) base.coins[s] = Object.assign(defaultCoinState(), parsed.coins[s]); });
+        return base;
+      }
+    } catch(e){}
+    return defaultState();
+  }
+  function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+
+  document.getElementById('tgToken').value = state.tgToken;
+  document.getElementById('tgChatId').value = state.tgChatId;
+
+  // ── Göstergeler ──
+  function ema(vals, period){ const k=2/(period+1); let e=vals[0]; const out=[e]; for(let i=1;i<vals.length;i++){ e=vals[i]*k+e*(1-k); out.push(e); } return out; }
+  function rsi(closes, period){
+    if (closes.length < period+1) return 50;
+    let g=0,l=0; for(let i=closes.length-period;i<closes.length;i++){ const d=closes[i]-closes[i-1]; if(d>=0) g+=d; else l-=d; }
+    const ag=g/period, al=l/period; if(al===0) return 100; return 100-(100/(1+ag/al));
+  }
+  function atr(candles, period){
+    if (candles.length < period+1) return 0;
+    let sum=0; for(let i=candles.length-period;i<candles.length;i++){ const c=candles[i],p=candles[i-1]; sum+=Math.max(c.h-c.l,Math.abs(c.h-p.c),Math.abs(c.l-p.c)); } return sum/period;
+  }
+  function macd(closes, f=12, s=26, sig=9){ const ef=ema(closes,f), es=ema(closes,s); const line=closes.map((_,i)=>ef[i]-es[i]); const signal=ema(line,sig); return { hist: line.map((v,i)=>v-signal[i]) }; }
+  function bollinger(closes, period=20, mult=2){ const slice=closes.slice(-period); const mid=slice.reduce((a,b)=>a+b,0)/period; const varr=slice.reduce((a,b)=>a+Math.pow(b-mid,2),0)/period; const sd=Math.sqrt(varr); return { mid, upper:mid+sd*mult, lower:mid-sd*mult, width:(sd*mult*2)/mid }; }
+  function adx(candles, period=14){
+    if (candles.length < period*2) return 15;
+    let pDM=[],mDM=[],tr=[];
+    for(let i=1;i<candles.length;i++){ const up=candles[i].h-candles[i-1].h, down=candles[i-1].l-candles[i].l;
+      pDM.push(up>down&&up>0?up:0); mDM.push(down>up&&down>0?down:0);
+      tr.push(Math.max(candles[i].h-candles[i].l, Math.abs(candles[i].h-candles[i-1].c), Math.abs(candles[i].l-candles[i-1].c))); }
+    const smooth = arr => { let s=arr.slice(0,period).reduce((a,b)=>a+b,0); const out=[s]; for(let i=period;i<arr.length;i++){ s=s-(s/period)+arr[i]; out.push(s);} return out; };
+    const trS=smooth(tr), pS=smooth(pDM), mS=smooth(mDM);
+    const pDI=pS.map((v,i)=>100*(v/(trS[i]||1))), mDI=mS.map((v,i)=>100*(v/(trS[i]||1)));
+    const dx=pDI.map((v,i)=>100*Math.abs(v-mDI[i])/((v+mDI[i])||1));
+    const adxArr=smooth(dx).map(v=>v/period);
+    return adxArr[adxArr.length-1] || 15;
+  }
+  function volumeRatio(candles, period=20){ const vols=candles.map(c=>c.v); const recent=vols[vols.length-1]; const avg=vols.slice(-period-1,-1).reduce((a,b)=>a+b,0)/period; return avg>0?recent/avg:1; }
+  function cci(candles, period=20){
+    const tp = candles.map(c => (c.h+c.l+c.c)/3);
+    const slice = tp.slice(-period);
+    const sma = slice.reduce((a,b)=>a+b,0)/period;
+    const meanDev = slice.reduce((a,b)=>a+Math.abs(b-sma),0)/period;
+    const cur = tp[tp.length-1];
+    return meanDev>0 ? (cur-sma)/(0.015*meanDev) : 0;
+  }
+  function obvTrend(candles, period=20){
+    let obv=0; const arr=[0];
+    for(let i=1;i<candles.length;i++){ obv += candles[i].c > candles[i-1].c ? candles[i].v : candles[i].c < candles[i-1].c ? -candles[i].v : 0; arr.push(obv); }
+    const recent = arr.slice(-period);
+    return recent[recent.length-1] > recent[0] ? 1 : -1;
+  }
+  // VWAP — kurumsal "adil fiyat" çizgisi: fiyat bunun üstündeyse alıcılar kontrolde
+  function vwap(candles, period=20){
+    const slice = candles.slice(-period);
+    let cumPV=0, cumV=0;
+    slice.forEach(c => { const tp=(c.h+c.l+c.c)/3; cumPV += tp*c.v; cumV += c.v; });
+    return cumV>0 ? cumPV/cumV : slice[slice.length-1].c;
+  }
+  // MACD Uyuşmazlığı — basitleştirilmiş: fiyat zirve/dip yaparken momentum onaylamıyorsa dönüş sinyali
+  function macdDivergence(closes, histArr, lookback=20){
+    const pSlice = closes.slice(-lookback), hSlice = histArr.slice(-lookback);
+    const pNow = pSlice[pSlice.length-1], hNow = hSlice[hSlice.length-1];
+    const pMax = Math.max(...pSlice), pMaxIdx = pSlice.indexOf(pMax);
+    const pMin = Math.min(...pSlice), pMinIdx = pSlice.indexOf(pMin);
+    if (pNow >= pMax*0.999 && hNow < hSlice[pMaxIdx]*0.9) return -1; // fiyat zirvede ama momentum zayıflıyor
+    if (pNow <= pMin*1.001 && hNow > hSlice[pMinIdx]*0.9) return 1;  // fiyat dipte ama satış baskısı tükeniyor
+    return 0;
+  }
+  // SuperTrend — ATR bantlarıyla trend yönünü iteratif takip eder
+  function superTrendSignal(candles, period=10, mult=3){
+    if (candles.length < period+2) return 0;
+    let trArr=[];
+    for(let i=1;i<candles.length;i++){ const c=candles[i],p=candles[i-1]; trArr.push(Math.max(c.h-c.l,Math.abs(c.h-p.c),Math.abs(c.l-p.c))); }
+    let sum = trArr.slice(0,period).reduce((a,b)=>a+b,0);
+    let atrSeries = [sum/period];
+    for(let i=period;i<trArr.length;i++){ sum = sum - trArr[i-period] + trArr[i]; atrSeries.push(sum/period); }
+    const offset = candles.length - atrSeries.length;
+    let trend=1, finalUpper=null, finalLower=null;
+    for(let i=0;i<atrSeries.length;i++){
+      const c = candles[offset+i]; const hl2=(c.h+c.l)/2;
+      const basicUpper = hl2 + mult*atrSeries[i], basicLower = hl2 - mult*atrSeries[i];
+      if (finalUpper===null){ finalUpper=basicUpper; finalLower=basicLower; }
+      else {
+        finalUpper = (basicUpper < finalUpper || candles[offset+i-1].c > finalUpper) ? basicUpper : finalUpper;
+        finalLower = (basicLower > finalLower || candles[offset+i-1].c < finalLower) ? basicLower : finalLower;
+      }
+      if (c.c > finalUpper) trend=1; else if (c.c < finalLower) trend=-1;
+    }
+    return trend;
+  }
+  // MFI — RSI'ın hacim ağırlıklı hâli: "gerçek para" bu harekete katılıyor mu
+  function mfi(candles, period=14){
+    if (candles.length < period+1) return 50;
+    let posFlow=0, negFlow=0;
+    for(let i=candles.length-period;i<candles.length;i++){
+      const c=candles[i], p=candles[i-1];
+      const tp=(c.h+c.l+c.c)/3, prevTp=(p.h+p.l+p.c)/3;
+      const rawFlow = tp*c.v;
+      if (tp>prevTp) posFlow+=rawFlow; else if (tp<prevTp) negFlow+=rawFlow;
+    }
+    if (negFlow===0) return 100;
+    return 100-(100/(1+posFlow/negFlow));
+  }
+
+  async function fetchCandles(symbol){
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1m&limit=100`);
+    const d = await r.json();
+    return d.map(k => ({ t:+k[0], o:+k[1], h:+k[2], l:+k[3], c:+k[4], v:+k[5] }));
+  }
+  async function fetchPrice(symbol){
+    const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+    const d = await r.json();
+    return +d.price;
+  }
+
+
+  function fmt(n){ return (n<0?'-$':'$') + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtPrice(p){ if(p==null) return '—'; return p>=1000? p.toLocaleString('en-US',{maximumFractionDigits:0}) : p.toFixed(p>=10?2:4); }
+  function fmtTime(t){ const d=new Date(t); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+  // ── Telegram ──
+  async function sendTelegram(text){
+    if (!state.tgToken || !state.tgChatId) return;
+    try {
+      await fetch(`https://api.telegram.org/bot${state.tgToken}/sendMessage`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: state.tgChatId, text, parse_mode:'HTML' })
+      });
+    } catch(e){ /* sessizce geç — telegram olmadan da bot çalışmaya devam etsin */ }
+  }
+
+  // ── Bot Günlüğü — canlı olay akışı ──
+  function pushLog(type, text){
+    state.botLog.unshift({ t: Date.now(), type, text });
+    if (state.botLog.length > 200) state.botLog.length = 200;
+  }
+
+  // ── Pozisyon kapatma — hem derin taramadan hem hızlı nabızdan çağrılır ──
+  function closePosition(symbol, price, reason){
+    const cs = state.coins[symbol];
+    const pos = cs.position;
+    if (!pos) return;
+    const now = Date.now();
+    const pnlPct = (price - pos.entry)/pos.entry;
+    let pnlUsd = pos.size * pos.leverage * pnlPct;
+    if (pnlUsd <= -pos.size){ pnlUsd = -pos.size; reason = 'LİKİDASYON'; }
+    cs.balance += pnlUsd;
+    cs.trades.unshift({ t: now, symbol, entry: pos.entry, exit: price, pnl: pnlUsd, reason, leverage: pos.leverage, entryScore: pos.entryScore, entryAdx: pos.entryAdx });
+    cs.position = null;
+    cs.equity.push({ t: now, v: cs.balance });
+
+    pushLog(pnlUsd>=0?'win':'loss', `${NAMES[symbol]} kapandı (${reason} · ${pos.leverage}x) — Giriş ${fmtPrice(pos.entry)} → Çıkış ${fmtPrice(price)} · ${pnlUsd>=0?'+':''}${fmt(pnlUsd)} (giriş skoru: +${pos.entryScore}/12)`);
+    sendTelegram(`${pnlUsd>=0?'✅':'🔴'} <b>${NAMES[symbol]} kapandı</b> (${reason} · ${pos.leverage}x)\nGiriş: ${fmtPrice(pos.entry)} → Çıkış: ${fmtPrice(price)}\nK/Z: ${pnlUsd>=0?'+':''}${fmt(pnlUsd)}`);
+
+    if (pnlUsd < 0){
+      cs.consecutiveLosses = (cs.consecutiveLosses||0)+1;
+      cs.cooldownUntil = now + 60000;
+      pushLog('protect', `${NAMES[symbol]} — kayıp sonrası 1 dk soğumaya girdi`);
+      if (cs.consecutiveLosses >= 3){
+        cs.breakerUntil = now + 30*60000; cs.consecutiveLosses = 0;
+        pushLog('protect', `${NAMES[symbol]} — 3 art arda kayıp, 30 dk devre kesici devrede`);
+      }
+    } else { cs.consecutiveLosses = 0; }
+  }
+
+  // ── Derin tarama: 12 saniyede bir, tüm göstergeleri yeniden hesaplar, giriş kararları burada verilir ──
+  async function cycleCoin(symbol){
+    const cs = state.coins[symbol];
+    let candles;
+    try { candles = await fetchCandles(symbol); } catch(e){ return; }
+    const closes = candles.map(c=>c.c);
+    const price = closes[closes.length-1];
+    cs.lastPrice = price;
+
+    const emaFast=ema(closes,9), emaSlow=ema(closes,21), ema50=ema(closes,50);
+    const rsiVal=rsi(closes,14);
+    const atrVal=atr(candles,14);
+    const atrPct = atrVal/price;
+    const macdHist=macd(closes).hist;
+    const bb=bollinger(closes,20,2);
+    const adxVal=adx(candles,14);
+    const volRatio=volumeRatio(candles,20);
+    const cciVal=cci(candles,20);
+    const obv=obvTrend(candles,20);
+    const vwapVal = vwap(candles,20);
+    const divVal = macdDivergence(closes, macdHist, 20);
+    const stVal = superTrendSignal(candles,10,3);
+    const mfiVal = mfi(candles,14);
+
+    const todayKey = new Date().toISOString().slice(0,10);
+    if (cs.dayKey !== todayKey){ cs.dayKey=todayKey; cs.dayStartBalance=cs.balance; cs.dailyLocked=false; }
+
+    const votes = {
+      emaCross:   emaFast[emaFast.length-1] > emaSlow[emaSlow.length-1] ? 1 : -1,
+      ema50Slope: ema50[ema50.length-1] > ema50[ema50.length-6] ? 1 : -1,
+      rsi:        rsiVal > 75 ? -1 : (rsiVal > 45 && rsiVal < 68 ? 1 : 0),
+      macd:       macdHist[macdHist.length-1] > 0 && macdHist[macdHist.length-1] > macdHist[macdHist.length-2] ? 1 : (macdHist[macdHist.length-1] < 0 ? -1 : 0),
+      bollinger:  price > bb.mid && bb.width > 0.004 ? 1 : (price < bb.lower ? -1 : 0),
+      volume:     volRatio >= 1.1 ? 1 : (volRatio < 0.7 ? -1 : 0),
+      cci:        cciVal > 100 ? 1 : (cciVal < -100 ? -1 : 0),
+      obv:        obv,
+      vwap:       price > vwapVal*1.0008 ? 1 : (price < vwapVal*0.9992 ? -1 : 0),
+      macdDiv:    divVal,
+      superTrend: stVal,
+      mfi:        mfiVal > 80 ? -1 : (mfiVal > 50 && mfiVal < 80 ? 1 : 0)
+    };
+    const score = Object.values(votes).reduce((a,b)=>a+b,0);
+    cs.lastScore = score; cs.lastVotes = votes; cs.lastAdx = adxVal;
+
+    const now = Date.now();
+    const inCooldown = cs.cooldownUntil && now < cs.cooldownUntil;
+    const inBreaker = cs.breakerUntil && now < cs.breakerUntil;
+    const dailyBlocked = cs.dailyLocked || ((cs.balance - cs.dayStartBalance)/cs.dayStartBalance <= -0.05);
+    if (dailyBlocked) cs.dailyLocked = true;
+
+    if (cs.position){
+      const pos = cs.position;
+      if (price <= pos.stop) closePosition(symbol, price, 'STOP');
+      else if (price >= pos.target) closePosition(symbol, price, 'HEDEF');
+      else if (score <= EXIT_SCORE) closePosition(symbol, price, 'SİNYAL');
+    } else if (!inCooldown && !inBreaker && !dailyBlocked) {
+      if (score >= ENTRY_SCORE && adxVal >= 20 && atrVal > 0){
+        const size = cs.balance * RISK_PCT;
+        const lev = calcLeverage(score, adxVal, atrPct);
+        const activeVotes = Object.entries(votes).filter(([,v])=>v>0).map(([k])=>labels[k]).join(', ');
+        cs.position = { symbol, entry: price, stop: price-atrVal*ATR_SL_MULT, target: price+atrVal*ATR_TP_MULT, size, leverage: lev, openedAt: now, entryScore: score, entryAdx: adxVal };
+        pushLog('open', `${NAMES[symbol]} işlem açıldı · ${lev}x — Giriş ${fmtPrice(price)} · Skor +${score}/12 (ADX ${adxVal.toFixed(0)}) — Uyumlu: ${activeVotes}`);
+        sendTelegram(`🟢 <b>${NAMES[symbol]} işlem açıldı · ${lev}x</b>\nGiriş: ${fmtPrice(price)}\nStop: ${fmtPrice(cs.position.stop)} · Hedef: ${fmtPrice(cs.position.target)}\nSkor: +${score}/12 · ADX: ${adxVal.toFixed(0)}\nMarjin: ${fmt(size)} → Efektif: ${fmt(size*lev)}`);
+      } else if (score >= ENTRY_SCORE - 2) {
+        // Eşiğe yakın ama girmedi — bunu da göster ki "bot hiçbir şey yapmıyor" hissi olmasın
+        pushLog('scan', `${NAMES[symbol]} tarandı · Skor ${score>=0?'+':''}${score}/12 (ADX ${adxVal.toFixed(0)}) — eşiğe yakın ama girmedi`);
+      }
+    }
+  }
+
+  // ── Hızlı nabız: 3 saniyede bir, sadece anlık fiyat — açık pozisyonların stop/hedefini neredeyse anlık yakalar ──
+  async function fastTick(){
+    const results = await Promise.all(SYMBOLS.map(async sym => {
+      try { return [sym, await fetchPrice(sym)]; } catch(e){ return [sym, null]; }
+    }));
+    let changed = false;
+    results.forEach(([sym, price]) => {
+      if (price == null) return;
+      const cs = state.coins[sym];
+      cs.lastPrice = price;
+      if (cs.position){
+        const pos = cs.position;
+        if (price <= pos.stop){ closePosition(sym, price, 'STOP'); changed = true; }
+        else if (price >= pos.target){ closePosition(sym, price, 'HEDEF'); changed = true; }
+      }
+    });
+    render();
+    if (changed) saveState();
+  }
+
+  async function runAllCoins(){
+    document.getElementById('cycleInfo').textContent = 'Derin tarama: hesaplanıyor…';
+    for (const sym of SYMBOLS){
+      await cycleCoin(sym);
+      await new Promise(r => setTimeout(r, 250)); // Binance'e nazik olalım
+    }
+    saveState();
+    render();
+    document.getElementById('cycleInfo').textContent = 'Derin tarama: ' + new Date().toLocaleTimeString('tr-TR') + ' · Nabız: 3sn';
+  }
+
+  // ── Arayüz ──
+  function buildCoinCards(){
+    const grid = document.getElementById('coinGrid');
+    grid.innerHTML = SYMBOLS.map(sym => `
+      <div class="coin-card" id="card-${sym}">
+        <div class="coin-head">
+          <span class="coin-name">${NAMES[sym]}/USDT</span>
+          <span class="coin-price" id="price-${sym}">—</span>
+          <span class="coin-badge" id="badge-${sym}">BEKLİYOR</span>
+        </div>
+        <div class="coin-bal zero" id="bal-${sym}">$${START_BAL.toFixed(2)}</div>
+        <div class="coin-pnl-sub" id="pnlsub-${sym}">K/Z: $0.00 (%0.00)</div>
+        <div class="vote-row" id="votes-${sym}"></div>
+        <div class="score-line" id="score-${sym}">Skor: —</div>
+        <div class="prot-row" id="prot-${sym}"></div>
+        <div class="pos-mini" id="posmini-${sym}" style="display:none;">
+          <div><span>GİRİŞ</span><b id="pe-${sym}">—</b></div>
+          <div><span>STOP</span><b id="ps-${sym}">—</b></div>
+          <div><span>HEDEF</span><b id="pt-${sym}">—</b></div>
+          <div><span>KALDIRAÇ</span><b id="pl-${sym}">—</b></div>
+          <div><span>ANLIK</span><b id="pp-${sym}">—</b></div>
+        </div>
+      </div>`).join('');
+  }
+
+  const labels = { emaCross:'EMA9/21', ema50Slope:'EMA50', rsi:'RSI', macd:'MACD', bollinger:'BOLL', volume:'HACİM', cci:'CCI', obv:'OBV', vwap:'VWAP', macdDiv:'MACD-UY', superTrend:'S.TREND', mfi:'MFI' };
+
+  function render(){
+    let totalBal=0, totalStart=0, totalTrades=0, totalWins=0, openCount=0;
+    SYMBOLS.forEach(sym => {
+      const cs = state.coins[sym];
+      totalBal += cs.balance; totalStart += cs.startBalance;
+      totalTrades += cs.trades.length; totalWins += cs.trades.filter(t=>t.pnl>0).length;
+      if (cs.position) openCount++;
+
+      document.getElementById('price-'+sym).textContent = cs.lastPrice ? '$'+fmtPrice(cs.lastPrice) : '—';
+      const pnl = cs.balance - cs.startBalance;
+      const balEl = document.getElementById('bal-'+sym);
+      balEl.textContent = fmt(cs.balance);
+      balEl.className = 'coin-bal ' + (pnl>0?'pos':pnl<0?'neg':'zero');
+      document.getElementById('pnlsub-'+sym).textContent = `K/Z: ${pnl>=0?'+':''}${fmt(pnl)} (${((pnl/cs.startBalance)*100).toFixed(2)}%)`;
+
+      const badge = document.getElementById('badge-'+sym);
+      if (cs.position){ badge.textContent = `POZİSYON AÇIK · ${cs.position.leverage}X`; badge.classList.add('pos-open'); }
+      else { badge.textContent = state.running ? 'İZLENİYOR' : 'BEKLİYOR'; badge.classList.remove('pos-open'); }
+
+      const voteRow = document.getElementById('votes-'+sym);
+      if (cs.lastVotes){
+        voteRow.innerHTML = Object.entries(cs.lastVotes).map(([k,v]) => `<span class="vote-chip ${v>0?'up':v<0?'down':''}">${labels[k]}</span>`).join('');
+        document.getElementById('score-'+sym).textContent = `Skor: ${cs.lastScore>=0?'+':''}${cs.lastScore}/12 · ADX ${cs.lastAdx?cs.lastAdx.toFixed(0):'—'} (giriş için ≥${ENTRY_SCORE}/12 + ADX≥20)`;
+      } else {
+        voteRow.innerHTML = ''; document.getElementById('score-'+sym).textContent = 'Skor: — (veri bekleniyor)';
+      }
+
+      const now = Date.now();
+      const prot = [
+        { label: cs.cooldownUntil && now<cs.cooldownUntil ? `Soğuma ~${Math.ceil((cs.cooldownUntil-now)/1000)}sn` : 'Soğuma', active: cs.cooldownUntil && now<cs.cooldownUntil },
+        { label: cs.breakerUntil && now<cs.breakerUntil ? `Devre Kesici ~${Math.ceil((cs.breakerUntil-now)/60000)}dk` : 'Devre Kesici', active: cs.breakerUntil && now<cs.breakerUntil },
+        { label:'Günlük Limit', active: cs.dailyLocked }
+      ];
+      document.getElementById('prot-'+sym).innerHTML = prot.map(p => `<span class="prot-chip ${p.active?'active':''}">${p.active?'🔒':'🛡'} ${p.label}</span>`).join('');
+
+      const posMini = document.getElementById('posmini-'+sym);
+      if (cs.position){
+        posMini.style.display = 'grid';
+        document.getElementById('pe-'+sym).textContent = fmtPrice(cs.position.entry);
+        document.getElementById('ps-'+sym).textContent = fmtPrice(cs.position.stop);
+        document.getElementById('pt-'+sym).textContent = fmtPrice(cs.position.target);
+        document.getElementById('pl-'+sym).textContent = cs.position.leverage + 'x';
+        if (cs.lastPrice){
+          const upnl = cs.position.size * ((cs.lastPrice-cs.position.entry)/cs.position.entry);
+          const el = document.getElementById('pp-'+sym);
+          el.textContent = (upnl>=0?'+':'')+fmt(upnl);
+          el.style.color = upnl>=0 ? 'var(--green)' : 'var(--red)';
+        }
+      } else { posMini.style.display = 'none'; }
+    });
+
+    const totalPnl = totalBal - totalStart;
+    const totalEl = document.getElementById('totalBal');
+    totalEl.textContent = fmt(totalBal);
+    totalEl.className = 'totals-num ' + (totalPnl>0?'pos':totalPnl<0?'neg':'zero');
+    document.getElementById('totalSub').textContent = `Toplam K/Z: ${totalPnl>=0?'+':''}${fmt(totalPnl)} (${((totalPnl/totalStart)*100).toFixed(2)}%)`;
+    document.getElementById('statTrades').textContent = totalTrades;
+    document.getElementById('statWin').textContent = totalTrades ? Math.round(totalWins/totalTrades*100)+'%' : '—';
+    document.getElementById('statOpen').textContent = openCount;
+    document.getElementById('statLast').textContent = new Date().toLocaleTimeString('tr-TR');
+
+    // İşlem günlüğü — tüm coinler birleşik, en yeni üstte
+    const allTrades = [];
+    SYMBOLS.forEach(sym => state.coins[sym].trades.forEach(t => allTrades.push(t)));
+    allTrades.sort((a,b) => b.t - a.t);
+    const body = document.getElementById('logBody'), empty = document.getElementById('emptyLog');
+    if (allTrades.length){
+      empty.style.display='none';
+      body.innerHTML = allTrades.slice(0,50).map(t => `<tr><td>${fmtTime(t.t)}</td><td>${NAMES[t.symbol]}</td><td>${t.entryScore!=null?('+'+t.entryScore+'/12 · ADX'+Math.round(t.entryAdx||0)):'—'}</td><td>${t.leverage||1}x</td><td>${t.reason}</td><td>${fmtPrice(t.entry)}</td><td>${fmtPrice(t.exit)}</td><td class="${t.pnl>=0?'win':'loss'}">${t.pnl>=0?'+':''}${fmt(t.pnl)}</td></tr>`).join('');
+    } else { empty.style.display='block'; body.innerHTML=''; }
+
+    // ── Bot Günlüğü ──
+    const actBody = document.getElementById('activityBody');
+    if (state.botLog && state.botLog.length){
+      actBody.innerHTML = state.botLog.slice(0,80).map(l => `
+        <div class="act-row ${l.type}">
+          <span class="act-time">${fmtTime(l.t)}</span>
+          <span class="act-dot"></span>
+          <span class="act-text">${l.text}</span>
+        </div>`).join('');
+    } else {
+      actBody.innerHTML = '<div class="empty-log">Henüz kayıt yok — bot çalışmaya başlayınca burada her tarama ve karar görünecek</div>';
+    }
+
+    updateControlsUI();
+  }
+
+  function updateControlsUI(){
+    const chip = document.getElementById('statusChip');
+    chip.textContent = state.running ? 'ÇALIŞIYOR' : 'DURDU';
+    chip.classList.toggle('on', state.running);
+    document.getElementById('btnStart').disabled = state.running;
+    document.getElementById('btnStop').disabled = !state.running;
+  }
+
+  let scanTimer = null, tickTimer = null;
+  function start(){
+    if (state.running) return;
+    state.running = true; saveState(); updateControlsUI();
+    runAllCoins();
+    scanTimer = setInterval(runAllCoins, SCAN_MS);
+    tickTimer = setInterval(fastTick, TICK_MS);
+  }
+  function stop(){
+    state.running = false; saveState(); updateControlsUI();
+    if (scanTimer) clearInterval(scanTimer); scanTimer = null;
+    if (tickTimer) clearInterval(tickTimer); tickTimer = null;
+  }
+  function reset(){
+    if (!confirm('Tüm coinlerin sanal bakiyesi ve işlem geçmişi silinsin mi? Geri alınamaz.')) return;
+    stop();
+    const tg = { tgToken: state.tgToken, tgChatId: state.tgChatId };
+    state = Object.assign(defaultState(), tg);
+    saveState(); render();
+  }
+
+  document.getElementById('btnStart').addEventListener('click', start);
+  document.getElementById('btnStop').addEventListener('click', stop);
+  document.getElementById('btnReset').addEventListener('click', reset);
+  document.getElementById('actClear').addEventListener('click', () => {
+    if (!confirm('Bot günlüğü temizlensin mi? (İşlem geçmişini etkilemez)')) return;
+    state.botLog = []; saveState(); render();
+  });
+
+  // ── Telegram ayarları ──
+  document.getElementById('btnTgSave').addEventListener('click', () => {
+    state.tgToken = document.getElementById('tgToken').value.trim();
+    state.tgChatId = document.getElementById('tgChatId').value.trim();
+    saveState();
+    document.getElementById('backupStatus').textContent = '';
+    alert('Telegram bilgileri kaydedildi.');
+  });
+  document.getElementById('btnTgTest').addEventListener('click', async () => {
+    state.tgToken = document.getElementById('tgToken').value.trim();
+    state.tgChatId = document.getElementById('tgChatId').value.trim();
+    saveState();
+    if (!state.tgToken || !state.tgChatId){ alert('Önce Bot Token ve Chat ID gir.'); return; }
+    await sendTelegram('🔔 OTO-SİM v4.1 test mesajı — bağlantı çalışıyor!');
+    alert('Test mesajı gönderildi (Telegram uygulamanı kontrol et). Gelmezse token/chat ID hatalı olabilir.');
+  });
+
+  // ── Yedekleme ──
+  document.getElementById('btnExportJson').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `oto-sim-yedek-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+  });
+  document.getElementById('btnExportCsv').addEventListener('click', () => {
+    const rows = [['Saat','Coin','Giriş Skoru','Giriş ADX','Kaldıraç','Sebep','Giriş','Çıkış','K/Z']];
+    SYMBOLS.forEach(sym => state.coins[sym].trades.forEach(t => rows.push([new Date(t.t).toLocaleString('tr-TR'), NAMES[sym], t.entryScore!=null?('+'+t.entryScore+'/12'):'', t.entryAdx!=null?Math.round(t.entryAdx):'', (t.leverage||1)+'x', t.reason, t.entry, t.exit, t.pnl.toFixed(2)])));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type:'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `oto-sim-islemler-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  });
+  document.getElementById('btnImportJson').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', function(){
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        stop();
+        state = Object.assign(defaultState(), parsed);
+        saveState(); render();
+        document.getElementById('tgToken').value = state.tgToken || '';
+        document.getElementById('tgChatId').value = state.tgChatId || '';
+        document.getElementById('backupStatus').textContent = '✅ Yedek geri yüklendi.';
+      } catch(err){ document.getElementById('backupStatus').textContent = '❌ Geçersiz dosya.'; }
+    };
+    reader.readAsText(file);
+  });
+
+  window.addEventListener('visibilitychange', () => {
+    if (document.hidden){
+      if (scanTimer){ clearInterval(scanTimer); scanTimer=null; }
+      if (tickTimer){ clearInterval(tickTimer); tickTimer=null; }
+    } else if (!document.hidden && state.running && !scanTimer){
+      runAllCoins(); scanTimer = setInterval(runAllCoins, SCAN_MS);
+      tickTimer = setInterval(fastTick, TICK_MS);
+    }
+  });
+
+  // ── Açılış ──
+  buildCoinCards();
+  updateControlsUI();
+  render();
+  if (state.running){ runAllCoins(); scanTimer = setInterval(runAllCoins, SCAN_MS); tickTimer = setInterval(fastTick, TICK_MS); }
+})();
+</script>
+</body>
+</html>
