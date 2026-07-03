@@ -1,2 +1,3 @@
 oto-sim klasörü
 .
+.
