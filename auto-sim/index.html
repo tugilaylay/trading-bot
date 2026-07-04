@@ -1029,6 +1029,25 @@
     .hero-pnl-number { font-size: clamp(36px, 11vw, 54px) !important; }
   }
 
+/* ═══ v41.1: Hızlı Erişim Çubuğu — yapışkan, sekmeler gelene kadar 5 dk kaydırma sorununu çözer ═══ */
+.qt-quicknav {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 8px 8px; margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  scrollbar-width: none;
+}
+.qt-quicknav::-webkit-scrollbar { display: none; }
+.qt-quicknav button {
+  flex: 0 0 auto; font-family: var(--mono); font-weight: 700; font-size: 11.5px;
+  padding: 8px 13px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--muted); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.qt-quicknav button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.qt-quicknav button:active { transform: scale(0.95); }
+
 </style>
 </head>
 <body>
@@ -1067,6 +1086,16 @@
     </div>
   </div>
 
+  <!-- ══════════ v41.1: HIZLI ERİŞİM ÇUBUĞU — yapışkan, sekmeler gelene kadar geçici çözüm ══════════ -->
+  <div class="qt-quicknav" id="qtQuickNav">
+    <button data-target="secDashboard" class="active">📊 Özet</button>
+    <button data-target="secCoins">🪙 Coinler</button>
+    <button data-target="secRisk">🛡️ Risk</button>
+    <button data-target="secAnalytics">🔬 Analiz</button>
+    <button data-target="secSettings">⚙️ Ayarlar</button>
+    <button data-target="secLog">📋 Log</button>
+  </div>
+
   <!-- ══════════ EXECUTION CYCLE ══════════ -->
   <div class="qt-exec-wrap">
     <div class="qt-exec-head">
@@ -1101,7 +1130,7 @@
   </div>
 
   <!-- Hero P&L — büyük glowing sayı -->
-  <div class="hero-pnl-wrap">
+  <div class="hero-pnl-wrap" id="secDashboard">
     <div class="hero-label">TOPLAM K/Z</div>
     <div class="hero-pnl-number neutral" id="globalPnl">+0.00 $</div>
     <div class="hero-badges">
@@ -1338,6 +1367,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 
   <!-- 🪙 Coin Panelleri — sayfanın en üstünde, botu açar açmaz aktif coinler görünsün -->
+  <span id="secCoins" style="display:block;position:relative;top:-8px;"></span>
   <div class="coin-grid" id="coinGrid"></div>
 
 
@@ -1450,6 +1480,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
   <!-- 2️⃣ Ayarlar -->
+  <span id="secSettings" style="display:block;position:relative;top:-8px;"></span>
   <div class="setup-card">
     <div class="card-title"><span class="step-badge">2</span><span>⚙️ Genel Bot Ayarları (Tüm Coinler İçin)</span></div>
     <div class="form-grid">
@@ -1548,7 +1579,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 
   <!-- 3️⃣ Göstergeler & Risk Yönetimi (açılır/kapanır) -->
-  <details class="setup-card acc-card" open data-accid="indicators">
+  <details class="setup-card acc-card" data-accid="indicators">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
         <span class="step-badge">3</span>
@@ -1611,6 +1642,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
   <!-- 4️⃣ Risk Yönetimi (ayrı kart) -->
+  <span id="secRisk" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" data-accid="riskmgmt">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -2118,6 +2150,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
 
+  <span id="secAnalytics" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" id="backtestCompareDetails" data-accid="backtest">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -2284,6 +2317,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 
   <!-- Log -->
+  <span id="secLog" style="display:block;position:relative;top:-8px;"></span>
   <div class="log-card">
     <div class="log-header">
       <div class="card-title" style="margin:0">📋 Bot Günlüğü (Tüm Coinler)</div>
@@ -4715,6 +4749,40 @@ function checkAutoWeeklyReport() {
   if (localStorage.getItem(SK_WEEKLY_SENT) === key) return;
   sendWeeklyReport(false);
   log('🗓️ Otomatik haftalık rapor Telegram\'a gönderildi.', 'system');
+}
+
+// ───────── v41.1: Hızlı Erişim Çubuğu ─────────
+// Sekmeler gelene kadar geçici çözüm: butona tıklayınca ilgili bölüme kaydırır,
+// scroll-spy ise hangi bölümdeysen o butonu otomatik aktif eder.
+function initQuickNav() {
+  const nav = document.getElementById('qtQuickNav');
+  if (!nav) return;
+  const buttons = Array.from(nav.querySelectorAll('button'));
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const navHeight = nav.getBoundingClientRect().height + 12;
+      const top = target.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+
+  const sections = buttons.map(b => document.getElementById(b.dataset.target)).filter(Boolean);
+  let ticking = false;
+  function updateActive() {
+    ticking = false;
+    const navHeight = nav.getBoundingClientRect().height + 20;
+    let currentIdx = 0;
+    sections.forEach((sec, i) => {
+      if (sec.getBoundingClientRect().top - navHeight <= 0) currentIdx = i;
+    });
+    buttons.forEach((b, i) => b.classList.toggle('active', i === currentIdx));
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateActive); ticking = true; }
+  }, { passive: true });
+  updateActive();
 }
 
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
@@ -7628,6 +7696,7 @@ window.addEventListener('load', () => {
   checkAutoWeeklyReport();
   setInterval(checkAutoWeeklyReport, 30 * 60 * 1000); // 30 dk'da bir kontrol — Pazar 20:00+ yakalanır
   setInterval(renderBotHealth, 60 * 1000);            // Bot Sağlığı kartı dakikada bir tazelenir
+  initQuickNav(); // v41.1: hızlı erişim çubuğu — buton tıklaması ve scroll-spy
   document.getElementById('minConfirmPct').addEventListener('change', updateIndicatorCountNote);
   if (globalTradeHistory.length > 0) {
     log(`📂 ${globalTradeHistory.length} işlem yüklendi | Toplam K/Z: ${globalTotalPnl>=0?'+':''}${globalTotalPnl.toFixed(2)} $`, 'system');
