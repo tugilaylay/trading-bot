@@ -1029,24 +1029,43 @@
     .hero-pnl-number { font-size: clamp(36px, 11vw, 54px) !important; }
   }
 
-/* ═══ v41.1: Hızlı Erişim Çubuğu — yapışkan, sekmeler gelene kadar 5 dk kaydırma sorununu çözer ═══ */
-.qt-quicknav {
-  position: sticky; top: 0; z-index: 40;
-  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 8px 8px; margin-bottom: 14px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-  scrollbar-width: none;
+/* ═══ v41.2: Alt Sekme Çubuğu — gerçek native app navigasyonu ═══ */
+body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important; }
+
+.qt-tab-panel { display: none; }
+.qt-tab-panel.active { display: block; animation: qtTabFade 0.2s ease; }
+@keyframes qtTabFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.qt-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  display: flex; justify-content: space-between;
+  background: var(--surface); border-top: 1px solid var(--text);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
 }
-.qt-quicknav::-webkit-scrollbar { display: none; }
-.qt-quicknav button {
-  flex: 0 0 auto; font-family: var(--mono); font-weight: 700; font-size: 11.5px;
-  padding: 8px 13px; border-radius: 9px; border: 1px solid var(--border);
-  background: var(--surface2); color: var(--muted); cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
+.qt-tab-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: none; cursor: pointer; padding: 6px 2px;
+  color: var(--muted); font-family: var(--font);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+  transition: color 0.15s, transform 0.1s;
 }
-.qt-quicknav button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.qt-quicknav button:active { transform: scale(0.95); }
+.qt-tab-btn .qt-tab-icon { font-size: 18px; line-height: 1; }
+.qt-tab-btn.active { color: var(--text); }
+.qt-tab-btn.active .qt-tab-icon { transform: translateY(-1px); }
+.qt-tab-btn.active::before {
+  content: ''; position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 2px; background: var(--accent);
+}
+.qt-tab-btn { position: relative; }
+.qt-tab-btn:active { transform: scale(0.94); }
+.qt-tab-badge {
+  position: absolute; top: 2px; right: 18%; min-width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); border: 1.5px solid var(--surface);
+}
+@media (min-width: 900px) {
+  .qt-tabbar { max-width: 1180px; left: 50%; transform: translateX(-50%); border-radius: 14px 14px 0 0; border-left: 1px solid var(--text); border-right: 1px solid var(--text); }
+}
 
 </style>
 </head>
@@ -1084,16 +1103,6 @@
       <span id="wakeLockBadge" class="qt-mast-stat" style="color:var(--muted);" title="Ekran kilidi">🔓 SERBEST</span>
       <button class="qt-theme-toggle" id="qtThemeToggle" title="Kâğıt / Gece görünümü" type="button">☾ GECE MODU</button>
     </div>
-  </div>
-
-  <!-- ══════════ v41.1: HIZLI ERİŞİM ÇUBUĞU — yapışkan, sekmeler gelene kadar geçici çözüm ══════════ -->
-  <div class="qt-quicknav" id="qtQuickNav">
-    <button data-target="secDashboard" class="active">📊 Özet</button>
-    <button data-target="secCoins">🪙 Coinler</button>
-    <button data-target="secRisk">🛡️ Risk</button>
-    <button data-target="secAnalytics">🔬 Analiz</button>
-    <button data-target="secSettings">⚙️ Ayarlar</button>
-    <button data-target="secLog">📋 Log</button>
   </div>
 
   <!-- ══════════ EXECUTION CYCLE ══════════ -->
@@ -1153,7 +1162,10 @@
     </div>
     <button onclick="dismissCircuitBreaker()" style="background:rgba(196,58,47,0.15); color:var(--red); border:1px solid rgba(196,58,47,0.4);
         border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font);">✕ Kapat</button>
-  </div>
+<button id="v40PanicBtn" onclick="v40PanicPress()" title="ACİL DURDUR — tüm pozisyonları kapatır, otopilotu kilitler">🛑<br>ACİL<br>DURDUR</button>
+
+  <!-- ═══ v41.2 SEKME PANELİ: ÖZET ═══ -->
+  <div class="qt-tab-panel active" data-tab="ozet" id="tabPanel-ozet">
 
   <!-- 📟 v38.0: Sistem Durumu Şeridi — tek bakışta tüm yapılandırma -->
   <div class="system-strip" id="systemStrip">
@@ -1289,7 +1301,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 @keyframes v40fadein { from { opacity:0; transform: translateY(-4px);} to { opacity:1; transform:none;} }
 
 /* ── EL FRENİ ── */
-#v40PanicBtn { position: fixed; right: 16px; bottom: 18px; z-index: 9999; width: 74px; height: 74px; border-radius: 50%; border: 3px solid #fff; background: radial-gradient(circle at 35% 30%, #e2685c, #8f1d13); color:#fff; font-family: var(--display); font-weight:800; font-size:11px; line-height:1.2; cursor:pointer; box-shadow: 0 6px 24px rgba(169,50,38,0.55), 0 0 0 0 rgba(226,104,92,0.6); animation: v40panicRing 2.4s ease-out infinite; }
+#v40PanicBtn { position: fixed; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); z-index: 9999; width: 74px; height: 74px; border-radius: 50%; border: 3px solid #fff; background: radial-gradient(circle at 35% 30%, #e2685c, #8f1d13); color:#fff; font-family: var(--display); font-weight:800; font-size:11px; line-height:1.2; cursor:pointer; box-shadow: 0 6px 24px rgba(169,50,38,0.55), 0 0 0 0 rgba(226,104,92,0.6); animation: v40panicRing 2.4s ease-out infinite; }
 @keyframes v40panicRing { 0%{ box-shadow: 0 6px 24px rgba(169,50,38,0.55), 0 0 0 0 rgba(226,104,92,0.55);} 70%{ box-shadow: 0 6px 24px rgba(169,50,38,0.55), 0 0 0 16px rgba(226,104,92,0);} 100%{ box-shadow: 0 6px 24px rgba(169,50,38,0.55), 0 0 0 0 rgba(226,104,92,0);} }
 #v40PanicBtn:active { transform: scale(0.93); }
 #v40PanicBtn.locked { background: radial-gradient(circle at 35% 30%, #6b6650, #3a3628); animation:none; font-size:10px; }
@@ -1351,8 +1363,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 </div>
 
-<button id="v40PanicBtn" onclick="v40PanicPress()" title="ACİL DURDUR — tüm pozisyonları kapatır, otopilotu kilitler">🛑<br>ACİL<br>DURDUR</button>
+  </div>
+  <!-- ═══ /ÖZET ═══ -->
 
+  <!-- ═══ v41.2 SEKME PANELİ: COİNLER ═══ -->
+  <div class="qt-tab-panel" data-tab="coins" id="tabPanel-coins">
 
   <!-- ▶ Başlat / Durdur — coin panellerinin hemen üstünde, her zaman ulaşılabilir -->
   <div class="setup-card" style="padding:14px 18px;">
@@ -1480,6 +1495,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
   <!-- 2️⃣ Ayarlar -->
+  </div>
+  <!-- ═══ /COİNLER ═══ -->
+
+  <!-- ═══ v41.2 SEKME PANELİ: AYARLAR ═══ -->
+  <div class="qt-tab-panel" data-tab="settings" id="tabPanel-settings">
   <span id="secSettings" style="display:block;position:relative;top:-8px;"></span>
   <div class="setup-card">
     <div class="card-title"><span class="step-badge">2</span><span>⚙️ Genel Bot Ayarları (Tüm Coinler İçin)</span></div>
@@ -1642,6 +1662,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
   <!-- 4️⃣ Risk Yönetimi (ayrı kart) -->
+  </div>
+  <!-- ═══ /AYARLAR ═══ -->
+
+  <!-- ═══ v41.2 SEKME PANELİ: RİSK ═══ -->
+  <div class="qt-tab-panel" data-tab="risk" id="tabPanel-risk">
   <span id="secRisk" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" data-accid="riskmgmt">
     <summary>
@@ -2150,6 +2175,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </details>
 
 
+  </div>
+  <!-- ═══ /RİSK ═══ -->
+
+  <!-- ═══ v41.2 SEKME PANELİ: ANALİZ ═══ -->
+  <div class="qt-tab-panel" data-tab="analytics" id="tabPanel-analytics">
   <span id="secAnalytics" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" id="backtestCompareDetails" data-accid="backtest">
     <summary>
@@ -2317,6 +2347,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 
   <!-- Log -->
+  </div>
+  <!-- ═══ /ANALİZ ═══ -->
+
+  <!-- ═══ v41.2 SEKME PANELİ: LOG ═══ -->
+  <div class="qt-tab-panel" data-tab="log" id="tabPanel-log">
   <span id="secLog" style="display:block;position:relative;top:-8px;"></span>
   <div class="log-card">
     <div class="log-header">
@@ -2364,6 +2399,19 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     </div>
   </details>
 
+  </div>
+  <!-- ═══ /LOG ═══ -->
+
+</div>
+
+<!-- ══════════ v41.2: ALT SEKME ÇUBUĞU — gerçek native app navigasyonu ══════════ -->
+<div class="qt-tabbar" id="qtTabbar">
+  <button class="qt-tab-btn active" data-tab="ozet"><span class="qt-tab-icon">📊</span>Özet</button>
+  <button class="qt-tab-btn" data-tab="coins"><span class="qt-tab-icon">🪙</span>Coinler</button>
+  <button class="qt-tab-btn" data-tab="risk"><span class="qt-tab-icon">🛡️</span>Risk</button>
+  <button class="qt-tab-btn" data-tab="analytics"><span class="qt-tab-icon">🔬</span>Analiz</button>
+  <button class="qt-tab-btn" data-tab="settings"><span class="qt-tab-icon">⚙️</span>Ayarlar</button>
+  <button class="qt-tab-btn" data-tab="log"><span class="qt-tab-icon">📋</span>Log</button>
 </div>
 
 <script>
@@ -4751,38 +4799,58 @@ function checkAutoWeeklyReport() {
   log('🗓️ Otomatik haftalık rapor Telegram\'a gönderildi.', 'system');
 }
 
-// ───────── v41.1: Hızlı Erişim Çubuğu ─────────
-// Sekmeler gelene kadar geçici çözüm: butona tıklayınca ilgili bölüme kaydırır,
-// scroll-spy ise hangi bölümdeysen o butonu otomatik aktif eder.
-function initQuickNav() {
-  const nav = document.getElementById('qtQuickNav');
-  if (!nav) return;
-  const buttons = Array.from(nav.querySelectorAll('button'));
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = document.getElementById(btn.dataset.target);
-      if (!target) return;
-      const navHeight = nav.getBoundingClientRect().height + 12;
-      const top = target.getBoundingClientRect().top + window.scrollY - navHeight;
-      window.scrollTo({ top, behavior: 'smooth' });
-    });
-  });
+// ───────── v41.2: Alt Sekme Çubuğu (Gerçek Native App Navigasyonu) ─────────
+const SK_ACTIVE_TAB = 'tugay_v41_activetab';
+const QT_TABS = ['ozet', 'coins', 'risk', 'analytics', 'settings', 'log'];
 
-  const sections = buttons.map(b => document.getElementById(b.dataset.target)).filter(Boolean);
-  let ticking = false;
-  function updateActive() {
-    ticking = false;
-    const navHeight = nav.getBoundingClientRect().height + 20;
-    let currentIdx = 0;
-    sections.forEach((sec, i) => {
-      if (sec.getBoundingClientRect().top - navHeight <= 0) currentIdx = i;
-    });
-    buttons.forEach((b, i) => b.classList.toggle('active', i === currentIdx));
-  }
-  window.addEventListener('scroll', () => {
-    if (!ticking) { requestAnimationFrame(updateActive); ticking = true; }
-  }, { passive: true });
-  updateActive();
+function switchTab(tabName) {
+  if (!QT_TABS.includes(tabName)) tabName = 'ozet';
+  document.querySelectorAll('.qt-tab-panel').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.qt-tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tabName);
+  });
+  try { localStorage.setItem(SK_ACTIVE_TAB, tabName); } catch(e) {}
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+
+  // Gizliyken clientWidth=0 olan canvas'lar sekme görünür olunca yeniden çizilmeli,
+  // yoksa bir sonraki veri tick'ine kadar (dakikalar sürebilir) boş/bozuk kalırlar.
+  requestAnimationFrame(() => {
+    if (tabName === 'ozet') {
+      drawMiniEquityChart();
+      drawGlobalEquityChart();
+    } else if (tabName === 'coins') {
+      redrawAllCoinCharts();
+    } else if (tabName === 'analytics') {
+      drawChart();
+    }
+  });
+}
+
+// Coin panelleri sekmesi tekrar görünür olduğunda her aktif coin'in kendi grafiğini tazeler.
+function redrawAllCoinCharts() {
+  Object.keys(activeCoins).forEach(coin => {
+    if (!activeCoins[coin]) return;
+    const st = coinStates[coin];
+    if (!st) return;
+    if (st.lastKlines && st.lastKlines.length > 4) {
+      drawCoinLiveChart(coin, st.lastKlines, st.lastTickPrice, st);
+    } else if (st.priceHistory && st.priceHistory.length > 1) {
+      drawCoinSparkline(coin, st.priceHistory);
+    }
+  });
+}
+
+function initTabbar() {
+  const bar = document.getElementById('qtTabbar');
+  if (!bar) return;
+  bar.querySelectorAll('.qt-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  let saved = 'ozet';
+  try { saved = localStorage.getItem(SK_ACTIVE_TAB) || 'ozet'; } catch(e) {}
+  switchTab(saved);
 }
 
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
@@ -7696,7 +7764,7 @@ window.addEventListener('load', () => {
   checkAutoWeeklyReport();
   setInterval(checkAutoWeeklyReport, 30 * 60 * 1000); // 30 dk'da bir kontrol — Pazar 20:00+ yakalanır
   setInterval(renderBotHealth, 60 * 1000);            // Bot Sağlığı kartı dakikada bir tazelenir
-  initQuickNav(); // v41.1: hızlı erişim çubuğu — buton tıklaması ve scroll-spy
+  initTabbar(); // v41.2: alt sekme çubuğu — gerçek native app navigasyonu
   document.getElementById('minConfirmPct').addEventListener('change', updateIndicatorCountNote);
   if (globalTradeHistory.length > 0) {
     log(`📂 ${globalTradeHistory.length} işlem yüklendi | Toplam K/Z: ${globalTotalPnl>=0?'+':''}${globalTotalPnl.toFixed(2)} $`, 'system');
