@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.0 QUANT+</title>
+<title>TUGAY × QUANT · v41.3 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1078,7 +1078,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.0 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.3 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2406,13 +2406,70 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
 <!-- ══════════ v41.2: ALT SEKME ÇUBUĞU — gerçek native app navigasyonu ══════════ -->
 <div class="qt-tabbar" id="qtTabbar">
-  <button class="qt-tab-btn active" data-tab="ozet"><span class="qt-tab-icon">📊</span>Özet</button>
-  <button class="qt-tab-btn" data-tab="coins"><span class="qt-tab-icon">🪙</span>Coinler</button>
-  <button class="qt-tab-btn" data-tab="risk"><span class="qt-tab-icon">🛡️</span>Risk</button>
-  <button class="qt-tab-btn" data-tab="analytics"><span class="qt-tab-icon">🔬</span>Analiz</button>
-  <button class="qt-tab-btn" data-tab="settings"><span class="qt-tab-icon">⚙️</span>Ayarlar</button>
-  <button class="qt-tab-btn" data-tab="log"><span class="qt-tab-icon">📋</span>Log</button>
+  <button class="qt-tab-btn active" data-tab="ozet" onclick="qtSwitchTab('ozet')"><span class="qt-tab-icon">📊</span>Özet</button>
+  <button class="qt-tab-btn" data-tab="coins" onclick="qtSwitchTab('coins')"><span class="qt-tab-icon">🪙</span>Coinler</button>
+  <button class="qt-tab-btn" data-tab="risk" onclick="qtSwitchTab('risk')"><span class="qt-tab-icon">🛡️</span>Risk</button>
+  <button class="qt-tab-btn" data-tab="analytics" onclick="qtSwitchTab('analytics')"><span class="qt-tab-icon">🔬</span>Analiz</button>
+  <button class="qt-tab-btn" data-tab="settings" onclick="qtSwitchTab('settings')"><span class="qt-tab-icon">⚙️</span>Ayarlar</button>
+  <button class="qt-tab-btn" data-tab="log" onclick="qtSwitchTab('log')"><span class="qt-tab-icon">📋</span>Log</button>
 </div>
+
+<script>
+// ═══ v41.3: BAĞIMSIZ SEKME MOTORU ═══
+// Bu blok KASITLI olarak ayrı bir <script> etiketinde ve ana bot kodundan önce duruyor.
+// Neden: her <script> bloğu tarayıcıda bağımsız derlenir/çalışır — ana bot kodunda
+// (aşağıdaki dev blokta) parse hatası, çalışma hatası, ne olursa olsun BU blok etkilenmez.
+// Butonlar da addEventListener'a değil, satır içi onclick'e bağlı: tıklama anında
+// window.qtSwitchTab'ı arar ve bulur. Yani sekmelerin çalışması için tek şart bu 30
+// satırın sağlam olması — başka hiçbir koda bağımlılığı yok.
+(function () {
+  'use strict';
+  var TABS = ['ozet', 'coins', 'risk', 'analytics', 'settings', 'log'];
+  var KEY = 'tugay_v41_activetab';
+
+  window.qtSwitchTab = function (tabName, skipScroll) {
+    if (TABS.indexOf(tabName) === -1) tabName = 'ozet';
+    var panels = document.querySelectorAll('.qt-tab-panel');
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].classList.toggle('active', panels[i].getAttribute('data-tab') === tabName);
+    }
+    var btns = document.querySelectorAll('.qt-tab-btn');
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].classList.toggle('active', btns[j].getAttribute('data-tab') === tabName);
+    }
+    try { localStorage.setItem(KEY, tabName); } catch (e) {}
+
+    if (!skipScroll) {
+      var panel = document.getElementById('tabPanel-' + tabName);
+      if (panel) {
+        var top = panel.getBoundingClientRect().top + window.scrollY - 10;
+        try { window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' }); }
+        catch (e) { window.scrollTo(0, Math.max(top, 0)); }
+      }
+    }
+
+    // Grafik tazeleme: ana kod yüklüyse çalışır, yüklü değilse sessizce atlanır.
+    // typeof kontrolü sayesinde ana kod çökmüş olsa bile sekme geçişi ASLA bozulmaz.
+    try {
+      if (tabName === 'ozet') {
+        if (typeof drawMiniEquityChart === 'function') drawMiniEquityChart();
+        if (typeof drawGlobalEquityChart === 'function') drawGlobalEquityChart();
+      } else if (tabName === 'coins') {
+        if (typeof redrawAllCoinCharts === 'function') redrawAllCoinCharts();
+      } else if (tabName === 'analytics') {
+        if (typeof drawChart === 'function') drawChart();
+      }
+    } catch (e) { /* grafik hatası sekmeyi etkilemesin */ }
+  };
+
+  // Kayıtlı sekmeyi geri yükle — bu script tabbar HTML'inden ve tüm panellerden SONRA
+  // geldiği için DOM elemanları şu anda hazır, herhangi bir load/DOMContentLoaded
+  // olayını beklemeye gerek yok.
+  var saved = 'ozet';
+  try { saved = localStorage.getItem(KEY) || 'ozet'; } catch (e) {}
+  window.qtSwitchTab(saved, true);
+})();
+</script>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -4799,47 +4856,10 @@ function checkAutoWeeklyReport() {
   log('🗓️ Otomatik haftalık rapor Telegram\'a gönderildi.', 'system');
 }
 
-// ───────── v41.2: Alt Sekme Çubuğu (Gerçek Native App Navigasyonu) ─────────
-const SK_ACTIVE_TAB = 'tugay_v41_activetab';
-const QT_TABS = ['ozet', 'coins', 'risk', 'analytics', 'settings', 'log'];
-
-function switchTab(tabName, skipScroll) {
-  if (!QT_TABS.includes(tabName)) tabName = 'ozet';
-  document.querySelectorAll('.qt-tab-panel').forEach(p => {
-    p.classList.toggle('active', p.dataset.tab === tabName);
-  });
-  document.querySelectorAll('.qt-tab-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === tabName);
-  });
-  try { localStorage.setItem(SK_ACTIVE_TAB, tabName); } catch(e) {}
-
-  // v41.2 Fix: Sayfanın en tepesi (logo/saat/canlı grafik) her sekmede AYNI göründüğü için
-  // en tepeye kaydırmak "hiçbir şey değişmedi" hissi veriyordu. Artık doğrudan seçilen
-  // sekmenin KENDİ içeriğinin başına kaydırıyoruz — tıklama anında fark görünür.
-  requestAnimationFrame(() => {
-    if (!skipScroll) {
-      const panel = document.getElementById('tabPanel-' + tabName);
-      if (panel) {
-        const top = panel.getBoundingClientRect().top + window.scrollY - 10;
-        window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
-      }
-    }
-
-    // Gizliyken clientWidth=0 olan canvas'lar sekme görünür olunca yeniden çizilmeli,
-    // yoksa bir sonraki veri tick'ine kadar (dakikalar sürebilir) boş/bozuk kalırlar.
-    // try/catch: bir grafik çizim hatası ASLA sekme geçişini bozmamalı.
-    try {
-      if (tabName === 'ozet') {
-        drawMiniEquityChart();
-        drawGlobalEquityChart();
-      } else if (tabName === 'coins') {
-        redrawAllCoinCharts();
-      } else if (tabName === 'analytics') {
-        drawChart();
-      }
-    } catch (e) { console.error('Sekme grafik yenileme hatası (sekme geçişi etkilenmedi):', e); }
-  });
-}
+// ───────── v41.3: Sekme motoru artık sayfanın altında, tabbar HTML'inin hemen
+// yanındaki BAĞIMSIZ <script> bloğunda yaşıyor (window.qtSwitchTab). Buradaki eski
+// switchTab/initTabbar tanımları kaldırıldı — çakışma ve çift tanım olmasın diye.
+// Aşağıdaki yardımcı fonksiyon ana kodda kalıyor çünkü coin verilerine erişmesi gerek:
 
 // Coin panelleri sekmesi tekrar görünür olduğunda her aktif coin'in kendi grafiğini tazeler.
 function redrawAllCoinCharts() {
@@ -4854,28 +4874,6 @@ function redrawAllCoinCharts() {
     }
   });
 }
-
-function initTabbar() {
-  const bar = document.getElementById('qtTabbar');
-  if (!bar) return;
-  bar.querySelectorAll('.qt-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
-  let saved = 'ozet';
-  try { saved = localStorage.getItem(SK_ACTIVE_TAB) || 'ozet'; } catch(e) {}
-  switchTab(saved, true);
-}
-
-// v41.3: KRİTİK GÜVENLİK — initTabbar'ı sayfanın ana yükleme zincirinden TAMAMEN
-// AYRI, kendi bağımsız 'load' dinleyicisinde çalıştırıyoruz. Bir tarayıcıda birden
-// fazla 'load' dinleyicisi varsa, biri hata fırlatıp dursa bile DİĞERLERİ yine de
-// çalışır (JS bunu bu şekilde garanti eder). Böylece ana başlatma zincirinde
-// (ayarlar/grafikler/coin panelleri) her ne patlarsa patlasın, sekme çubuğu HER ZAMAN
-// tıklamaya cevap verir. try/catch ekstra bir güvenlik katmanı.
-window.addEventListener('load', () => {
-  try { initTabbar(); }
-  catch (e) { console.error('initTabbar hatası (sekmeler yine de denenmeli):', e); }
-});
 
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
   globalTradeCount++;
