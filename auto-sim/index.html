@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.4 QUANT+</title>
+<title>TUGAY × QUANT · v41.5 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1078,7 +1078,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.4 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.5 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1179,6 +1179,20 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <span class="sys-chip" id="sysChipInterval">⏱ <b>—</b></span>
     <span class="sys-chip" id="sysChipIndicators">🧠 <b>—</b> gösterge</span>
     <span class="sys-chip" id="sysChipProtections">🛡️ <b>—</b> koruma aktif</span>
+  </div>
+
+  <!-- ═══ v41.4: 🌍 PİYASA NABZI — genel piyasa havası, tek bakışta ═══ -->
+  <div class="setup-card" id="marketPulseCard" style="padding:16px 18px; margin-bottom:16px;">
+    <div class="card-title" style="margin-bottom:12px;">
+      <span>🌍 Piyasa Nabzı</span>
+      <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41.4 — Genel Piyasa Havası</span>
+    </div>
+    <div id="marketPulseBody" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;font-family:var(--mono);">
+      <div style="text-align:center;color:var(--muted);font-size:11px;padding:14px;grid-column:1/-1;">Piyasa verisi yükleniyor…</div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">
+      📌 Bu panel yalnızca <b>farkındalık</b> içindir — bot kararlarını her zaman kendi kurallarına göre veriyor, bu veriler otomatik işleme karışmaz. 20 dk'da bir güncellenir. Kaynak: CoinGecko (piyasa geneli) + Binance (BTC volatilitesi).
+    </div>
   </div>
 
   <!-- Equity Curve Canvas -->
@@ -2459,6 +2473,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       if (tabName === 'ozet') {
         if (typeof drawMiniEquityChart === 'function') drawMiniEquityChart();
         if (typeof drawGlobalEquityChart === 'function') drawGlobalEquityChart();
+        if (typeof fetchMarketPulse === 'function') fetchMarketPulse(); // v41.4 — kendi 20dk cache'i var, spam olmaz
       } else if (tabName === 'coins') {
         if (typeof redrawAllCoinCharts === 'function') redrawAllCoinCharts();
       } else if (tabName === 'analytics') {
@@ -2580,6 +2595,17 @@ let globalTradeHistory = [];
 
 // ── v36.7 Yeni Özellik Global State ──
 let fearGreedData  = { value: 50, label: 'Neutral', lastFetch: 0 };
+
+// ───────── v41.4: Piyasa Nabzı (Market Pulse) Cache ─────────
+let marketPulseData = {
+  lastFetch: 0,
+  btcDominance: null,
+  mcapChangePct24h: null,   // toplam piyasa değeri 24s değişimi %
+  totalVolume: null,
+  prevVolume: null,         // önceki fetch'teki hacim — trend kıyaslaması için (session bazlı)
+  weather: null,            // 'calm' | 'active' | 'storm'
+  weatherPct: null          // BTC son N mumun ortalama mutlak yüzde değişimi
+};
 let btcCorrCache   = { change: 0, lastFetch: 0 };
 let dynSizing      = { consecutiveLosses: 0, consecutiveWins: 0 };
 let cbLossStreak   = 0; // v37.0: Devre kesici üst üste kayıp sayacı (dinamik boyutlandırmadan bağımsız)
@@ -5996,6 +6022,110 @@ function updateFearGreedBadge() {
   badge.title = `${tr_label} · 30 dk'da bir güncellenir`;
 }
 
+// ───────── v41.4: Piyasa Nabzı — genel piyasa havası (dominans, hacim, volatilite) ─────────
+// Sadece FARKINDALIK amaçlı — hiçbir otomatik işlem kararına karışmaz.
+async function fetchMarketPulse() {
+  const now = Date.now();
+  if (now - marketPulseData.lastFetch < 20 * 60 * 1000) return; // 20 dk cache
+
+  // 1) CoinGecko /global — dominans + toplam piyasa değeri + hacim (anahtarsız, ücretsiz)
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/global');
+    const json = await r.json();
+    const d = json?.data;
+    if (d) {
+      marketPulseData.btcDominance = d.market_cap_percentage?.btc ?? null;
+      marketPulseData.mcapChangePct24h = d.market_cap_change_percentage_24h_usd ?? null;
+      const newVolume = d.total_volume?.usd ?? null;
+      if (marketPulseData.totalVolume !== null) marketPulseData.prevVolume = marketPulseData.totalVolume;
+      marketPulseData.totalVolume = newVolume;
+    }
+  } catch (e) { /* CoinGecko erişilemezse mevcut son değerler ekranda kalır */ }
+
+  // 2) BTC volatilite "hava durumu" — son 4 saatteki 15dk mumların ortalama |% değişim|i
+  try {
+    const r2 = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=16');
+    const klines = await r2.json();
+    if (Array.isArray(klines) && klines.length > 2) {
+      let sumAbsPct = 0;
+      for (let i = 1; i < klines.length; i++) {
+        const prevClose = parseFloat(klines[i - 1][4]);
+        const close = parseFloat(klines[i][4]);
+        sumAbsPct += Math.abs((close - prevClose) / prevClose * 100);
+      }
+      const avgAbsPct = sumAbsPct / (klines.length - 1);
+      marketPulseData.weatherPct = avgAbsPct;
+      marketPulseData.weather = avgAbsPct < 0.12 ? 'calm' : avgAbsPct < 0.35 ? 'active' : 'storm';
+    }
+  } catch (e) { /* Binance erişilemezse hava durumu güncellenmez, eskisi kalır */ }
+
+  marketPulseData.lastFetch = now;
+  renderMarketPulse();
+  log('🌍 [Piyasa Nabzı] Güncellendi — BTC dominans %' + (marketPulseData.btcDominance?.toFixed(1) ?? '—'), 'system');
+}
+
+function renderMarketPulse() {
+  const body = document.getElementById('marketPulseBody');
+  if (!body) return;
+  const d = marketPulseData;
+  if (d.lastFetch === 0) return; // henüz veri yok, "yükleniyor" mesajı kalsın
+
+  const fmtUsd = (n) => {
+    if (n === null || n === undefined) return '—';
+    if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  // Genel alış/satış eğilimi — toplam piyasa değeri 24s değişimine göre
+  let trendEmoji = '➖', trendLabel = 'Nötr', trendColor = 'var(--muted)';
+  if (d.mcapChangePct24h !== null) {
+    if (d.mcapChangePct24h >= 2) { trendEmoji = '🟢'; trendLabel = 'Güçlü Alış'; trendColor = 'var(--green)'; }
+    else if (d.mcapChangePct24h > 0.3) { trendEmoji = '🟩'; trendLabel = 'Hafif Alış'; trendColor = 'var(--green)'; }
+    else if (d.mcapChangePct24h <= -2) { trendEmoji = '🔴'; trendLabel = 'Güçlü Satış'; trendColor = 'var(--red)'; }
+    else if (d.mcapChangePct24h < -0.3) { trendEmoji = '🟥'; trendLabel = 'Hafif Satış'; trendColor = 'var(--red)'; }
+  }
+
+  // Hacim trendi — önceki fetch'e göre (sadece bu oturum içinde kıyaslanabilir)
+  let volTrendTxt = 'Referans toplanıyor…', volTrendIcon = '⏳';
+  if (d.prevVolume !== null && d.totalVolume !== null) {
+    const chg = (d.totalVolume - d.prevVolume) / d.prevVolume * 100;
+    if (Math.abs(chg) < 1.5) { volTrendIcon = '➡️'; volTrendTxt = 'Sabit'; }
+    else if (chg > 0) { volTrendIcon = '📈'; volTrendTxt = `Artıyor (+${chg.toFixed(1)}%)`; }
+    else { volTrendIcon = '📉'; volTrendTxt = `Azalıyor (${chg.toFixed(1)}%)`; }
+  }
+
+  // Hava durumu — BTC volatilitesi
+  const weatherMap = {
+    calm:  { emoji: '🌊', label: 'Sakin',      desc: 'Dar aralık, düşük risk' },
+    active:{ emoji: '⚡', label: 'Hareketli',  desc: 'Normal piyasa temposu' },
+    storm: { emoji: '🌪️', label: 'Fırtınalı',  desc: 'Yüksek volatilite, dikkat' }
+  };
+  const w = weatherMap[d.weather] || { emoji: '❔', label: '—', desc: 'Veri toplanıyor' };
+
+  body.innerHTML = `
+    <div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+      <div style="font-size:9.5px;color:var(--muted);">BTC DOMİNANS</div>
+      <div style="font-size:18px;font-weight:800;margin-top:2px;">${d.btcDominance !== null ? d.btcDominance.toFixed(1) + '%' : '—'}</div>
+    </div>
+    <div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+      <div style="font-size:9.5px;color:var(--muted);">GENEL EĞİLİM (24s)</div>
+      <div style="font-size:14px;font-weight:800;margin-top:2px;color:${trendColor};">${trendEmoji} ${trendLabel}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:1px;">${d.mcapChangePct24h !== null ? (d.mcapChangePct24h >= 0 ? '+' : '') + d.mcapChangePct24h.toFixed(2) + '%' : '—'}</div>
+    </div>
+    <div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+      <div style="font-size:9.5px;color:var(--muted);">24S HACİM</div>
+      <div style="font-size:14px;font-weight:800;margin-top:2px;">${fmtUsd(d.totalVolume)}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:1px;">${volTrendIcon} ${volTrendTxt}</div>
+    </div>
+    <div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+      <div style="font-size:9.5px;color:var(--muted);">HAVA DURUMU (BTC)</div>
+      <div style="font-size:14px;font-weight:800;margin-top:2px;">${w.emoji} ${w.label}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:1px;">${w.desc}</div>
+    </div>
+  `;
+}
+
 // ───────── v36.7: BTC Korelasyon Cache ─────────
 async function fetchBtcCorr() {
   const now = Date.now();
@@ -7791,6 +7921,9 @@ window.addEventListener('load', () => {
   checkAutoWeeklyReport();
   setInterval(checkAutoWeeklyReport, 30 * 60 * 1000); // 30 dk'da bir kontrol — Pazar 20:00+ yakalanır
   setInterval(renderBotHealth, 60 * 1000);            // Bot Sağlığı kartı dakikada bir tazelenir
+  // v41.4: Piyasa Nabzı — try/catch ile korunuyor, hata atarsa geri kalan zincir devam etsin
+  try { fetchMarketPulse(); } catch(e) { console.error('Piyasa Nabzı ilk yükleme hatası:', e); }
+  setInterval(() => { try { fetchMarketPulse(); } catch(e) {} }, 20 * 60 * 1000); // 20 dk'da bir
   // v41.3: initTabbar() buradan kaldırıldı — artık aşağıda TAMAMEN BAĞIMSIZ kendi
   // load listener'ında çalışıyor. Sebep: bu fonksiyon (attachSettingsAutoSave ve öncesi)
   // içinde bir yerde hata patlarsa, aynı fonksiyonun kalanı (yani initTabbar dahil) hiç
