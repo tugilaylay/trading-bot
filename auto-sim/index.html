@@ -4803,7 +4803,7 @@ function checkAutoWeeklyReport() {
 const SK_ACTIVE_TAB = 'tugay_v41_activetab';
 const QT_TABS = ['ozet', 'coins', 'risk', 'analytics', 'settings', 'log'];
 
-function switchTab(tabName) {
+function switchTab(tabName, skipScroll) {
   if (!QT_TABS.includes(tabName)) tabName = 'ozet';
   document.querySelectorAll('.qt-tab-panel').forEach(p => {
     p.classList.toggle('active', p.dataset.tab === tabName);
@@ -4812,11 +4812,21 @@ function switchTab(tabName) {
     b.classList.toggle('active', b.dataset.tab === tabName);
   });
   try { localStorage.setItem(SK_ACTIVE_TAB, tabName); } catch(e) {}
-  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 
-  // Gizliyken clientWidth=0 olan canvas'lar sekme görünür olunca yeniden çizilmeli,
-  // yoksa bir sonraki veri tick'ine kadar (dakikalar sürebilir) boş/bozuk kalırlar.
+  // v41.2 Fix: Sayfanın en tepesi (logo/saat/canlı grafik) her sekmede AYNI göründüğü için
+  // en tepeye kaydırmak "hiçbir şey değişmedi" hissi veriyordu. Artık doğrudan seçilen
+  // sekmenin KENDİ içeriğinin başına kaydırıyoruz — tıklama anında fark görünür.
   requestAnimationFrame(() => {
+    if (!skipScroll) {
+      const panel = document.getElementById('tabPanel-' + tabName);
+      if (panel) {
+        const top = panel.getBoundingClientRect().top + window.scrollY - 10;
+        window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+      }
+    }
+
+    // Gizliyken clientWidth=0 olan canvas'lar sekme görünür olunca yeniden çizilmeli,
+    // yoksa bir sonraki veri tick'ine kadar (dakikalar sürebilir) boş/bozuk kalırlar.
     if (tabName === 'ozet') {
       drawMiniEquityChart();
       drawGlobalEquityChart();
@@ -4850,7 +4860,7 @@ function initTabbar() {
   });
   let saved = 'ozet';
   try { saved = localStorage.getItem(SK_ACTIVE_TAB) || 'ozet'; } catch(e) {}
-  switchTab(saved);
+  switchTab(saved, true);
 }
 
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
