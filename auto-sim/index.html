@@ -2,8 +2,14 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TUGAY × QUANT · v40.0 OTOPİLOT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- v41: PWA — Ana ekrana ekle → tam ekran uygulama gibi açılır (iOS Safari: Paylaş → Ana Ekrana Ekle) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QUANT">
+<meta name="theme-color" content="#C7C0A4">
+<title>TUGAY × QUANT · v41.0 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1034,7 +1040,7 @@
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v40.0 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.0 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1136,6 +1142,8 @@
 
   <!-- 📊 Canlı Özet Panosu -->
   <div class="dashboard-summary" id="dashboardSummary">
+    <!-- v41: Bot Sağlığı — tek bakışta durum -->
+    <div id="botHealthCard" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;font-size:10.5px;font-family:var(--mono);"></div>
     <div class="ds-stats">
       <div class="ds-stat">
         <div class="ds-stat-label">Açık Pozisyon</div>
@@ -1617,6 +1625,20 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Aktif korumaların özeti (yeşil = açık) — detaylar aşağıda:</div>
       <div class="risk-chip-strip" id="riskChipStrip"></div>
 
+      <!-- ── v41: Risk Profilleri — tek tıkla tüm ayarları set eder ── -->
+      <div class="acc-divider"></div>
+      <div class="card-title"><span>🎛️ Hazır Risk Profilleri</span><span class="optional-badge">v41 — YENİ</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <button class="btn btn-toggle-all" style="flex:1;min-width:110px;" onclick="applyRiskProfile('safe')">🛡️ Korumacı</button>
+        <button class="btn btn-toggle-all" style="flex:1;min-width:110px;" onclick="applyRiskProfile('balanced')">⚖️ Dengeli</button>
+        <button class="btn btn-toggle-all" style="flex:1;min-width:110px;" onclick="applyRiskProfile('aggressive')">🔥 Agresif</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-toggle-all" style="flex:1;min-width:110px;background:rgba(14,124,74,0.12);" onclick="saveMyProfile()">💾 Mevcut Ayarları "Benim Profilim" Yap</button>
+        <button class="btn btn-toggle-all" style="flex:1;min-width:110px;" onclick="applyMyProfile()">⭐ Benim Profilim</button>
+      </div>
+      <div id="riskProfileStatus" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">Bir profile tıklayınca tüm koruma toggle'ları ve eşik değerleri tek seferde ayarlanır. <b>Korumacı</b>: dar limitler, düşük kaldıraç, tüm filtreler açık. <b>Dengeli</b>: önerilen varsayılanlar. <b>Agresif</b>: daha geniş limitler, daha fazla eşzamanlı pozisyon (daha çok işlem = daha çok risk). Profil uygulamak açık pozisyonlara dokunmaz.</div>
+
       <div class="acc-divider" style="margin-top:0;"></div>
 
       <div class="card-title">
@@ -1652,6 +1674,25 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Take-Profit hedefinin yarısına ulaşınca pozisyonun belirttiğin yüzdesi kapatılır (kâr cebe alınır), kalan kısım çalışmaya devam eder. Böylece büyük hareketlerde daha fazla kazanç bırakırken küçük geri çekilmelerde de bir kısım kâr garanti edilir.</div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v41: Kademeli TP — Runner Modu ── -->
+      <div class="card-title">
+        <span>🏃 Runner Modu (Kademeli Take-Profit)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41 — Kazananı koştur</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="tp2Toggle">
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>TP hedefinde kapatılacak oran %</label>
+          <input type="number" id="tp2Pct" value="60" min="30" max="90" step="10" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: fiyat Take-Profit hedefine ulaştığında pozisyonun <b>tamamı kapanmaz</b> — belirttiğin yüzdesi kapatılır (kâr garantiye alınır), kalan "runner" kısmı <b>İz Süren Stop</b> ile trendde kalmaya devam eder. Büyük trend günlerinde TP'nin 2-3 katına kadar sürebilir. <b>Şart: İz Süren Stop açık olmalı</b> — kapalıysa güvenlik için pozisyonun tamamı normal şekilde TP'de kapanır. Breakeven ile mükemmel uyumlu: runner kısmı en kötü ihtimalle girişten kapanır.</div>
 
       <div class="acc-divider"></div>
 
@@ -1782,6 +1823,25 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ── v41: Funding Rate Filtresi ── -->
+      <div class="card-title">
+        <span>💰 Funding Rate Filtresi</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41 — Gerçek edge</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="fundingFilterToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Aşırı Funding Eşiği % (8 saatlik)</label>
+          <input type="number" id="fundingThreshold" value="0.05" min="0.01" max="0.3" step="0.01" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Binance Vadeli funding oranı coin bazında 15 dk'da bir çekilir. Funding <b>+eşiğin üstündeyse</b> kalabalık LONG tarafında demektir — long squeeze riski yüksek, <b>yeni LONG engellenir</b>. Funding <b>-eşiğin altındaysa</b> kalabalık SHORT'ta — short squeeze riski, <b>yeni SHORT engellenir</b>. Kalabalığın tersinde durmak profesyonel fonların en bilinen istatistiksel avantajlarından biridir. Normal funding ±0.01% civarıdır; 0.05+ belirgin aşırılıktır.</div>
+
+      <div class="acc-divider"></div>
+
       <!-- ── v37.0: Devre Kesici (Circuit Breaker) ── -->
       <div class="card-title">
         <span>🚨 Devre Kesici (Circuit Breaker)</span>
@@ -1798,6 +1858,25 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: belirttiğin sayıda <b>üst üste kayıp</b> yaşanırsa bot <b>TÜM coinlerde otomatik durur</b>, ekranda kırmızı uyarı gösterir ve Telegram'a haber verir. Dinamik boyutlandırma işlem miktarını küçültür ama botu durdurmaz — bu özellik ise "strateji bu piyasada çalışmıyor" durumunda hesabı tamamen korur. Profesyonel fonların hepsinde standart bir güvenlik mekanizmasıdır.</div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v41: Kayıp Sonrası Coin Soğuması ── -->
+      <div class="card-title">
+        <span>🧊 Kayıp Sonrası Coin Soğuması</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41 — ÖNERİLEN AÇIK</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="lossCooldownToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Soğuma Süresi (dakika)</label>
+          <input type="number" id="lossCooldownMin" value="45" min="10" max="240" step="5" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: bir coin <b>Stop-Loss veya likidasyonla zararlı kapanırsa</b>, SADECE o coin'de belirttiğin süre boyunca yeni pozisyon açılmaz (diğer coinler etkilenmez, açık pozisyonlar normal yönetilir). Stop yiyen coin genelde hâlâ aynı kaotik harekette — bot hemen tekrar girip aynı stopu bir daha yiyebilir ("revenge trade"in bot versiyonu). Soğuma bu döngüyü kırar. TP veya sinyalle kapanan işlemler soğuma başlatmaz.</div>
 
       <div class="acc-divider"></div>
 
@@ -2024,8 +2103,16 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       </div>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn btn-toggle-all" style="flex:1" onclick="testTelegram()">📨 Test Mesajı Gönder</button>
+        <button class="btn btn-toggle-all" style="flex:1" onclick="sendWeeklyReport(true)">📊 Haftalık Rapor Gönder</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: AL/SAT işlemleri ve pozisyon kapanışları doğrudan Telegram'a bildirim olarak gönderilir. Tarayıcı sekmesi açık olmalı (telefon kilitliyken JS duraklayabilir). Bilgiler sadece tarayıcında saklanır, kaydedilmez.</div>
+      <div class="card-title" style="margin-top:14px;">
+        <span style="font-size:12px;">🗓️ Otomatik Haftalık Rapor (Pazar 20:00+)</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="weeklyReportToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: AL/SAT işlemleri ve pozisyon kapanışları doğrudan Telegram'a bildirim olarak gönderilir. Tarayıcı sekmesi açık olmalı (telefon kilitliyken JS duraklayabilir). Bilgiler sadece tarayıcında saklanır, kaydedilmez. <b>v41:</b> Otomatik haftalık rapor açıksa, her Pazar 20:00'den sonra sekme açıkken haftanın özeti (K/Z, kazanma oranı, en iyi/kötü coin, kapanış sebepleri) bir kez Telegram'a gönderilir.</div>
 
     </div>
   </details>
@@ -2138,6 +2225,27 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     <div class="ra-section-title">Gösterge Bazında (En Düşük Kazanma Oranı Üstte)</div>
     <div id="raByIndicator" class="ra-table">
       <div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">Henüz bu güncellemeden sonra kapanmış işlem yok</div>
+    </div>
+
+    <!-- ── v41: Yön Bazında ── -->
+    <div class="ra-section-title">Yön Bazında (LONG vs SHORT)</div>
+    <div id="raByDirection" class="ra-table">
+      <div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">Henüz kapanmış işlem yok</div>
+    </div>
+
+    <!-- ── v41: Saat Bazında K/Z Isı Haritası ── -->
+    <div class="ra-section-title">Saat Bazında K/Z (00–23) — botun kazandığı ve kaybettiği saatler</div>
+    <div id="raByHour" style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:6px 0;"></div>
+    <div class="ra-note">📌 Yeşil = o saatte kapanan işlemler toplamda kârda, kırmızı = zararda. Renk yoğunluğu tutarla orantılı. Hücreye dokununca detay görünür. Belirgin kırmızı bir saat dilimi görürsen "İşlem Saatleri Filtresi" ile o aralığı kapatmak en kolay kazançtır.</div>
+
+    <!-- ── v41: Gün Bazında ── -->
+    <div class="ra-section-title">Haftanın Günü Bazında K/Z</div>
+    <div id="raByDay" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:6px 0;"></div>
+
+    <!-- ── v41: Kelly-Lite Boyut Önerisi ── -->
+    <div class="ra-section-title">🧮 Kelly-Lite Pozisyon Boyutu Önerisi</div>
+    <div id="raKelly" style="font-size:11.5px;line-height:1.7;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;">
+      <span style="color:var(--muted)">En az 20 kapanmış işlem birikince hesaplanır.</span>
     </div>
     <div class="ra-note">📌 "Gösterge Bazında" tablosu: bir gösterge, açtığın pozisyonun yönüyle aynı yönde oy kullandığında o işleme "katkıda bulunmuş" sayılır. Düşük kazanma oranı, o göstergenin diğerlerine göre daha sık yanlış yönde sinyal verdiğini gösterir.</div>
     <div class="ra-note">📌 Bu analiz sadece bu güncellemeden (v25) SONRA kapanan işlemleri kapsar — geçmiş işlemlerde kapanış sebebi/rejim/gösterge bilgisi kaydedilmemişti, birkaç gün veri biriktikçe daha anlamlı olacak.</div>
@@ -2331,6 +2439,156 @@ let fearGreedData  = { value: 50, label: 'Neutral', lastFetch: 0 };
 let btcCorrCache   = { change: 0, lastFetch: 0 };
 let dynSizing      = { consecutiveLosses: 0, consecutiveWins: 0 };
 let cbLossStreak   = 0; // v37.0: Devre kesici üst üste kayıp sayacı (dinamik boyutlandırmadan bağımsız)
+
+// ───────── v41: Funding Rate cache (coin bazında, 15 dk) ─────────
+let fundingCache = {}; // { BTCUSDT: { rate: 0.0001, lastFetch: ts } }
+
+// ───────── v41: Kayıp Sonrası Coin Soğuması ─────────
+const SK_LOSS_COOLDOWN = 'tugay_v41_losscooldown';
+let lossCooldownUntil = {}; // { BTC: timestampMs }
+try { lossCooldownUntil = JSON.parse(localStorage.getItem(SK_LOSS_COOLDOWN) || '{}'); } catch(e) { lossCooldownUntil = {}; }
+function setLossCooldown(coin) {
+  const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
+  lossCooldownUntil[coin] = Date.now() + mins * 60 * 1000;
+  try { localStorage.setItem(SK_LOSS_COOLDOWN, JSON.stringify(lossCooldownUntil)); } catch(e) {}
+}
+function isLossCooldownActive(coin) {
+  const on = document.getElementById('lossCooldownToggle')?.checked;
+  if (!on) return false;
+  return (lossCooldownUntil[coin] || 0) > Date.now();
+}
+
+// ───────── v41: Son engellenen sinyal takibi (Bot Sağlığı için) ─────────
+let lastBlockInfo = null; // { coin, msg, ts }
+
+// ───────── v41: Risk Profilleri ─────────
+const SK_MY_PROFILE = 'tugay_v41_myprofile';
+// Sadece profil kapsamındaki alanlar değiştirilir — Telegram/API gibi kişisel alanlara dokunulmaz.
+const RISK_PROFILES = {
+  safe: {
+    label: '🛡️ Korumacı',
+    values: {
+      leverage: '2', stopLoss: '2', takeProfit: '5', minConfirmPct: '0.7',
+      trailingStopToggle: true, trailingStopPct: '1.2',
+      partialTpToggle: true, partialTpPct: '50', tp2Toggle: false,
+      dailyLossLimitToggle: true, dailyLossLimitPct: '20',
+      perCoinLossLimitToggle: true, perCoinLossLimitPct: '10',
+      maxPositionsToggle: true, maxPositionsCount: '2',
+      breakevenToggle: true, breakevenThreshold: '1.2',
+      btcCorrToggle: true, btcCorrThreshold: '2',
+      fgFilterToggle: true, fgThreshold: '30',
+      fundingFilterToggle: true, fundingThreshold: '0.04',
+      dynSizingToggle: true, atrSizingToggle: true,
+      atrTpSlToggle: true, atrSlMultiplier: '1.5', atrTpMultiplier: '2.0',
+      maxLevLossToggle: true, maxLevLossPct: '6',
+      adxMinFilterToggle: true, adxMinValue: '28',
+      trendGateToggle: true, sidewaysBlockToggle: true,
+      exitConfirmToggle: true, exitConfirmTicks: '3',
+      circuitBreakerToggle: true, circuitBreakerCount: '3',
+      lossCooldownToggle: true, lossCooldownMin: '60',
+      mtfToggle: true
+    }
+  },
+  balanced: {
+    label: '⚖️ Dengeli',
+    values: {
+      leverage: '2', stopLoss: '2', takeProfit: '6', minConfirmPct: '0.6',
+      trailingStopToggle: true, trailingStopPct: '1.5',
+      partialTpToggle: true, partialTpPct: '50', tp2Toggle: true, tp2Pct: '60',
+      dailyLossLimitToggle: true, dailyLossLimitPct: '30',
+      perCoinLossLimitToggle: true, perCoinLossLimitPct: '15',
+      maxPositionsToggle: true, maxPositionsCount: '3',
+      breakevenToggle: true, breakevenThreshold: '1.5',
+      btcCorrToggle: true, btcCorrThreshold: '3',
+      fgFilterToggle: true, fgThreshold: '25',
+      fundingFilterToggle: true, fundingThreshold: '0.05',
+      dynSizingToggle: true, atrSizingToggle: true,
+      atrTpSlToggle: true, atrSlMultiplier: '1.5', atrTpMultiplier: '2.0',
+      maxLevLossToggle: true, maxLevLossPct: '8',
+      adxMinFilterToggle: true, adxMinValue: '25',
+      trendGateToggle: true, sidewaysBlockToggle: true,
+      exitConfirmToggle: true, exitConfirmTicks: '2',
+      circuitBreakerToggle: true, circuitBreakerCount: '4',
+      lossCooldownToggle: true, lossCooldownMin: '45',
+      mtfToggle: true
+    }
+  },
+  aggressive: {
+    label: '🔥 Agresif',
+    values: {
+      leverage: '3', stopLoss: '2.5', takeProfit: '8', minConfirmPct: '0.55',
+      trailingStopToggle: true, trailingStopPct: '2',
+      partialTpToggle: false, tp2Toggle: true, tp2Pct: '50',
+      dailyLossLimitToggle: true, dailyLossLimitPct: '50',
+      perCoinLossLimitToggle: true, perCoinLossLimitPct: '25',
+      maxPositionsToggle: true, maxPositionsCount: '5',
+      breakevenToggle: true, breakevenThreshold: '2',
+      btcCorrToggle: true, btcCorrThreshold: '4',
+      fgFilterToggle: false,
+      fundingFilterToggle: true, fundingThreshold: '0.08',
+      dynSizingToggle: true, atrSizingToggle: true,
+      atrTpSlToggle: true, atrSlMultiplier: '1.8', atrTpMultiplier: '2.5',
+      maxLevLossToggle: true, maxLevLossPct: '10',
+      adxMinFilterToggle: true, adxMinValue: '22',
+      trendGateToggle: true, sidewaysBlockToggle: false,
+      exitConfirmToggle: true, exitConfirmTicks: '2',
+      circuitBreakerToggle: true, circuitBreakerCount: '6',
+      lossCooldownToggle: true, lossCooldownMin: '30',
+      mtfToggle: false
+    }
+  }
+};
+
+function _applyProfileValues(values) {
+  Object.keys(values).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!values[id];
+    else el.value = values[id];
+  });
+  saveSettings();
+  checkSettingsConflicts();
+  renderSystemStrip();
+  updateAllTpBreakevenHints();
+}
+
+function applyRiskProfile(key) {
+  const p = RISK_PROFILES[key];
+  if (!p) return;
+  if (!confirm(`${p.label} profili uygulansın mı? Risk toggle'ları ve eşik değerleri bu profile göre ayarlanacak (açık pozisyonlara ve Telegram/coin seçimlerine dokunulmaz).`)) return;
+  _applyProfileValues(p.values);
+  const st = document.getElementById('riskProfileStatus');
+  if (st) st.innerHTML = `✅ <b>${p.label}</b> profili uygulandı (${new Date().toLocaleTimeString('tr-TR')}). İstediğin alanı elle değiştirebilirsin.`;
+  log(`🎛️ [Profil] ${p.label} risk profili uygulandı.`, 'system');
+}
+
+function saveMyProfile() {
+  // Profil kapsamı: "balanced" şablonundaki alanların GÜNCEL ekran değerleri
+  const snapshot = {};
+  Object.keys(RISK_PROFILES.balanced.values).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    snapshot[id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  try { localStorage.setItem(SK_MY_PROFILE, JSON.stringify(snapshot)); } catch(e) {}
+  const st = document.getElementById('riskProfileStatus');
+  if (st) st.innerHTML = `💾 Mevcut ayarların <b>"Benim Profilim"</b> olarak kaydedildi. Artık tek tıkla geri dönebilirsin.`;
+  log('💾 [Profil] Mevcut risk ayarları "Benim Profilim" olarak kaydedildi.', 'system');
+}
+
+function applyMyProfile() {
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem(SK_MY_PROFILE) || 'null'); } catch(e) {}
+  if (!snap) {
+    const st = document.getElementById('riskProfileStatus');
+    if (st) st.innerHTML = `⚠️ Henüz kayıtlı profil yok — önce "💾 Mevcut Ayarları Benim Profilim Yap" butonuna bas.`;
+    return;
+  }
+  _applyProfileValues(snap);
+  const st = document.getElementById('riskProfileStatus');
+  if (st) st.innerHTML = `⭐ <b>Benim Profilim</b> uygulandı (${new Date().toLocaleTimeString('tr-TR')}).`;
+  log('⭐ [Profil] Kayıtlı kişisel profil uygulandı.', 'system');
+}
 
 // ── v36.8: Multi-Timeframe Cache ──
 const mtfCache = {};
@@ -2616,7 +2874,12 @@ const SETTINGS_FIELD_IDS = [
   'tradingHoursToggle', 'tradingHoursStart', 'tradingHoursEnd',
   'browserNotifToggle',
   'fgFilterToggle', 'fgThreshold',
-  'mtfToggle', 'mtfTf2', 'mtfTf3'
+  'mtfToggle', 'mtfTf2', 'mtfTf3',
+  // v41: Funding filtresi, kayıp soğuması, runner TP, haftalık rapor
+  'fundingFilterToggle', 'fundingThreshold',
+  'lossCooldownToggle', 'lossCooldownMin',
+  'tp2Toggle', 'tp2Pct',
+  'weeklyReportToggle'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -3323,6 +3586,11 @@ function updateGlobalPnlDisplay() {
 
 // ───────── Log ─────────
 function log(msg, type = 'info', coin = null) {
+  // v41: Engellenen sinyalleri yakala — Bot Sağlığı kartında "son engel" olarak gösterilir.
+  // Engel logları belirli emoji önekleriyle başlar; içerik değişse de önek sözleşmesi korunur.
+  if (coin && /^(⛔|🚫|😱|🔗|⏰|🧊|💰|📊 \[MTF\])/.test(msg)) {
+    lastBlockInfo = { coin, msg: msg.replace(/<[^>]*>/g, '').slice(0, 140), ts: Date.now() };
+  }
   const body = document.getElementById('logBody');
   const now = new Date().toLocaleTimeString('tr-TR');
   const line = document.createElement('div');
@@ -4389,6 +4657,66 @@ function calculateNetPnl(grossPnl, amount, leverage) {
   return { netPnl: grossPnl - cost, cost };
 }
 
+// ───────── v41: Haftalık Telegram Raporu ─────────
+const SK_WEEKLY_SENT = 'tugay_v41_weeklysent';
+function _isoWeekKey(d) {
+  // Basit hafta anahtarı: yıl + yılın kaçıncı pazartesi haftası
+  const dt = new Date(d); dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate() + 3 - ((dt.getDay() + 6) % 7)); // ISO: perşembeye hizala
+  const week1 = new Date(dt.getFullYear(), 0, 4);
+  const week = 1 + Math.round(((dt - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  return dt.getFullYear() + '-W' + week;
+}
+
+function buildWeeklyReport() {
+  const weekStats = getStatsForRange(7);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weekTrades = globalTradeHistory.filter(t => t.ts && t.ts >= weekAgo);
+  const wins = weekTrades.filter(t => t.pnl >= 0).length;
+  const winRate = weekTrades.length > 0 ? (wins / weekTrades.length * 100).toFixed(0) : '—';
+
+  const perCoin = {};
+  weekTrades.forEach(t => { perCoin[t.coin] = (perCoin[t.coin] || 0) + t.pnl; });
+  const ranked = Object.keys(perCoin).map(c => ({ c, p: perCoin[c] })).sort((a, b) => b.p - a.p);
+  const best = ranked[0], worst = ranked[ranked.length - 1];
+
+  const byReason = {};
+  weekTrades.forEach(t => { if (t.reasonCategory) byReason[t.reasonCategory] = (byReason[t.reasonCategory] || 0) + 1; });
+  const reasonTxt = Object.keys(byReason).map(k => `${(typeof REASON_LABELS !== 'undefined' && REASON_LABELS[k]) || k}: ${byReason[k]}`).join(' · ') || '—';
+
+  const k = computeKellyLite();
+  const kellyLine = k ? `\n🧮 Son ${k.n} işlem: %${(k.W*100).toFixed(0)} kazanma, R=${k.R.toFixed(2)}, yarım Kelly %${(k.halfKelly*100).toFixed(1)}` : '';
+
+  return `📊 <b>HAFTALIK RAPOR</b> (${new Date().toLocaleDateString('tr-TR')})\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `💵 Haftalık K/Z: <b>${weekStats.pnl >= 0 ? '+' : ''}${weekStats.pnl.toFixed(2)} USDT</b> (${weekStats.count} işlem)\n` +
+    `🎯 Kazanma oranı: %${winRate}\n` +
+    (best ? `🏆 En iyi coin: ${best.c} (${best.p >= 0 ? '+' : ''}${best.p.toFixed(2)}$)\n` : '') +
+    (worst && ranked.length > 1 ? `📉 En zayıf coin: ${worst.c} (${worst.p >= 0 ? '+' : ''}${worst.p.toFixed(2)}$)\n` : '') +
+    `🚪 Kapanış sebepleri: ${reasonTxt}` +
+    kellyLine +
+    `\n💰 Yaşam boyu toplam: ${globalTotalPnl >= 0 ? '+' : ''}${globalTotalPnl.toFixed(2)} USDT (${globalTradeCount} işlem)`;
+}
+
+async function sendWeeklyReport(manual = false) {
+  const report = buildWeeklyReport();
+  await sendTelegramMessage(report);
+  if (manual) log('📊 Haftalık rapor Telegram\'a gönderildi (Telegram toggle açık ve bilgiler doğruysa).', 'system');
+  try { localStorage.setItem(SK_WEEKLY_SENT, _isoWeekKey(new Date())); } catch(e) {}
+}
+
+function checkAutoWeeklyReport() {
+  // Pazar 20:00+ ve bu hafta henüz gönderilmemişse otomatik gönder (sekme açıkken)
+  if (!document.getElementById('weeklyReportToggle')?.checked) return;
+  if (!document.getElementById('telegramToggle')?.checked) return;
+  const now = new Date();
+  if (now.getDay() !== 0 || now.getHours() < 20) return;
+  const key = _isoWeekKey(now);
+  if (localStorage.getItem(SK_WEEKLY_SENT) === key) return;
+  sendWeeklyReport(false);
+  log('🗓️ Otomatik haftalık rapor Telegram\'a gönderildi.', 'system');
+}
+
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
   globalTradeCount++;
   globalTotalPnl += pnl;
@@ -4410,6 +4738,14 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
   // (böylece özellik sonradan açılırsa mevcut seri doğru bilinir).
   if (pnl >= 0) cbLossStreak = 0; else cbLossStreak++;
   checkCircuitBreaker();
+
+  // ── v41: Kayıp sonrası coin soğuması — SADECE SL/likidasyonla zararlı kapananlar tetikler.
+  // TP, sinyal, trailing, breakeven kapanışları soğuma başlatmaz (bunlar "kaos" değildir).
+  if (pnl < 0 && (reasonCategory === 'sl' || reasonCategory === 'liquidation') && document.getElementById('lossCooldownToggle')?.checked) {
+    setLossCooldown(coin);
+    const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
+    log(`🧊 [Kayıp Soğuması] ${coin} — Stop-Loss zararı sonrası ${mins} dk soğuma başladı. Bu sürede sadece ${coin}'de yeni pozisyon açılmayacak.`, 'system', coin);
+  }
 
   pnlHistory.push({ t: now.getTime(), pnl: globalTotalPnl });
   if (pnlHistory.length > 100) pnlHistory.shift();
@@ -4634,6 +4970,139 @@ function renderReasonAnalysis() {
   const indicatorLabels = {};
   Object.keys(INDICATOR_DEFS).forEach(id => { indicatorLabels[id] = INDICATOR_DEFS[id].name; });
   renderAnalysisTable('raByIndicator', byIndicator, indicatorLabels, 'winrate', byReasonHasData ? oldPositionMsg : null);
+
+  // ── v41: Yön bazında (LONG vs SHORT) ──
+  const byDirection = {};
+  globalTradeHistory.forEach(t => {
+    const k = t.direction || 'long';
+    if (!byDirection[k]) byDirection[k] = { count: 0, wins: 0, pnl: 0 };
+    byDirection[k].count++;
+    if (t.pnl >= 0) byDirection[k].wins++;
+    byDirection[k].pnl += t.pnl;
+  });
+  renderAnalysisTable('raByDirection', byDirection, { long: '🟢 LONG', short: '🔻 SHORT' }, null, 'Henüz kapanmış işlem yok');
+
+  renderTimeAnalysis();
+  renderKellyLite();
+}
+
+// ───────── v41: Saat & Gün Bazlı K/Z Isı Haritası ─────────
+function _heatCell(label, pnl, count) {
+  let bg = 'var(--surface2)', fg = 'var(--muted)';
+  if (count > 0) {
+    // Yoğunluk: 20$ mutlak K/Z'de tam doygunluk
+    const alpha = Math.min(Math.abs(pnl) / 20, 1) * 0.55 + 0.12;
+    bg = pnl >= 0 ? `rgba(14,124,74,${alpha.toFixed(2)})` : `rgba(169,50,38,${alpha.toFixed(2)})`;
+    fg = 'var(--text)';
+  }
+  const title = count > 0 ? `${label}: ${count} işlem · ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$` : `${label}: işlem yok`;
+  return `<div title="${title}" style="background:${bg};color:${fg};border:1px solid var(--border);border-radius:6px;text-align:center;padding:5px 0;font-size:9.5px;font-family:var(--mono);cursor:default;">${label}<br><b style="font-size:8.5px;">${count > 0 ? (pnl >= 0 ? '+' : '') + pnl.toFixed(0) + '$' : '·'}</b></div>`;
+}
+
+function renderTimeAnalysis() {
+  const hourEl = document.getElementById('raByHour');
+  const dayEl = document.getElementById('raByDay');
+  if (!hourEl && !dayEl) return;
+  const byHour = Array.from({length: 24}, () => ({ pnl: 0, count: 0 }));
+  const byDay  = Array.from({length: 7},  () => ({ pnl: 0, count: 0 }));
+  globalTradeHistory.forEach(t => {
+    if (!t.ts) return;
+    const d = new Date(t.ts);
+    byHour[d.getHours()].pnl += t.pnl; byHour[d.getHours()].count++;
+    byDay[d.getDay()].pnl += t.pnl; byDay[d.getDay()].count++;
+  });
+  if (hourEl) hourEl.innerHTML = byHour.map((h, i) => _heatCell(String(i).padStart(2, '0'), h.pnl, h.count)).join('');
+  const dayNames = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+  if (dayEl) dayEl.innerHTML = byDay.map((d, i) => _heatCell(dayNames[i], d.pnl, d.count)).join('');
+}
+
+// ───────── v41: Kelly-Lite Boyut Önerisi ─────────
+// Klasik Kelly: f* = W - (1-W)/R  (W = kazanma oranı, R = ort. kazanç / ort. kayıp)
+// Kripto gürültüsü için endüstri pratiği "yarım Kelly" veya çeyrek Kelly'dir — biz
+// yarım Kelly gösterip her zaman muhafazakâr yorumluyoruz. Bu bir ÖNERİ panelidir,
+// işlem miktarına otomatik müdahale ETMEZ.
+function computeKellyLite() {
+  const trades = globalTradeHistory.slice(-50); // son 50 işlem — güncel piyasa davranışı
+  if (trades.length < 20) return null;
+  const wins = trades.filter(t => t.pnl >= 0);
+  const losses = trades.filter(t => t.pnl < 0);
+  if (wins.length === 0 || losses.length === 0) return null;
+  const W = wins.length / trades.length;
+  const avgWin = wins.reduce((s, t) => s + t.pnl, 0) / wins.length;
+  const avgLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0) / losses.length);
+  if (avgLoss === 0) return null;
+  const R = avgWin / avgLoss;
+  const kelly = W - (1 - W) / R;
+  return { n: trades.length, W, R, avgWin, avgLoss, kelly, halfKelly: kelly / 2 };
+}
+
+function renderKellyLite() {
+  const el = document.getElementById('raKelly');
+  if (!el) return;
+  const k = computeKellyLite();
+  if (!k) {
+    el.innerHTML = '<span style="color:var(--muted)">En az 20 kapanmış işlem (ve hem kazanç hem kayıp) birikince hesaplanır. Şu an: ' + Math.min(globalTradeHistory.length, 50) + ' işlem.</span>';
+    return;
+  }
+  const kc = k.kelly > 0 ? 'var(--green)' : 'var(--red)';
+  let verdict;
+  if (k.kelly <= 0) {
+    verdict = `⚠️ <b style="color:var(--red)">Kelly negatif</b> — mevcut strateji son ${k.n} işlemde matematiksel edge üretmedi. Bu dönemde işlem miktarını BÜYÜTME; filtreleri sıkılaştırmayı (Korumacı profil) veya backtest ile parametre aramayı düşün.`;
+  } else if (k.halfKelly < 0.05) {
+    verdict = `Edge var ama ince — <b>işlem başına kasa riskini %${Math.max(k.halfKelly*100, 1).toFixed(1)} civarında tut</b> (yarım Kelly). Muhafazakâr kalmak doğru.`;
+  } else {
+    verdict = `Sağlıklı edge — yarım Kelly'ye göre işlem başına <b>kasanın ~%${Math.min(k.halfKelly*100, 10).toFixed(1)}'i</b> makul üst sınır. Yine de tek işlemde %5+'ı geçmemek profesyonel standarttır.`;
+  }
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:8px;">
+      <div><span style="color:var(--muted);font-size:9.5px;">SON ${k.n} İŞLEM</span><br><b>%${(k.W*100).toFixed(0)} kazanma</b></div>
+      <div><span style="color:var(--muted);font-size:9.5px;">ORT. KAZANÇ/KAYIP</span><br><b>+${k.avgWin.toFixed(2)}$ / -${k.avgLoss.toFixed(2)}$</b></div>
+      <div><span style="color:var(--muted);font-size:9.5px;">R ORANI</span><br><b>${k.R.toFixed(2)}</b></div>
+      <div><span style="color:var(--muted);font-size:9.5px;">KELLY / YARIM</span><br><b style="color:${kc}">%${(k.kelly*100).toFixed(1)} / %${(k.halfKelly*100).toFixed(1)}</b></div>
+    </div>
+    <div>${verdict}</div>
+    <div style="color:var(--muted);font-size:10px;margin-top:6px;">📌 Bu panel bilgilendirme amaçlıdır, işlem miktarına otomatik müdahale etmez. Kelly formülü geçmiş performansın devam edeceğini varsayar — kripto piyasasında bu varsayım sık bozulur, o yüzden hep yarım Kelly ve altında kalınır.</div>`;
+}
+
+// ───────── v41: Bot Sağlığı Kartı ─────────
+function renderBotHealth() {
+  const el = document.getElementById('botHealthCard');
+  if (!el) return;
+  const chip = (icon, label, color) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:100px;border:1px solid var(--border);background:var(--surface2);${color ? 'color:' + color + ';' : ''}">${icon} ${label}</span>`;
+
+  const parts = [];
+  // Koruma sayısı
+  parts.push(chip('🛡️', `<b>${countActiveProtections()}/${RISK_CHIP_DEFS.length}</b> koruma`, null));
+  // Günlük K/Z durumu
+  const dailyOn = document.getElementById('dailyLossLimitToggle')?.checked;
+  if (dailyOn) {
+    const lim = Math.abs(parseFloat(document.getElementById('dailyLossLimitPct')?.value) || 30);
+    const used = dailyPnlTracker.pnl < 0 ? Math.min(Math.abs(dailyPnlTracker.pnl) / lim * 100, 100) : 0;
+    const c = used >= 80 ? 'var(--red)' : used >= 50 ? 'var(--yellow)' : 'var(--green)';
+    parts.push(chip('🛑', `Günlük limit: <b>%${used.toFixed(0)}</b> dolu`, c));
+  }
+  // Devre kesici serisi
+  if (cbLossStreak > 0) {
+    const cbLim = parseInt(document.getElementById('circuitBreakerCount')?.value) || 4;
+    parts.push(chip('🚨', `Kayıp serisi: <b>${cbLossStreak}/${cbLim}</b>`, cbLossStreak >= cbLim - 1 ? 'var(--red)' : 'var(--yellow)'));
+  }
+  // Aktif soğumalar
+  const cooling = Object.keys(lossCooldownUntil).filter(c => lossCooldownUntil[c] > Date.now());
+  if (cooling.length > 0) parts.push(chip('🧊', `Soğumada: <b>${cooling.join(', ')}</b>`, 'var(--yellow)'));
+  // BTC funding (varsa)
+  const btcFund = getFundingRate('BTCUSDT');
+  if (btcFund !== null) {
+    const fc = Math.abs(btcFund) >= 0.05 ? 'var(--yellow)' : null;
+    parts.push(chip('💰', `BTC funding: <b>${btcFund >= 0 ? '+' : ''}${btcFund.toFixed(4)}%</b>`, fc));
+  }
+  // Son engellenen sinyal
+  if (lastBlockInfo && Date.now() - lastBlockInfo.ts < 6 * 60 * 60 * 1000) {
+    const ago = Math.round((Date.now() - lastBlockInfo.ts) / 60000);
+    parts.push(chip('⛔', `Son engel (${ago} dk önce): <b>${lastBlockInfo.coin}</b>`, null));
+  }
+  el.innerHTML = parts.join('');
+  if (lastBlockInfo) el.title = lastBlockInfo.msg;
 }
 
 function renderDashboardSummary() {
@@ -4719,6 +5188,7 @@ function renderDashboardSummary() {
   drawGlobalEquityChart();
   updateHeroBadges();
   renderReasonAnalysis();
+  renderBotHealth(); // v41
 }
 
 // Üstteki özet panosundaki küçük canlı toplam K/Z grafiği (büyük detaylı grafikle aynı veriyi kullanır)
@@ -5379,6 +5849,24 @@ async function fetchBtcCorr() {
   } catch(e) {}
 }
 
+// ───────── v41: Funding Rate Cache (coin bazında 15 dk) ─────────
+async function fetchFunding(symbol) {
+  const now = Date.now();
+  const cached = fundingCache[symbol];
+  if (cached && now - cached.lastFetch < 15 * 60 * 1000) return;
+  try {
+    const r = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=' + symbol);
+    const data = await r.json();
+    if (data && data.lastFundingRate !== undefined) {
+      fundingCache[symbol] = { rate: parseFloat(data.lastFundingRate) * 100, lastFetch: now }; // % olarak
+    }
+  } catch(e) { /* fapi erişilemezse filtre sessizce devre dışı kalır (fail-open) */ }
+}
+function getFundingRate(symbol) {
+  const c = fundingCache[symbol];
+  return c ? c.rate : null;
+}
+
 // ───────── v36.7: CSV Export ─────────
 function exportTradesToCSV() {
   if (!globalTradeHistory || globalTradeHistory.length === 0) {
@@ -5617,6 +6105,8 @@ async function coinTick(coin) {
   // ── v36.7: Fear & Greed + BTC Korelasyon önbellekleri güncelle ──
   fetchFearGreed();
   if (coin !== 'BTC') fetchBtcCorr();
+  // ── v41: Funding rate önbelleği (filtre açıksa) ──
+  if (document.getElementById('fundingFilterToggle')?.checked) fetchFunding(cfg.symbol);
 
   const priceEl = document.getElementById('price-' + coin);
   if (priceEl) {
@@ -5736,7 +6226,30 @@ async function coinTick(coin) {
     // Yeni pozisyon açma kararı — filtreler burada uygulanır
     if (isManualCooldown) {
       log('🧊 [Soğuma] ' + coin + ' — Manuel kapatma soğuması aktif. Otomatik işlem engellendi.', 'info', coin);
-    } else if (isOutsideTradingHours()) {
+    } else if (isLossCooldownActive(coin)) {
+      // v41: Kayıp sonrası soğuma — sadece sinyal varken logla (spam önleme)
+      if (buyCount >= weightedMinConfirm || sellCount >= weightedMinConfirm) {
+        const remMin = Math.ceil((lossCooldownUntil[coin] - Date.now()) / 60000);
+        log(`🧊 [Kayıp Soğuması] ${coin} — Son Stop-Loss sonrası soğumada, ${remMin} dk kaldı. Sinyal var ama yeni pozisyon açılmadı (aynı kaotik harekete geri girmeyi önler).`, 'warn', coin);
+      }
+    } else if ((() => {
+      // ── v41: Funding Rate Filtresi (yön duyarlı) ──
+      const fundOn = document.getElementById('fundingFilterToggle')?.checked;
+      if (!fundOn) return false;
+      const rate = getFundingRate(cfg.symbol);
+      if (rate === null) return false; // veri yoksa fail-open
+      const thresh = parseFloat(document.getElementById('fundingThreshold')?.value) || 0.05;
+      if (buyCount >= weightedMinConfirm && rate >= thresh) {
+        log(`💰 [Funding] ${coin} — Funding %${rate.toFixed(4)} ≥ +%${thresh} (kalabalık LONG'da, squeeze riski). Yeni LONG engellendi.`, 'warn', coin);
+        return true;
+      }
+      if (sellCount >= weightedMinConfirm && rate <= -thresh) {
+        log(`💰 [Funding] ${coin} — Funding %${rate.toFixed(4)} ≤ -%${thresh} (kalabalık SHORT'ta, squeeze riski). Yeni SHORT engellendi.`, 'warn', coin);
+        return true;
+      }
+      return false;
+    })()) { /* Funding bloğu yukarıda loglandı */ }
+    else if (isOutsideTradingHours()) {
       // v37.0: İşlem saatleri dışında yeni pozisyon açılmaz (açık pozisyonlar yönetilmeye devam eder)
       if (buyCount >= weightedMinConfirm || sellCount >= weightedMinConfirm) {
         log(`⏰ [İşlem Saati] ${coin} — Sinyal var ama izin verilen saat aralığının dışındayız (${document.getElementById('tradingHoursStart').value}–${document.getElementById('tradingHoursEnd').value}). Yeni pozisyon açılmadı.`, 'warn', coin);
@@ -5930,7 +6443,34 @@ async function coinTick(coin) {
       pos.partialTaken = true;
     }
 
-    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || hitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit;
+    // ───────── v41: Runner Modu (Kademeli TP) ─────────
+    // TP hedefine ulaşıldığında pozisyonun tamamı yerine tp2Pct%'si kapatılır; kalan "runner"
+    // trailing stop ile trendde kalır. GÜVENLİK ŞARTI: trailing stop açık olmalı — yoksa
+    // runner'ın çıkış mekanizması kalmaz, normal tam TP kapanışına düşülür.
+    let effHitTakeProfit = hitTakeProfit;
+    const tp2On = document.getElementById('tp2Toggle')?.checked;
+    if (hitTakeProfit && tp2On && !pos.tp2Taken && trailingOn && pos.amount > 0) {
+      const rawTp2 = parseFloat(document.getElementById('tp2Pct')?.value) || 60;
+      const closePct2 = Math.min(Math.max(rawTp2, 1), 99) / 100;
+      const runnerCloseAmount = pos.amount * closePct2;
+      const grossRunnerPnl = runnerCloseAmount * leveragedChange;
+      const { netPnl: runnerPnl, cost: runnerCost } = calculateNetPnl(grossRunnerPnl, runnerCloseAmount, pos.leverage || 1);
+
+      addTrade(coin, price, runnerCloseAmount, runnerPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'tp', pos.entryRegime || null, pos.entrySignals || null);
+      log(`🏃 RUNNER MODU | ${coin} ${dir==='long'?'LONG':'SHORT'} TP hedefinde %${(closePct2*100).toFixed(0)} kapatıldı (Net: +${runnerPnl.toFixed(2)}$, Komisyon/Kayma: -${runnerCost.toFixed(2)}$). Kalan %${((1-closePct2)*100).toFixed(0)} trailing stop ile trendde koşmaya devam ediyor.`, 'buy', coin);
+      sendTelegramMessage(`🏃 <b>${coin} Runner Modu</b>\nTP hedefinde %${(closePct2*100).toFixed(0)} kapatıldı: +${runnerPnl.toFixed(2)} USDT\nKalan kısım trailing stop ile trendde.`);
+
+      pos.amount = pos.amount - runnerCloseAmount;
+      pos.tp2Taken = true;
+      // Runner için breakeven'ı garantiye al: en kötü ihtimalle girişten kapanır
+      if (document.getElementById('breakevenToggle')?.checked) pos.breakevenActivated = true;
+      effHitTakeProfit = false; // tam kapanışı bu tick'te iptal et — runner devam
+    } else if (pos.tp2Taken) {
+      // Runner zaten alınmış — TP eşiği artık tam kapanış tetiklemez, çıkış trailing/breakeven/sinyalde
+      effHitTakeProfit = false;
+    }
+
+    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit;
 
     if (shouldClose) {
       // 🛡️ Guard: pos.amount negatife düşmüşse (partial TP %100+ bug artığı) 0'a sabitle.
@@ -5948,7 +6488,7 @@ async function coinTick(coin) {
       else if (hitBreakevenSL)  { reason = '🛡️ Breakeven Stop (giriş fiyatı koruması)'; reasonCategory = 'breakeven'; }
       else if (emergencyExit)   { reason = '🚨 Acil Çıkış (Max Zarar Cap)'; reasonCategory = 'sl'; }
       else if (hitStopLoss)     { reason = 'Stop-Loss'; reasonCategory = 'sl'; }
-      else if (hitTakeProfit)   { reason = 'Take-Profit'; reasonCategory = 'tp'; }
+      else if (effHitTakeProfit) { reason = 'Take-Profit'; reasonCategory = 'tp'; }
       else { reason = `${dir === 'long' ? sellCount : buyCount}/${activeList.length} onay`; reasonCategory = 'signal'; }
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
@@ -6124,6 +6664,9 @@ const RISK_CHIP_DEFS = [
   { id: 'mtfToggle',             icon: '📊', name: 'MTF Onay' },
   { id: 'circuitBreakerToggle',  icon: '🚨', name: 'Devre Kesici' },
   { id: 'tradingHoursToggle',    icon: '⏰', name: 'İşlem Saati' },
+  { id: 'fundingFilterToggle',   icon: '💰', name: 'Funding Filtre' },   // v41
+  { id: 'lossCooldownToggle',    icon: '🧊', name: 'Kayıp Soğuması' },   // v41
+  { id: 'tp2Toggle',             icon: '🏃', name: 'Runner TP' },        // v41
 ];
 
 function renderRiskChips() {
@@ -7080,6 +7623,11 @@ window.addEventListener('load', () => {
   attachSettingsAutoSave();
   renderSystemStrip(); // v38.0: sistem şeridi + risk çipleri ilk yükleme
   updateAllTpBreakevenHints();
+  // ── v41 başlangıç kancaları ──
+  if (document.getElementById('fundingFilterToggle')?.checked) fetchFunding('BTCUSDT'); // Bot Sağlığı için BTC funding
+  checkAutoWeeklyReport();
+  setInterval(checkAutoWeeklyReport, 30 * 60 * 1000); // 30 dk'da bir kontrol — Pazar 20:00+ yakalanır
+  setInterval(renderBotHealth, 60 * 1000);            // Bot Sağlığı kartı dakikada bir tazelenir
   document.getElementById('minConfirmPct').addEventListener('change', updateIndicatorCountNote);
   if (globalTradeHistory.length > 0) {
     log(`📂 ${globalTradeHistory.length} işlem yüklendi | Toplam K/Z: ${globalTotalPnl>=0?'+':''}${globalTotalPnl.toFixed(2)} $`, 'system');
