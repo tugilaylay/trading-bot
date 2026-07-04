@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.3 QUANT+</title>
+<title>TUGAY × QUANT · v41.4 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1078,7 +1078,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.3 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.4 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1162,6 +1162,11 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     </div>
     <button onclick="dismissCircuitBreaker()" style="background:rgba(196,58,47,0.15); color:var(--red); border:1px solid rgba(196,58,47,0.4);
         border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font);">✕ Kapat</button>
+  </div>
+  <!-- ⬆ v41.4 KRİTİK FİX: Bu kapanış div'i panic butonunu taşırken yanlışlıkla silinmişti.
+       Sonuç: 6 sekme panelinin TAMAMI display:none olan bu banner'ın içine hapsolmuştu —
+       sekmeler doğru çalışıyor ama içerikleri görünmez kutuda render ediliyordu. -->
+
 <button id="v40PanicBtn" onclick="v40PanicPress()" title="ACİL DURDUR — tüm pozisyonları kapatır, otopilotu kilitler">🛑<br>ACİL<br>DURDUR</button>
 
   <!-- ═══ v41.2 SEKME PANELİ: ÖZET ═══ -->
