@@ -1888,7 +1888,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
         <div class="form-group">
           <label>Take-Profit = ATR ×</label>
-          <input type="number" id="atrTpMultiplier" value="3.0" min="0.5" step="0.1" />
+          <input type="number" id="atrTpMultiplier" value="2.0" min="0.5" step="0.1" />
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
@@ -2624,7 +2624,7 @@ const SETTINGS_FIELD_IDS = [
 // standarda çeker, sonra dokunmaz — kullanıcı istediği gibi değiştirebilir.
 const RECOMMENDED_RISK_DEFAULTS = {
   atrSlMultiplier: '1.5',    // 1.0 çok dardı — normal gürültü bile stop ediyordu
-  atrTpMultiplier: '3.0',    // risk/ödül 1:2 → daha nefesli
+  atrTpMultiplier: '2.0',    // v40.1: 3.0 + eski %25 tavan = her coinde aynı "ulaşılamaz" TP hissi. 2.0'a düşürüldü.
   leverage: '2',             // 3x+ kaldıraç dar SL ile kötü kombinasyon
   adxMinValue: '25',
   breakevenThreshold: '1.5',
@@ -2677,6 +2677,20 @@ function applyV40RiskUpgrade() {
       saveSettings();
       log(`🛠️ [v40] Otopilot çağına uygun risk ayarları güncellendi (tek seferlik): ${changed.join(', ')}. Artık her coin kendi oynaklığına göre SL/TP/pozisyon boyutu alıyor. Elle değiştirdiğin her şey korunur.`, 'system');
     }
+  } catch(e) {}
+}
+
+// ───────── v40.1: TP tavanı gerçekçi değildi (tek seferlik) ─────────
+// %25 tavan + 3.0x ATR çarpanı kombinasyonu neredeyse HER coin'de aynı "%25.0 TP" görüntüsüne
+// çarpıyordu — coin'e özgü değil, hep aynı sayı. Çarpanı 2.0'a çekiyoruz (tavan zaten koddan
+// %12'ye indi, o kısım migrasyon gerektirmez). Elle değiştirdiysen bu da bir kez üzerine yazar,
+// sonrasında tekrar dokunmaz.
+function applyV40TpRealism() {
+  try {
+    if (localStorage.getItem('v40b_tp_upgrade_applied')) return;
+    const el = document.getElementById('atrTpMultiplier');
+    if (el) { el.value = '2.0'; saveSettings(); log('🛠️ [v40.1] Take-Profit çarpanı 3.0 → 2.0 olarak güncellendi (tek seferlik) — artık TP her coinde aynı %25 tavana çarpmıyor, kendi oynaklığına göre daha gerçekçi bir hedefe oturuyor.', 'system'); }
+    localStorage.setItem('v40b_tp_upgrade_applied', '1');
   } catch(e) {}
 }
 
@@ -5159,7 +5173,7 @@ function computeEffectiveTpSl(stopLossDefault, takeProfitDefault, atr, price, le
   let levTp = rawTpPct * lev;
 
   const MAX_LEV_SL = 0.10; // ekranda max %10 SL
-  const MAX_LEV_TP = 0.25; // ekranda max %25 TP
+  const MAX_LEV_TP = 0.12; // ekranda max %12 TP — v40.1: %25 gerçekçi hissettirmiyordu, düşürüldü
 
   if (levSl > MAX_LEV_SL) {
     const ratio = levTp / levSl;
@@ -7045,6 +7059,7 @@ window.addEventListener('load', () => {
   loadSettings();
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
+  applyV40TpRealism();            // v40.1: tek seferlik gerçekçi TP çarpanı düzeltmesi
   checkSettingsConflicts();       // v38.1: çakışma denetimi (açılışta)
   onTradeModeChange();
   loadFromStorage();
