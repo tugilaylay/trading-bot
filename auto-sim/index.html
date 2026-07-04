@@ -4827,14 +4827,17 @@ function switchTab(tabName, skipScroll) {
 
     // Gizliyken clientWidth=0 olan canvas'lar sekme görünür olunca yeniden çizilmeli,
     // yoksa bir sonraki veri tick'ine kadar (dakikalar sürebilir) boş/bozuk kalırlar.
-    if (tabName === 'ozet') {
-      drawMiniEquityChart();
-      drawGlobalEquityChart();
-    } else if (tabName === 'coins') {
-      redrawAllCoinCharts();
-    } else if (tabName === 'analytics') {
-      drawChart();
-    }
+    // try/catch: bir grafik çizim hatası ASLA sekme geçişini bozmamalı.
+    try {
+      if (tabName === 'ozet') {
+        drawMiniEquityChart();
+        drawGlobalEquityChart();
+      } else if (tabName === 'coins') {
+        redrawAllCoinCharts();
+      } else if (tabName === 'analytics') {
+        drawChart();
+      }
+    } catch (e) { console.error('Sekme grafik yenileme hatası (sekme geçişi etkilenmedi):', e); }
   });
 }
 
@@ -4862,6 +4865,17 @@ function initTabbar() {
   try { saved = localStorage.getItem(SK_ACTIVE_TAB) || 'ozet'; } catch(e) {}
   switchTab(saved, true);
 }
+
+// v41.3: KRİTİK GÜVENLİK — initTabbar'ı sayfanın ana yükleme zincirinden TAMAMEN
+// AYRI, kendi bağımsız 'load' dinleyicisinde çalıştırıyoruz. Bir tarayıcıda birden
+// fazla 'load' dinleyicisi varsa, biri hata fırlatıp dursa bile DİĞERLERİ yine de
+// çalışır (JS bunu bu şekilde garanti eder). Böylece ana başlatma zincirinde
+// (ayarlar/grafikler/coin panelleri) her ne patlarsa patlasın, sekme çubuğu HER ZAMAN
+// tıklamaya cevap verir. try/catch ekstra bir güvenlik katmanı.
+window.addEventListener('load', () => {
+  try { initTabbar(); }
+  catch (e) { console.error('initTabbar hatası (sekmeler yine de denenmeli):', e); }
+});
 
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
   globalTradeCount++;
@@ -7774,7 +7788,10 @@ window.addEventListener('load', () => {
   checkAutoWeeklyReport();
   setInterval(checkAutoWeeklyReport, 30 * 60 * 1000); // 30 dk'da bir kontrol — Pazar 20:00+ yakalanır
   setInterval(renderBotHealth, 60 * 1000);            // Bot Sağlığı kartı dakikada bir tazelenir
-  initTabbar(); // v41.2: alt sekme çubuğu — gerçek native app navigasyonu
+  // v41.3: initTabbar() buradan kaldırıldı — artık aşağıda TAMAMEN BAĞIMSIZ kendi
+  // load listener'ında çalışıyor. Sebep: bu fonksiyon (attachSettingsAutoSave ve öncesi)
+  // içinde bir yerde hata patlarsa, aynı fonksiyonun kalanı (yani initTabbar dahil) hiç
+  // çalışmıyordu — sekmeler o zaman tıklansa da tepki vermiyordu. Ayrı listener = izole güvenlik.
   document.getElementById('minConfirmPct').addEventListener('change', updateIndicatorCountNote);
   if (globalTradeHistory.length > 0) {
     log(`📂 ${globalTradeHistory.length} işlem yüklendi | Toplam K/Z: ${globalTotalPnl>=0?'+':''}${globalTotalPnl.toFixed(2)} $`, 'system');
