@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.8 QUANT+</title>
+<title>TUGAY × QUANT · v41.9 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.8 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1670,6 +1670,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('guvenli')">🛡️ Güvenli (Az &amp; Öz)<small>Sadece en yüksek teyitli sinyaller — az işlem, yüksek isabet</small></button>
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('kanal')">📡 Kanal Kırılımı<small>Donchian + Keltner — Turtle tarzı zirve/dip kırılım avcısı</small></button>
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('kurumsal')">🏛️ Kurumsal Akış<small>VWAP + MFI — büyük oyuncuların izlediği seviyeler</small></button>
+        <button class="ind-preset-btn" style="border-color:rgba(255,165,0,0.5);" onclick="applyIndicatorPreset('harmanlanmis')">🎯 Harmanlanmış <small style="color:orange;">v41.9 YENİ</small><small>Trend + Güç + Momentum + Kurumsal + Divergence — hiç tekrar yok</small></button>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
         💡 <b>Aile renkleri:</b>
@@ -3733,7 +3734,14 @@ const INDICATOR_PRESETS = {
   kanal: { list: ['donchian','keltner','ematrend','obv','adx'],
     msg: '📡 Kanal Kırılımı uygulandı: Donchian + Keltner + EMA Trend + OBV + ADX · Turtle tarzı kırılım avcısı' },
   kurumsal: { list: ['vwap','mfi','supertrend','macd','DIV_MACD'],
-    msg: '🏛️ Kurumsal Akış uygulandı: VWAP + MFI + Supertrend + MACD + MACD Divergence · Kurumların izlediği seviyeler' }
+    msg: '🏛️ Kurumsal Akış uygulandı: VWAP + MFI + Supertrend + MACD + MACD Divergence · Kurumların izlediği seviyeler' },
+  // ── v41.9: Momentum + Kurumsal + Trend Takipçisi HARMANI ──
+  // Tanı: Supertrend + EMA Trend + VWAP aynı anda kullanılınca üçü de "trend" ailesinden
+  // sayılıyor ve pratikte hep aynı anda aynı yöne işaret ediyor — 3 bağımsız onay değil,
+  // TEK sinyalin 3 kez sayılması. Bu set her aileden en fazla 2 temsilci alır, hiçbir
+  // aile 3+ olmaz: Trend(1) + Güç(1) + Momentum(2) + Kurumsal/Hacim(2) + Divergence(1).
+  harmanlanmis: { list: ['supertrend','adx','rsi','macd','vwap','cmf','DIV_RSI'],
+    msg: '🎯 Harmanlanmış Set uygulandı: Supertrend(Trend) + ADX(Güç) + RSI+MACD(Momentum) + VWAP+CMF(Kurumsal) + RSI Divergence · Aile dengeli, tekrarsız 7 gösterge' }
 };
 
 function applyIndicatorPreset(key) {
