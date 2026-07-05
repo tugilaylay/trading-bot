@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.9.1 QUANT+</title>
+<title>TUGAY × QUANT · v41.9.2 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.1 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.2 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1868,7 +1868,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="form-grid">
         <div class="form-group">
           <label>Aktivasyon Eşiği (kaldıraçlı %)</label>
-          <input type="number" id="breakevenThreshold" value="1.5" step="0.5" min="0.5" />
+          <input type="number" id="breakevenThreshold" value="1.5" step="0.5" min="0.5" max="8" />
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon belirttiğin % kâra ulaşınca Stop-Loss otomatik olarak giriş fiyatına çekilir. Böylece kâra dönen işlem geri zarar edemez — en kötü ihtimalle komisyon kadar küçük bir kayıpla kapanır.</div>
@@ -2069,17 +2069,18 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="form-grid">
         <div class="form-group">
           <label>Stop-Loss = ATR ×</label>
-          <input type="number" id="atrSlMultiplier" value="1.5" min="0.5" step="0.1" />
+          <input type="number" id="atrSlMultiplier" value="1.5" min="0.8" max="3" step="0.1" />
         </div>
         <div class="form-group">
           <label>Take-Profit = ATR ×</label>
-          <input type="number" id="atrTpMultiplier" value="2.0" min="0.5" step="0.1" />
+          <input type="number" id="atrTpMultiplier" value="2.5" min="1" max="6" step="0.1" />
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
         Açıkken: her pozisyon açıldığı anda o coin'in ATR'sine göre SL/TP hesaplanır, kapanana kadar sabit kalır.
         <b style="color:orange;">v34 Fix:</b> Kaldıraç artık çift sayılmıyor — SL/TP ham fiyat % olarak hesaplanır, kaldıraç zaten leveragedChange'de var.
-        Varsayılan SL=1.0×ATR, TP=2.5×ATR (risk:ödül 1:2.5).
+        <b>Varsayılan ve önerilen: SL=1.5×ATR, TP=2.5×ATR (risk:ödül 1:1.67)</b> — ne çok dar (gürültüyle sürekli stop yer) ne çok geniş (TP'ye asla ulaşmaz).
+        <b style="color:orange;">v41.9.2 Güvenlik Kilidi:</b> Bu iki alan artık <b>0.8–3.0</b> (SL) ve <b>1.0–6.0</b> (TP) aralığının dışına asla çıkamaz — yanlışlıkla "5" veya "400" gibi bir sayı yazsan bile alan otomatik olarak en yakın güvenli sınıra çekilir ve sana haber verir.
       </div>
 
       <div class="acc-divider"></div>
@@ -3319,6 +3320,44 @@ function attachSettingsAutoSave() {
     if (!el) return;
     el.addEventListener('change', updateAllTpBreakevenHints);
     el.addEventListener('input', updateAllTpBreakevenHints);
+  });
+  attachInputClamps(); // v41.9.2: risk alanlarına anlamsız değer girişini engelleyen kalıcı kilit
+}
+
+// ───────── v41.9.2: Girdi Sınırlama Kilidi ─────────
+// Geçmişte "Breakeven Eşiği: 400", "Kısmi TP Oranı: 400", "ATR Stop-Loss: 5x" gibi
+// yanlışlıkla girilmiş anlamsız değerler özelliği fiilen devre dışı bırakıyordu — toggle
+// açık görünüyordu ama pratikte hiç tetiklenmiyordu (sessiz arıza, en kötü tür arıza).
+// Artık bu alanlar, HTML min/max'a EK olarak burada da JS ile kilitleniyor — mobil
+// klavyeler HTML max'ı her zaman uygulamayabilir, bu yüzden 'blur' anında ikinci bir
+// güvenlik katmanı devreye giriyor.
+const INPUT_CLAMP_RULES = {
+  atrSlMultiplier:    { min: 0.8, max: 3,   label: 'ATR Stop-Loss çarpanı' },
+  atrTpMultiplier:    { min: 1,   max: 6,   label: 'ATR Take-Profit çarpanı' },
+  breakevenThreshold: { min: 0.5, max: 8,   label: 'Breakeven Aktivasyon Eşiği' },
+  partialTpPct:       { min: 10,  max: 90,  label: 'Kısmi TP Kapatma Oranı' },
+  tp2Pct:             { min: 30,  max: 90,  label: 'Runner TP Kapatma Oranı' },
+  fgThreshold:        { min: 5,   max: 50,  label: 'Fear & Greed Eşiği' },
+  fundingThreshold:   { min: 0.01,max: 0.3, label: 'Funding Rate Eşiği' },
+};
+
+function attachInputClamps() {
+  Object.keys(INPUT_CLAMP_RULES).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const rule = INPUT_CLAMP_RULES[id];
+    el.addEventListener('blur', () => {
+      const raw = parseFloat(el.value);
+      if (isNaN(raw)) return;
+      const clamped = Math.min(Math.max(raw, rule.min), rule.max);
+      if (clamped !== raw) {
+        el.value = clamped;
+        el.style.animation = 'none';
+        requestAnimationFrame(() => { el.style.transition = 'background-color 0.3s'; el.style.backgroundColor = 'rgba(255,165,0,0.25)'; setTimeout(() => { el.style.backgroundColor = ''; }, 900); });
+        log(`🔒 [Güvenlik Kilidi] ${rule.label}: ${raw} değeri geçerli aralığın (${rule.min}–${rule.max}) dışındaydı, otomatik olarak ${clamped}'e çekildi.`, 'system');
+        saveSettings();
+      }
+    });
   });
 }
 
