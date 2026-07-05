@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.6 QUANT+</title>
+<title>TUGAY × QUANT · v41.7 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1090,7 +1090,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.6 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.7 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2629,6 +2629,29 @@ let fundingCache = {}; // { BTCUSDT: { rate: 0.0001, lastFetch: ts } }
 const SK_LOSS_COOLDOWN = 'tugay_v41_losscooldown';
 let lossCooldownUntil = {}; // { BTC: timestampMs }
 try { lossCooldownUntil = JSON.parse(localStorage.getItem(SK_LOSS_COOLDOWN) || '{}'); } catch(e) { lossCooldownUntil = {}; }
+
+// ───────── v41.7 FIX: Manuel Soğuma artık KALICI ─────────
+// Önceden state.manualCooldown sadece coinStates hafızasında yaşıyordu — sayfa yenilenince
+// (veya tarayıcı sekmesi yeniden açılınca) bu bilgi sıfırlanıyor, kullanıcı elle kapattığı
+// bir coin (örn. TLM) hemen otomatik olarak yeniden açılabiliyordu. Artık bu bilgi de
+// localStorage'a yazılıyor ve sayfa her açıldığında geri yükleniyor.
+const SK_MANUAL_COOLDOWN = 'tugay_v41_manualcooldown';
+let manualCooldownCoins = {}; // { TLM: true }
+try { manualCooldownCoins = JSON.parse(localStorage.getItem(SK_MANUAL_COOLDOWN) || '{}'); } catch(e) { manualCooldownCoins = {}; }
+function setManualCooldown(coin) {
+  manualCooldownCoins[coin] = true;
+  try { localStorage.setItem(SK_MANUAL_COOLDOWN, JSON.stringify(manualCooldownCoins)); } catch(e) {}
+  if (coinStates[coin]) coinStates[coin].manualCooldown = true;
+}
+function clearManualCooldown(coin) {
+  delete manualCooldownCoins[coin];
+  try { localStorage.setItem(SK_MANUAL_COOLDOWN, JSON.stringify(manualCooldownCoins)); } catch(e) {}
+  if (coinStates[coin]) coinStates[coin].manualCooldown = false;
+}
+// Tek doğruluk kaynağı: hafızadaki state VEYA kalıcı kayıt — ikisinden biri true'ysa soğuma aktif.
+function isManualCooldownActive(coin) {
+  return !!(coinStates[coin]?.manualCooldown || manualCooldownCoins[coin]);
+}
 function setLossCooldown(coin) {
   const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
   lossCooldownUntil[coin] = Date.now() + mins * 60 * 1000;
@@ -3733,7 +3756,8 @@ function initCoinState(coin) {
     botRunning: false,
     interval: null,
     openPosition: null,
-    tradeCount: 0
+    tradeCount: 0,
+    manualCooldown: !!manualCooldownCoins[coin] // v41.7: kalıcı kayıttan geri yükle
   };
 }
 
@@ -4730,7 +4754,7 @@ function updateCooldownUI(coin) {
   const el = document.getElementById('position-' + coin);
   if (!el) return;
   const state = coinStates[coin];
-  if (!state || !state.manualCooldown) return;
+  if (!state || !isManualCooldownActive(coin)) return;
 
   // Pozisyon kartına soğuma mesajı + buton ekle
   el.className = 'position-card empty';
@@ -4749,8 +4773,8 @@ function updateCooldownUI(coin) {
 }
 
 function resetCooldown(coin) {
+  clearManualCooldown(coin); // v41.7: coinStates[coin] henüz oluşmamış olsa bile kalıcı kaydı temizle
   if (!coinStates[coin]) return;
-  coinStates[coin].manualCooldown = false;
   const price = parseFloat(document.getElementById('price-' + coin)?.textContent?.replace(',', '.')) || 0;
   renderPositionCard(coin, coinStates[coin], price);
   log('✅ [Soğuma Kaldırıldı] ' + coin + ' — Bot artık bu coinde tekrar otomatik işlem açabilir.', 'system', coin);
@@ -5677,6 +5701,7 @@ async function manualSell(coin) {
     // Kullanıcı "Soğumayı Kaldır" butonuna basana kadar veya coin panelini yeniden başlatana kadar bekler.
     // XLM'i manuel sattın → bot hemen yeni XLM açıyordu sorunu bu şekilde çözülür.
     state.manualCooldown = true;
+    setManualCooldown(coin); // v41.7: kalıcı hale getir — sayfa yenilense de kaybolmasın
     log('🧊 [Manuel Soğuma] ' + coin + ' — Manuel kapatıldı. Bot bu coinde otomatik işlem açmayacak. Paneldeki "Soğumayı Kaldır" butonuna bas veya coini yeniden başlat.', 'warn', coin);
     renderPositionCard(coin, state, price);
     updateCooldownUI(coin);
@@ -6548,7 +6573,7 @@ async function coinTick(coin) {
   // ─── Manuel Soğuma ve ADX Filtresi ───
   // KRİTİK: Bu filtreler SADECE yeni pozisyon açmayı engeller.
   // Açık pozisyon varsa SL/TP/çıkış yönetimi ve P&L güncellemesi HER ZAMAN çalışır.
-  const isManualCooldown = coinStates[coin] && coinStates[coin].manualCooldown;
+  const isManualCooldown = isManualCooldownActive(coin);
 
   let adxBlocked = false;
   const adxCheckToggle = document.getElementById('adxMinFilterToggle');
@@ -8559,7 +8584,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   if (!coinStates[short]) coinStates[short] = initCoinState(short);
   const state = coinStates[short];
   if (state.openPosition) return false;
-  if (state.manualCooldown) { brain('🧊 ' + short + ' manuel soğumada — atlandı.'); return false; }
+  if (isManualCooldownActive(short)) { brain('🧊 ' + short + ' manuel soğumada — atlandı.'); return false; }
 
   const tradeMode = document.getElementById('tradeMode').value;
   if (direction === 'short' && tradeMode !== 'futures_sim') { brain('⚠️ ' + short + ' SHORT sinyali var ama Spot moddasın — atlandı.'); return false; }
@@ -8610,7 +8635,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
   addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null);
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
-  if (setCooldown) { state.manualCooldown = true; try { updateCooldownUI(coin); } catch(e){} }
+  if (setCooldown) { setManualCooldown(coin); try { updateCooldownUI(coin); } catch(e){} }
   try { renderPositionCard(coin, state, price); } catch(e){}
   renderVault();
 }
@@ -8748,9 +8773,25 @@ async function apCycle(){
       .filter(r => !(coinStates[r.short] && coinStates[r.short].openPosition))
       .filter(r => !(r.netPct < 0 && tradeMode !== 'futures_sim'))
       .filter(r => !(typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)))
+      .filter(r => {
+        // v41.7 FIX: Kayıp Sonrası Coin Soğuması VE Manuel Soğuma artık Otopilot'ta da geçerli.
+        // Önceden bu kontroller yalnızca tekli coin panellerinin kendi döngüsünde vardı —
+        // Otopilot'un evren taraması bu kayıtları hiç sormuyordu, bu yüzden stop yiyen veya
+        // elle kapatılan bir coin (örn. TLM) bir sonraki tarama turunda hemen yeniden açılabiliyordu.
+        if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(r.short)) return false;
+        if (typeof isManualCooldownActive === 'function' && isManualCooldownActive(r.short)) return false;
+        return true;
+      })
       .sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
 
-    if (!candidates.length) { brain('🌫️ Eşiği (%'+S.minScore+') geçen av yok. En yakın: ' + (results.sort((a,b)=>Math.abs(b.netPct)-Math.abs(a.netPct))[0] ? results[0].short + ' %' + Math.abs(results[0].netPct).toFixed(0) : '—') + '. Sabır, canım.'); return; }
+    if (!candidates.length) {
+      const coolingNow = Object.keys(lossCooldownUntil || {}).filter(c => lossCooldownUntil[c] > Date.now());
+      const manualCooling = Object.keys(manualCooldownCoins || {});
+      const allCooling = [...new Set([...coolingNow, ...manualCooling])];
+      const coolNote = allCooling.length ? ' (' + allCooling.join(', ') + ' şu an soğumada)' : '';
+      brain('🌫️ Eşiği (%'+S.minScore+') geçen av yok' + coolNote + '. En yakın: ' + (results.sort((a,b)=>Math.abs(b.netPct)-Math.abs(a.netPct))[0] ? results[0].short + ' %' + Math.abs(results[0].netPct).toFixed(0) : '—') + '. Sabır, canım.');
+      return;
+    }
 
     let opened = 0;
     for (const cand of candidates) {
