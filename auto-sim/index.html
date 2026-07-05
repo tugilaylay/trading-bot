@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.9 QUANT+</title>
+<title>TUGAY × QUANT · v41.9.1 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.1 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -7874,8 +7874,27 @@ async function runScanner() {
   const regimeFilterOn = document.getElementById('regimeFilterToggle') && document.getElementById('regimeFilterToggle').checked;
 
   const content = document.getElementById('scannerContent');
-  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">⏳ 15 coin taranıyor (paralel), gerçek veri indiriliyor...</div>';
-  log(`🔍 Tarama başladı: 15 coin (paralel), ${activeList.length} gösterge, ${iv} mum`, 'system');
+  content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">⏳ Coin evreni hazırlanıyor...</div>';
+
+  // v41.9.1 FIX: Önceden tarama SABİT 22 coin'e bakıyordu, Otopilot ise Binance'teki TÜM
+  // USDT çiftlerini hacme göre canlı taretiyordu (Top N) — iki farklı "evren" farklı coinler
+  // gösteriyordu. Artık tarama, sabit favori listeyi + Otopilot'un GÜNCEL dinamik evrenini
+  // BİRLEŞTİRİYOR — Otopilot'un görebileceği her coin artık taramada da görünür.
+  let scanUniverse = SCANNER_COINS.slice();
+  try {
+    const dynUniverseN = parseInt(document.getElementById('v40ApUniverseN')?.value) || 30;
+    const dynList = await loadUniverse(); // Otopilot ile AYNI kaynak, AYNI sıralama (hacme göre)
+    const existingSymbols = new Set(scanUniverse.map(c => c.symbol));
+    dynList.slice(0, dynUniverseN).forEach(u => {
+      if (!existingSymbols.has(u.symbol)) {
+        scanUniverse.push({ symbol: u.symbol, name: u.short, short: u.short, color: colorFor(u.short) });
+        existingSymbols.add(u.symbol);
+      }
+    });
+  } catch (e) { log('⚠️ Dinamik evren yüklenemedi, sadece sabit liste taranıyor: ' + e.message, 'warn'); }
+
+  content.innerHTML = `<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">⏳ ${scanUniverse.length} coin taranıyor (paralel), gerçek veri indiriliyor...</div>`;
+  log(`🔍 Tarama başladı: ${scanUniverse.length} coin (sabit favoriler + Otopilot evreni, paralel), ${activeList.length} gösterge, ${iv} mum`, 'system');
 
   // Her coin için bağımsız bir tarama fonksiyonu - Promise.all ile hepsi aynı anda çalışır
   async function scanOneCoin(coinDef) {
@@ -7922,7 +7941,7 @@ async function runScanner() {
     }
   }
 
-  const scanResults = await Promise.all(SCANNER_COINS.map(scanOneCoin));
+  const scanResults = await Promise.all(scanUniverse.map(scanOneCoin));
   const results = scanResults.filter(r => r !== null);
 
   // En güçlü AL sinyalinden en güçlü SAT sinyaline doğru sırala
@@ -8910,6 +8929,15 @@ function colorFor(short){
   let h = 0; for (let i=0;i<short.length;i++) h = (h*31 + short.charCodeAt(i)) >>> 0;
   return PALETTE[h % PALETTE.length];
 }
+
+// v41.9.1 FIX: loadUniverse/colorFor bu IIFE'nin İÇİNDE tanımlı — bu satırlar olmadan
+// diğer <script> bloğundaki (ana bot kodu, runScanner dahil) kod bunlara ULAŞAMAZ,
+// çağırdığında "tanımsız" hatası sessizce yutulur ve tarama hep sadece sabit listeye
+// düşerdi. Dışa açıyoruz ki Tarama ve Otopilot GERÇEKTEN aynı coin evrenine bakabilsin.
+window.loadUniverse = loadUniverse;
+window.colorFor = colorFor;
+window.qtGetUniverse = () => universe;
+
 function ensureCoin(short, symbol){
   if (!COIN_CONFIG[short]) COIN_CONFIG[short] = { symbol: symbol, name: short + '/USDT', color: colorFor(short), short: short.slice(0,2) };
   if (!activeCoins[short]) {
