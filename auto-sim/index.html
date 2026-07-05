@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.9.2 QUANT+</title>
+<title>TUGAY × QUANT · v41.9.3 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.2 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.3 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1813,7 +1813,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="form-grid">
         <div class="form-group">
           <label>Günlük Maks. Toplam Zarar (USDT)</label>
-          <input type="number" id="dailyLossLimitPct" value="30" min="5" step="5" />
+          <input type="number" id="dailyLossLimitPct" value="40" min="10" max="1000" step="5" />
         </div>
       </div>
       <div id="dailyLossStatus" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: TÜM coinlerin bugünkü toplam zararı belirttiğin tutara ulaşırsa, bot tamamen durur ve hiçbir coinde yeni pozisyon açılmaz. Gün değişince (gece yarısı) sayaç sıfırlanır.</div>
@@ -1831,7 +1831,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="form-grid">
         <div class="form-group">
           <label>Coin Başına Günlük Maks. Zarar (USDT)</label>
-          <input type="number" id="perCoinLossLimitPct" value="15" min="5" step="5" />
+          <input type="number" id="perCoinLossLimitPct" value="20" min="5" max="300" step="5" />
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: bugün hangi coin belirttiğin tutarı kadar zarar ettiyse SADECE O coin durur, diğer coinler çalışmaya devam eder. Böylece bir coindeki kötü gidiş, başka bir coindeki fırsatı kaçırmana neden olmaz.</div>
@@ -3332,33 +3332,59 @@ function attachSettingsAutoSave() {
 // klavyeler HTML max'ı her zaman uygulamayabilir, bu yüzden 'blur' anında ikinci bir
 // güvenlik katmanı devreye giriyor.
 const INPUT_CLAMP_RULES = {
-  atrSlMultiplier:    { min: 0.8, max: 3,   label: 'ATR Stop-Loss çarpanı' },
-  atrTpMultiplier:    { min: 1,   max: 6,   label: 'ATR Take-Profit çarpanı' },
-  breakevenThreshold: { min: 0.5, max: 8,   label: 'Breakeven Aktivasyon Eşiği' },
-  partialTpPct:       { min: 10,  max: 90,  label: 'Kısmi TP Kapatma Oranı' },
-  tp2Pct:             { min: 30,  max: 90,  label: 'Runner TP Kapatma Oranı' },
-  fgThreshold:        { min: 5,   max: 50,  label: 'Fear & Greed Eşiği' },
-  fundingThreshold:   { min: 0.01,max: 0.3, label: 'Funding Rate Eşiği' },
+  atrSlMultiplier:       { min: 0.8,  max: 3,    def: 1.5,  label: 'ATR Stop-Loss çarpanı' },
+  atrTpMultiplier:       { min: 1,    max: 6,    def: 2.5,  label: 'ATR Take-Profit çarpanı' },
+  breakevenThreshold:    { min: 0.5,  max: 8,    def: 1.5,  label: 'Breakeven Aktivasyon Eşiği' },
+  partialTpPct:          { min: 10,   max: 90,   def: 50,   label: 'Kısmi TP Kapatma Oranı' },
+  tp2Pct:                { min: 30,   max: 90,   def: 60,   label: 'Runner TP Kapatma Oranı' },
+  fgThreshold:           { min: 5,    max: 50,   def: 25,   label: 'Fear & Greed Eşiği' },
+  fundingThreshold:      { min: 0.01, max: 0.3,  def: 0.05, label: 'Funding Rate Eşiği' },
+  // v41.9.3: "45 Breakeven", "4 USDT Günlük Limit" gibi anlamsız değerlere karşı ek kilitler
+  dailyLossLimitPct:     { min: 10,   max: 1000, def: 40,   label: 'Günlük Toplam Zarar Limiti (USDT)' },
+  perCoinLossLimitPct:   { min: 5,    max: 300,  def: 20,   label: 'Coin Bazlı Zarar Limiti (USDT)' },
 };
 
 function attachInputClamps() {
   Object.keys(INPUT_CLAMP_RULES).forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const rule = INPUT_CLAMP_RULES[id];
-    el.addEventListener('blur', () => {
-      const raw = parseFloat(el.value);
-      if (isNaN(raw)) return;
-      const clamped = Math.min(Math.max(raw, rule.min), rule.max);
-      if (clamped !== raw) {
-        el.value = clamped;
-        el.style.animation = 'none';
-        requestAnimationFrame(() => { el.style.transition = 'background-color 0.3s'; el.style.backgroundColor = 'rgba(255,165,0,0.25)'; setTimeout(() => { el.style.backgroundColor = ''; }, 900); });
-        log(`🔒 [Güvenlik Kilidi] ${rule.label}: ${raw} değeri geçerli aralığın (${rule.min}–${rule.max}) dışındaydı, otomatik olarak ${clamped}'e çekildi.`, 'system');
-        saveSettings();
-      }
-    });
+    el.addEventListener('blur', () => clampFieldValue(id, true));
   });
+}
+
+// Tek bir alanı kuralına göre düzeltir. Aralık İÇİNDEYSE dokunmaz. Aralık DIŞINDAYSA sınıra
+// yapıştırmak yerine doğrudan önerilen OPTİMUM değere (def) çeker — amaç sadece "geçerli" bir
+// sayı değil, gerçekten iyi çalışan bir sayı bırakmak. silent=false ise ayrıca görsel + log bildirir.
+function clampFieldValue(id, silent) {
+  const el = document.getElementById(id);
+  const rule = INPUT_CLAMP_RULES[id];
+  if (!el || !rule) return false;
+  const raw = parseFloat(el.value);
+  if (isNaN(raw)) return false;
+  const inRange = raw >= rule.min && raw <= rule.max;
+  if (inRange) return false;
+  el.value = rule.def;
+  if (!silent) return true;
+  el.style.transition = 'background-color 0.3s';
+  el.style.backgroundColor = 'rgba(255,165,0,0.25)';
+  setTimeout(() => { el.style.backgroundColor = ''; }, 900);
+  log(`🔒 [Güvenlik Kilidi] ${rule.label}: ${raw} değeri geçerli aralığın (${rule.min}–${rule.max}) dışındaydı, doğrudan önerilen optimum değere (${rule.def}) çekildi.`, 'system');
+  return true;
+}
+
+// v41.9.3: SAYFA AÇILIRKEN de tüm alanları tarar — önceden kilit sadece kullanıcı alandan
+// ÇIKINCA (blur) çalışıyordu, yani hiç dokunulmadan localStorage'dan yüklenen eski/bozuk bir
+// değer (örn. Breakeven=45, Günlük Limit=4) fark edilmeden kalabiliyordu. Artık her açılışta
+// tüm alanlar otomatik denetleniyor ve gerekirse sessizce (ama log'a not düşerek) düzeltiliyor.
+function runInputClampSweep() {
+  let fixedCount = 0;
+  Object.keys(INPUT_CLAMP_RULES).forEach(id => {
+    if (clampFieldValue(id, false)) fixedCount++;
+  });
+  if (fixedCount > 0) {
+    saveSettings();
+    log(`🔒 [Güvenlik Kilidi] Sayfa açılışında ${fixedCount} ayar geçersiz aralıktaydı ve otomatik düzeltildi. Ayarlar kartlarını gözden geçirmen önerilir.`, 'system');
+  }
 }
 
 // ───────── Açık Pozisyonların Kalıcılığı ─────────
@@ -8460,6 +8486,7 @@ window.addEventListener('load', () => {
   loadIndicatorPrefs();
   renderIndicatorSelector();
   loadSettings();
+  runInputClampSweep(); // v41.9.3: eski/bozuk kayıtlı değerleri (örn. Breakeven=45) sayfa açılır açılmaz düzelt
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
   applyV40TpRealism();            // v40.1: tek seferlik gerçekçi TP çarpanı düzeltmesi
