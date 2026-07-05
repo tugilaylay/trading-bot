@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.7 QUANT+</title>
+<title>TUGAY × QUANT · v41.8 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -479,6 +479,11 @@
   .coin-detail-strip .cd-item b { color: var(--text); }
   .coin-detail-strip .cd-buy { color: var(--green); }
   .coin-detail-strip .cd-sell { color: var(--red); }
+  .coin-personality {
+    font-size: 10px; color: var(--muted); font-family: var(--font);
+    padding: 0 2px; margin: -2px 0 8px 0; line-height: 1.5;
+  }
+  .coin-personality b { color: var(--text); }
   .status-pill {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 5px 11px; border-radius: 100px; font-size: 11px; font-weight: 600; border: 1px solid;
@@ -1090,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.7 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.8 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1204,6 +1209,18 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     </div>
     <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">
       📌 Bu panel yalnızca <b>farkındalık</b> içindir — bot kararlarını her zaman kendi kurallarına göre veriyor, bu veriler otomatik işleme karışmaz. 20 dk'da bir güncellenir. Kaynak: CoinGecko (piyasa geneli) + Binance (BTC volatilitesi).
+    </div>
+  </div>
+
+  <!-- ═══ v41.8: 🚦 Canlıya Hazır mı? Skoru ═══ -->
+  <div class="setup-card" id="liveReadinessCard" style="padding:16px 18px; margin-bottom:16px;">
+    <div class="card-title" style="margin-bottom:12px;">
+      <span>🚦 Canlıya Hazır mı?</span>
+      <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41.8 — Gerçek paraya geçmeden bak</span>
+    </div>
+    <div id="liveReadinessBody"><div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">Hesaplanıyor…</div></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">
+      📌 Bu bir tavsiye değil, sadece bir <b>kontrol listesidir</b> — nihai karar her zaman senin. Ben ne yatırım danışmanıyım ne de finansal tavsiye verebilirim; bu sadece botun kendi geçmiş verisine dayanan objektif bir özet.
     </div>
   </div>
 
@@ -2171,6 +2188,22 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ═══ v41.8: 🔔 Ses & Titreşim Bildirimleri ═══ -->
+      <div class="card-title">
+        <span>🔔 Ses & Titreşim Bildirimi</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41.8 — YENİ</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="soundHapticToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn btn-toggle-all" style="flex:1" onclick="playTradeFeedback('buy'); playTradeFeedback('sell');">🔊 Test Et</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon açılış/kapanışlarında kısa bir bip sesi + (destekleyen cihazlarda) titreşim verilir — Telegram'a bakmadan hissetmen için. <b>Önemli dürüstlük notu:</b> Titreşim (Vibration API) Android tarayıcılarda çalışır, <b>iOS Safari bunu desteklemez</b> — iPhone'da sadece ses duyarsın, titreşim hissetmezsin. Ses için sekmenin arka planda da açık olması ve telefon sessize alınmamış olması gerekir.</div>
+
+      <div class="acc-divider"></div>
+
       <div class="card-title">
         <span>📲 Telegram Bildirimi</span>
         <span class="optional-badge">İSTEĞE BAĞLI</span>
@@ -2346,6 +2379,26 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     </div>
   </details>
 
+  <!-- ═══ v41.8: 🔗 Korelasyon Haritası ═══ -->
+  <details class="setup-card acc-card" data-accid="correlation">
+    <summary>🔗 Korelasyon Haritası <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41.8 — YENİ</span></summary>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Aktif coinlerin son fiyat hareketleri arasındaki ilişki. <b>Kırmızı</b> = birlikte hareket ediyorlar (aynı riski iki kez almış olabilirsin) · <b>Gri</b> = birbirinden bağımsız · <b>Mavi</b> = ters hareket ediyorlar (doğal çeşitlendirme).</div>
+    <div id="correlationMatrix" style="overflow-x:auto;">
+      <div style="text-align:center;color:var(--muted);font-size:11px;padding:16px;">En az 2 aktif ve veri toplamış coin gerekiyor.</div>
+    </div>
+    <div class="ra-note">📌 Son ~30 mumun kapanış fiyatlarından hesaplanır. Kısa vadeli bir kesittir, kesin bir kural değil — sadece "acaba aynı bahsi iki kere mi oynuyorum" sorusunu sormana yardım eder.</div>
+  </details>
+
+  <!-- ═══ v41.8: 🔀 Walk-Forward Testi ═══ -->
+  <details class="setup-card acc-card" data-accid="walkforward">
+    <summary>🔀 Walk-Forward Testi <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v41.8 — Canlıya geçmeden önce ÖNEMLİ</span></summary>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Normal backtest tüm geçmiş veriyi tek parça kullanır — bu, ayarların o veriye "ezberlenmiş" (overfit) olma riskini gizler. Walk-Forward, veriyi ikiye böler: <b>ilk yarı (Eğitim)</b> ve <b>ikinci yarı (Test)</b>. Mevcut ayarların Test yarısında da Eğitim yarısına yakın performans vermesi, o ayarların gerçekten kalıcı bir edge olduğuna dair daha güçlü bir işarettir.</div>
+    <div class="btn-row">
+      <button class="btn btn-toggle-all" style="flex:1" onclick="runWalkForwardTest()">🔀 Walk-Forward Testi Çalıştır</button>
+    </div>
+    <div id="walkForwardResult" style="margin-top:14px;"></div>
+  </details>
+
   <!-- 💾 v37.0: Yedekleme & Geri Yükleme Merkezi -->
   <div class="card" style="margin-bottom:18px;">
     <div class="card-title">
@@ -2486,10 +2539,12 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         if (typeof drawMiniEquityChart === 'function') drawMiniEquityChart();
         if (typeof drawGlobalEquityChart === 'function') drawGlobalEquityChart();
         if (typeof fetchMarketPulse === 'function') fetchMarketPulse(); // v41.4 — kendi 20dk cache'i var, spam olmaz
+        if (typeof renderLiveReadiness === 'function') renderLiveReadiness(); // v41.8
       } else if (tabName === 'coins') {
         if (typeof redrawAllCoinCharts === 'function') redrawAllCoinCharts();
       } else if (tabName === 'analytics') {
         if (typeof drawChart === 'function') drawChart();
+        if (typeof renderCorrelationMatrix === 'function') renderCorrelationMatrix(); // v41.8
       }
     } catch (e) { /* grafik hatası sekmeyi etkilemesin */ }
   };
@@ -3797,6 +3852,12 @@ function log(msg, type = 'info', coin = null) {
   if (coin && /^(⛔|🚫|😱|🔗|⏰|🧊|💰|📊 \[MTF\])/.test(msg)) {
     lastBlockInfo = { coin, msg: msg.replace(/<[^>]*>/g, '').slice(0, 140), ts: Date.now() };
   }
+  // v41.8: Ses & Titreşim — coin'e bağlı 'buy'/'sell' tipli her log satırı bir al/sat olayıdır
+  // (açılış, kapanış, kısmi kapanış). Merkezi tek nokta: her çağrı yerini ayrı ayrı bulup
+  // değiştirmeye gerek kalmadan tüm işlem olayları burada yakalanır.
+  if (coin && (type === 'buy' || type === 'sell')) {
+    try { playTradeFeedback(type); } catch (e) {}
+  }
   const body = document.getElementById('logBody');
   const now = new Date().toLocaleTimeString('tr-TR');
   const line = document.createElement('div');
@@ -3915,6 +3976,7 @@ function renderCoinPanels() {
         <div class="cp-title">
           <span class="badge-coin" style="background:${c.color}">${c.short}</span>
           ${c.name}
+          <span id="mood-${coin}" title="Coin ruh hali — trend/oynaklık durumuna göre" style="font-size:15px;"></span>
           <span class="regime-badge unknown" id="regime-${coin}">— Belirsiz</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -3928,6 +3990,9 @@ function renderCoinPanels() {
       <div class="coin-detail-strip" id="coinDetail-${coin}">
         <span class="cd-item">⏳ Yükleniyor…</span>
       </div>
+
+      <!-- ═══ v41.8: 🎭 Coin Kişilik Profili — geçmiş performansına göre karakter özeti ═══ -->
+      <div class="coin-personality" id="coinPersonality-${coin}"></div>
 
       <canvas class="coin-livechart" id="spark-${coin}" title="Canlı mum grafiği — giriş/SL/TP çizgileriyle"></canvas>
 
@@ -3995,6 +4060,7 @@ function renderCoinPanels() {
     // yoksa ilk fetch tamamlanana kadar "Yükleniyor…" görünür kalır.
     if (coinDetailData[coin]) renderCoinDetail(coin);
     fetchCoinDetail(coin);
+    renderCoinPersonality(coin); // v41.8 — trade geçmişi zaten hafızada, hemen gösterilebilir
 
     // 🛡️ v32 Fix: renderCoinPanels DOM'u sıfırdan oluşturduğu için status pill her zaman
     // "stopped" class'ıyla başlar. Bot gerçekte çalışıyorsa (interval aktif) pill'i "running"
@@ -4952,6 +5018,34 @@ function redrawAllCoinCharts() {
   });
 }
 
+// ───────── v41.8: Ses & Titreşim Bildirimi ─────────
+let _qtAudioCtx = null;
+function playTradeFeedback(kind) {
+  // kind: 'buy' (açılış/kâr) veya 'sell' (kapanış/zarar) — log() tipiyle aynı sözleşme
+  if (!document.getElementById('soundHapticToggle')?.checked) return;
+
+  // Ses — Web Audio API ile sentezlenmiş kısa bip, dosya gerektirmez
+  try {
+    if (!_qtAudioCtx) _qtAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_qtAudioCtx.state === 'suspended') _qtAudioCtx.resume();
+    const osc = _qtAudioCtx.createOscillator();
+    const gain = _qtAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = kind === 'buy' ? 880 : 440; // buy: yüksek/olumlu ton, sell: alçak ton
+    gain.gain.value = 0.001;
+    gain.gain.exponentialRampToValueAtTime(0.12, _qtAudioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, _qtAudioCtx.currentTime + 0.18);
+    osc.connect(gain); gain.connect(_qtAudioCtx.destination);
+    osc.start();
+    osc.stop(_qtAudioCtx.currentTime + 0.2);
+  } catch (e) { /* AudioContext kullanıcı etkileşimi olmadan bazı tarayıcılarda engellenebilir */ }
+
+  // Titreşim — iOS Safari'de Vibration API YOK, sadece Android/Chrome'da çalışır
+  try {
+    if (navigator.vibrate) navigator.vibrate(kind === 'buy' ? [40] : [40, 60, 40]);
+  } catch (e) {}
+}
+
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
   globalTradeCount++;
   globalTotalPnl += pnl;
@@ -4994,6 +5088,9 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
   drawChart();
   renderDashboardSummary();
   saveToStorage();
+  // v41.8: her kapanış Kelly/hazırlık skorunu ve coin kişilik profilini etkileyebilir
+  try { renderCoinPersonality(coin); } catch(e) {}
+  try { renderLiveReadiness(); } catch(e) {}
 }
 
 function renderTradeTable() {
@@ -6111,6 +6208,216 @@ async function fetchMarketPulse() {
   log('🌍 [Piyasa Nabzı] Güncellendi — BTC dominans %' + (marketPulseData.btcDominance?.toFixed(1) ?? '—'), 'system');
 }
 
+// ───────── v41.8: 🔗 Korelasyon Haritası ─────────
+function pearsonCorrelation(a, b) {
+  const n = Math.min(a.length, b.length);
+  if (n < 5) return null;
+  a = a.slice(-n); b = b.slice(-n);
+  const meanA = a.reduce((s,v)=>s+v,0)/n, meanB = b.reduce((s,v)=>s+v,0)/n;
+  let num = 0, denA = 0, denB = 0;
+  for (let i = 0; i < n; i++) {
+    const da = a[i]-meanA, db = b[i]-meanB;
+    num += da*db; denA += da*da; denB += db*db;
+  }
+  const den = Math.sqrt(denA*denB);
+  return den === 0 ? 0 : num/den;
+}
+
+function renderCorrelationMatrix() {
+  const el = document.getElementById('correlationMatrix');
+  if (!el) return;
+  const coins = Object.keys(activeCoins).filter(c => activeCoins[c] && coinStates[c]?.lastKlines?.length >= 10);
+  if (coins.length < 2) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:11px;padding:16px;">En az 2 aktif ve veri toplamış coin gerekiyor.</div>';
+    return;
+  }
+  // Her coin için son 30 kapanış fiyatının % değişim serisi (getiri serisi — ham fiyat değil, korelasyon için doğru olan budur)
+  const returns = {};
+  coins.forEach(c => {
+    const closes = coinStates[c].lastKlines.slice(-31).map(k => parseFloat(k[4]));
+    const r = [];
+    for (let i = 1; i < closes.length; i++) r.push((closes[i]-closes[i-1])/closes[i-1]);
+    returns[c] = r;
+  });
+
+  let html = '<table style="border-collapse:collapse;font-size:10.5px;font-family:var(--mono);width:100%;">';
+  html += '<tr><td></td>' + coins.map(c => `<td style="padding:5px 7px;text-align:center;font-weight:700;">${c}</td>`).join('') + '</tr>';
+  coins.forEach(rowCoin => {
+    html += `<tr><td style="padding:5px 7px;font-weight:700;">${rowCoin}</td>`;
+    coins.forEach(colCoin => {
+      if (rowCoin === colCoin) {
+        html += '<td style="padding:5px 7px;text-align:center;color:var(--muted);">—</td>';
+        return;
+      }
+      const corr = pearsonCorrelation(returns[rowCoin], returns[colCoin]);
+      if (corr === null) { html += '<td style="padding:5px 7px;text-align:center;color:var(--muted);">?</td>'; return; }
+      let bg, fg;
+      if (corr >= 0.6) { bg = 'rgba(196,58,47,0.35)'; fg = 'var(--red)'; }
+      else if (corr >= 0.3) { bg = 'rgba(196,58,47,0.15)'; fg = 'var(--text)'; }
+      else if (corr <= -0.3) { bg = 'rgba(30,90,180,0.25)'; fg = '#5a9bd8'; }
+      else { bg = 'var(--surface2)'; fg = 'var(--muted)'; }
+      html += `<td style="padding:5px 7px;text-align:center;background:${bg};color:${fg};border-radius:4px;font-weight:700;" title="${rowCoin} ↔ ${colCoin}: ${corr.toFixed(2)}">${corr.toFixed(2)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+}
+
+// ───────── v41.8: 🔀 Walk-Forward Testi ─────────
+// Amaç: mevcut ayarların geçmiş veriye "ezberlenmiş" (overfit) olup olmadığını anlamak.
+// Veri ikiye bölünür — İLK YARI (Eğitim) ve İKİNCİ YARI (Test) — aynı ayarlarla ikisi de
+// çalıştırılır. Test yarısı Eğitim yarısına göre çok daha kötüyse, bu "gelecekte de
+// çalışacak" garantisi vermez, tam tersine overfit riskine işaret eder.
+let walkForwardVerdict = null; // { lastRun, overallPass, coinResults: [...] }
+
+async function runWalkForwardTest() {
+  const selected = Object.keys(activeCoins).filter(c => activeCoins[c]);
+  if (selected.length === 0) { log('⚠️ Walk-Forward için en az bir coin seçmelisin!', 'warn'); return; }
+  const activeList = getActiveIndicatorList();
+  if (activeList.length === 0) { log('⚠️ En az bir gösterge seçmelisin!', 'warn'); return; }
+
+  const minConfirm = getMinConfirmCount();
+  const iv = document.getElementById('interval').value;
+  const resultEl = document.getElementById('walkForwardResult');
+  resultEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:16px;">⏳ Geçmiş veri indiriliyor ve ikiye bölünüyor...</div>';
+  log('🔀 Walk-Forward testi başladı...', 'system');
+
+  const coinResults = [];
+  for (const coin of selected) {
+    const cfg = COIN_CONFIG[coin];
+    const tradeAmount = getEffectiveSetting(coin, 'tradeAmount', false);
+    const stopLossPct = getEffectiveSetting(coin, 'stopLoss', true);
+    const takeProfitPct = getEffectiveSetting(coin, 'takeProfit', true);
+    try {
+      const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${cfg.symbol}&interval=${iv}&limit=1000`);
+      const klines = await r.json();
+      if (!Array.isArray(klines) || klines.length < 500) { log(`⚠️ ${coin} için Walk-Forward'a yetecek kadar veri yok (en az 500 mum gerekli).`, 'warn'); continue; }
+
+      const mid = Math.floor(klines.length / 2);
+      const trainKlines = klines.slice(0, mid);
+      const testKlines = klines.slice(mid); // indikatör ısınması her yarı içinde kendi başına gerçekleşir
+
+      const trainR = simulateStrategy(trainKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
+      const testR = simulateStrategy(testKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
+
+      // Tutarlılık ölçütü: Test yarısı, Eğitim yarısına göre ÇOK daha kötü olmamalı.
+      // Basit ama anlamlı bir eşik: Test profit factor >= Eğitim'in %60'ı VE Test kazanma oranı Eğitim'den 15 puandan fazla düşmemeli.
+      const enoughTrades = trainR.trades >= 5 && testR.trades >= 3;
+      const pfOk = !enoughTrades ? null : (testR.profitFactor >= trainR.profitFactor * 0.6);
+      const wrOk = !enoughTrades ? null : (testR.winRate >= trainR.winRate - 15);
+      const pass = enoughTrades ? (pfOk && wrOk) : null; // null = yetersiz veri, yargı verilemez
+
+      coinResults.push({ coin, cfg, trainR, testR, pass, enoughTrades });
+    } catch (e) { log(`⚠️ ${coin} Walk-Forward hatası: ${e.message}`, 'warn'); }
+  }
+
+  const judged = coinResults.filter(r => r.pass !== null);
+  const overallPass = judged.length > 0 && judged.every(r => r.pass);
+  walkForwardVerdict = { lastRun: Date.now(), overallPass, coinResults, judgedCount: judged.length };
+
+  // Render
+  let html = '';
+  coinResults.forEach(r => {
+    const verdictBadge = r.pass === null
+      ? '<span style="color:var(--muted);">❔ Yetersiz veri</span>'
+      : r.pass
+        ? '<span style="color:var(--green);font-weight:700;">✅ Tutarlı</span>'
+        : '<span style="color:var(--red);font-weight:700;">⚠️ Tutarsız (Overfit riski)</span>';
+    html += `
+      <div style="margin-bottom:14px;padding:14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:700;"><span class="badge-coin-tag" style="background:${r.cfg.color}">${r.coin}</span> ${r.cfg.name}</div>
+          ${verdictBadge}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+          <div style="padding:8px;background:var(--surface);border-radius:8px;">
+            <div style="color:var(--muted);font-size:9.5px;">EĞİTİM (ilk yarı)</div>
+            <div>İşlem: <b>${r.trainR.trades}</b> · Kazanma: <b>%${r.trainR.winRate.toFixed(0)}</b></div>
+            <div>PF: <b>${r.trainR.profitFactor.toFixed(2)}x</b> · K/Z: <b style="color:${r.trainR.totalPnl>=0?'var(--green)':'var(--red)'}">${r.trainR.totalPnl>=0?'+':''}${r.trainR.totalPnl.toFixed(2)}$</b></div>
+          </div>
+          <div style="padding:8px;background:var(--surface);border-radius:8px;">
+            <div style="color:var(--muted);font-size:9.5px;">TEST (ikinci yarı — görülmemiş veri)</div>
+            <div>İşlem: <b>${r.testR.trades}</b> · Kazanma: <b>%${r.testR.winRate.toFixed(0)}</b></div>
+            <div>PF: <b>${r.testR.profitFactor.toFixed(2)}x</b> · K/Z: <b style="color:${r.testR.totalPnl>=0?'var(--green)':'var(--red)'}">${r.testR.totalPnl>=0?'+':''}${r.testR.totalPnl.toFixed(2)}$</b></div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  const overallBadge = judged.length === 0
+    ? '<div style="color:var(--muted);text-align:center;padding:10px;">Hiçbir coin için yeterli veri toplanamadı.</div>'
+    : overallPass
+      ? '<div style="text-align:center;padding:10px;color:var(--green);font-weight:700;">✅ Genel Sonuç: Ayarların tutarlı görünüyor</div>'
+      : '<div style="text-align:center;padding:10px;color:var(--red);font-weight:700;">⚠️ Genel Sonuç: En az bir coin geçmiş veriye fazla uyumlu (overfit) olabilir</div>';
+
+  resultEl.innerHTML = overallBadge + html;
+  log(`🔀 Walk-Forward tamamlandı — ${judged.length} coin değerlendirildi, genel sonuç: ${overallPass ? 'TUTARLI ✅' : 'DİKKAT ⚠️'}`, overallPass ? 'buy' : 'sell');
+}
+
+// ───────── v41.8: 🚦 Canlıya Hazır mı? Skoru ─────────
+// Objektif bir kontrol listesi — tavsiye değil, botun kendi verisinin özeti.
+function computeLiveReadiness() {
+  const checks = [];
+
+  // 1) Yeterli örneklem
+  const tradeCount = globalTradeHistory.length;
+  checks.push({ label: 'En az 30 kapanmış işlem birikti', pass: tradeCount >= 30, detail: tradeCount + ' işlem' });
+
+  // 2) Kelly pozitif mi (edge var mı)
+  const k = typeof computeKellyLite === 'function' ? computeKellyLite() : null;
+  checks.push({ label: 'Kelly-Lite pozitif (istatistiksel edge var)', pass: !!(k && k.kelly > 0), detail: k ? '%' + (k.kelly*100).toFixed(1) : 'yetersiz veri' });
+
+  // 3) Son 30 işlemin kazanma oranı
+  const recent = globalTradeHistory.slice(-30);
+  const recentWinRate = recent.length > 0 ? recent.filter(t => t.pnl >= 0).length / recent.length * 100 : 0;
+  checks.push({ label: 'Son 30 işlemde kazanma oranı ≥ %45', pass: recent.length >= 10 && recentWinRate >= 45, detail: recent.length >= 10 ? '%' + recentWinRate.toFixed(0) : 'yetersiz veri' });
+
+  // 4) Günlük Zarar Limiti aktif mi
+  const dailyLossOn = document.getElementById('dailyLossLimitToggle')?.checked;
+  checks.push({ label: 'Günlük Zarar Limiti aktif', pass: !!dailyLossOn, detail: dailyLossOn ? 'açık' : 'kapalı' });
+
+  // 5) Devre Kesici aktif mi
+  const cbOn = document.getElementById('circuitBreakerToggle')?.checked;
+  checks.push({ label: 'Devre Kesici aktif', pass: !!cbOn, detail: cbOn ? 'açık' : 'kapalı' });
+
+  // 6) İşlem Saatleri filtresi ayarlanmış mı (ısı haritasına göre kötü saatler kapatılmış mı)
+  const hoursOn = document.getElementById('tradingHoursToggle')?.checked;
+  checks.push({ label: 'İşlem Saatleri filtresi ayarlanmış (ısı haritasına göre)', pass: !!hoursOn, detail: hoursOn ? 'açık' : 'kapalı — kayıp saatlerin hâlâ açık olabilir' });
+
+  // 7) Walk-Forward testi çalıştırılmış ve tutarlı mı
+  const wf = walkForwardVerdict;
+  const wfFresh = wf && (Date.now() - wf.lastRun < 7 * 24 * 60 * 60 * 1000); // 7 günden eskiyse "bayat" say
+  checks.push({ label: 'Walk-Forward testi tutarlı çıktı', pass: !!(wfFresh && wf.overallPass), detail: !wf ? 'henüz çalıştırılmadı' : wfFresh ? (wf.overallPass ? 'tutarlı ✅' : 'tutarsız ⚠️') : 'sonuç eski, tekrar çalıştır' });
+
+  const passCount = checks.filter(c => c.pass).length;
+  const total = checks.length;
+  let verdict, verdictColor, verdictEmoji;
+  if (passCount === total) { verdict = 'Hazır Görünüyor'; verdictColor = 'var(--green)'; verdictEmoji = '🟢'; }
+  else if (passCount >= total - 2) { verdict = 'Yakın Ama Henüz Değil'; verdictColor = 'var(--yellow)'; verdictEmoji = '🟡'; }
+  else { verdict = 'Henüz Değil'; verdictColor = 'var(--red)'; verdictEmoji = '🔴'; }
+
+  return { checks, passCount, total, verdict, verdictColor, verdictEmoji };
+}
+
+function renderLiveReadiness() {
+  const el = document.getElementById('liveReadinessBody');
+  if (!el) return;
+  const r = computeLiveReadiness();
+  const rows = r.checks.map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:11.5px;">
+      <span>${c.pass ? '✅' : '❌'} ${c.label}</span>
+      <span style="color:var(--muted);font-family:var(--mono);font-size:10.5px;white-space:nowrap;margin-left:10px;">${c.detail}</span>
+    </div>`).join('');
+  el.innerHTML = `
+    <div style="text-align:center;padding:12px;margin-bottom:10px;background:var(--surface2);border-radius:10px;">
+      <div style="font-size:26px;">${r.verdictEmoji}</div>
+      <div style="font-size:15px;font-weight:800;color:${r.verdictColor};margin-top:4px;">${r.verdict}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.passCount} / ${r.total} kriter karşılandı</div>
+    </div>
+    ${rows}`;
+}
+
 function renderMarketPulse() {
   const body = document.getElementById('marketPulseBody');
   if (!body) return;
@@ -6283,6 +6590,73 @@ function renderCoinDetail(coin) {
     ${pressureHtml}
   `;
   el.title = 'Kaynak: Binance · 3 dk\'da bir güncellenir · Alış/Satış baskısı order book anlık kesitidir, kesin sinyal değildir.';
+
+  // v41.8: Ruh hali ikonu — günlük değişim büyüklüğü + aralık genişliğine göre
+  const moodEl = document.getElementById('mood-' + coin);
+  if (moodEl && d.changePct !== undefined && d.high !== undefined && d.low !== undefined) {
+    const rangePct = d.low > 0 ? (d.high - d.low) / d.low * 100 : 0;
+    const absChange = Math.abs(d.changePct);
+    let mood = '😐';
+    if (absChange >= 6 || rangePct >= 9) mood = '🌪️';       // fırtınalı — büyük hareket
+    else if (absChange >= 2.5 || rangePct >= 4) mood = '🚀'; // hareketli/güçlü trend (yönüne göre pozitifse)
+    else if (absChange < 0.8 && rangePct < 1.8) mood = '😴'; // uyuşuk, yatay
+    else mood = '⚖️';                                        // dengeli
+    if (mood === '🚀' && d.changePct < 0) mood = '🔻'; // güçlü ama düşüşte
+    moodEl.textContent = mood;
+    moodEl.title = `Ruh Hali: değişim %${d.changePct.toFixed(1)}, günlük aralık %${rangePct.toFixed(1)}`;
+  }
+
+  // v41.8: Kişilik profili tazele (detay verisi değiştiğinde de güncel kalsın)
+  renderCoinPersonality(coin);
+}
+
+// ───────── v41.8: 🎭 Coin Kişilik Profili — geçmiş performansına göre karakter özeti ─────────
+function getCoinPersonality(coin) {
+  const trades = globalTradeHistory.filter(t => t.coin === coin);
+  if (trades.length < 3) return null;
+
+  const wins = trades.filter(t => t.pnl >= 0).length;
+  const winRate = wins / trades.length * 100;
+
+  // Karakter — coinDetailData'daki günlük değişim/aralık büyüklüğüne göre (yoksa "bilinmiyor")
+  const d = coinDetailData[coin];
+  let character = '❔ Henüz ölçülmedi';
+  if (d && d.high !== undefined && d.low !== undefined && d.low > 0) {
+    const rangePct = (d.high - d.low) / d.low * 100;
+    if (rangePct >= 8) character = '🌪️ Çılgın/Oynak';
+    else if (rangePct >= 3.5) character = '⚡ Hareketli';
+    else character = '🐢 Sakin/Kaplumbağa';
+  }
+
+  // Hangi rejimde en iyi performans gösteriyor
+  const byRegime = {};
+  trades.forEach(t => {
+    const r = t.entryRegime || 'bilinmiyor';
+    if (!byRegime[r]) byRegime[r] = { count: 0, wins: 0 };
+    byRegime[r].count++;
+    if (t.pnl >= 0) byRegime[r].wins++;
+  });
+  let bestRegime = null, bestRate = -1;
+  Object.keys(byRegime).forEach(r => {
+    if (byRegime[r].count < 2) return; // çok az örnekle yargı vermeyelim
+    const rate = byRegime[r].wins / byRegime[r].count;
+    if (rate > bestRate) { bestRate = rate; bestRegime = r; }
+  });
+
+  return { winRate, character, bestRegime, bestRate, tradeCount: trades.length };
+}
+
+function renderCoinPersonality(coin) {
+  const el = document.getElementById('coinPersonality-' + coin);
+  if (!el) return;
+  const p = getCoinPersonality(coin);
+  if (!p) { el.innerHTML = '🎭 Kişilik profili: <span style="color:var(--muted)">en az 3 kapanmış işlem gerekiyor</span>'; return; }
+
+  const wrColor = p.winRate >= 55 ? 'var(--green)' : p.winRate >= 40 ? 'var(--yellow)' : 'var(--red)';
+  const regimeLabels = { trend: 'Trend', sideways: 'Yatay', unknown: 'Belirsiz', bilinmiyor: 'Belirsiz' };
+  const regimeTxt = p.bestRegime ? `${regimeLabels[p.bestRegime] || p.bestRegime} rejiminde (%${(p.bestRate*100).toFixed(0)})` : 'yeterli veri yok';
+
+  el.innerHTML = `🎭 <b>${p.character}</b> · Kazanma <b style="color:${wrColor}">%${p.winRate.toFixed(0)}</b> (${p.tradeCount} işlem) · En güçlü: ${regimeTxt}`;
 }
 
 // ───────── v36.7: CSV Export ─────────
@@ -8051,6 +8425,10 @@ window.addEventListener('load', () => {
   // v41.4: Piyasa Nabzı — try/catch ile korunuyor, hata atarsa geri kalan zincir devam etsin
   try { fetchMarketPulse(); } catch(e) { console.error('Piyasa Nabzı ilk yükleme hatası:', e); }
   setInterval(() => { try { fetchMarketPulse(); } catch(e) {} }, 20 * 60 * 1000); // 20 dk'da bir
+  // v41.8: Canlıya Hazır mı skoru + Korelasyon Haritası — ilk yükleme
+  try { renderLiveReadiness(); } catch(e) {}
+  try { renderCorrelationMatrix(); } catch(e) {}
+  setInterval(() => { try { renderCorrelationMatrix(); } catch(e) {} }, 5 * 60 * 1000); // 5 dk'da bir tazele
   // v41.3: initTabbar() buradan kaldırıldı — artık aşağıda TAMAMEN BAĞIMSIZ kendi
   // load listener'ında çalışıyor. Sebep: bu fonksiyon (attachSettingsAutoSave ve öncesi)
   // içinde bir yerde hata patlarsa, aynı fonksiyonun kalanı (yani initTabbar dahil) hiç
