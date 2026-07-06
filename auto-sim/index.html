@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.0 TEYİT ZİNCİRİ</title>
+<title>TUGAY × QUANT · v43.1 OTOPİLOT HAFIZASI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.0 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.1 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1399,6 +1399,15 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     <div><label>Teyit Turu (kapanmış mum)</label><input type="number" id="v40ApConfirmCycles" value="2" min="1" max="4"></div>
   </div>
   <div class="v40-sub" style="margin-top:6px;">🧠 <b>Teyit Turu:</b> bir coin'in sinyali eşiği geçtikten sonra, o yönde ardışık kaç KAPANMIŞ mum onayı bekleneceği. 1 = eski davranış (anlık, riskli). 2+ önerilir — henüz oluşmakta olan mumun geçici sinyaliyle giriş yapılmasını önler.</div>
+  <div class="v40-ap-rot">
+    <label class="regime-toggle-switch"><input type="checkbox" id="v40ApMemoryToggle" checked><span class="regime-toggle-slider"></span></label>
+    <span>🧠 Otopilot Hafızası: bir coin'de otopilotun kendi son işlemleri kötüyse (bkz. eşikler), o coin'i kendiliğinden devre dışı bırak — senden onay beklemeden</span>
+  </div>
+  <div class="v40-ap-settings">
+    <div><label>Hafıza Penceresi (son N işlem)</label><input type="number" id="v40ApMemoryLookback" value="5" min="2" max="15"></div>
+    <div><label>Hafıza — Min. Örnek İşlem</label><input type="number" id="v40ApMemoryMinSample" value="3" min="2" max="10"></div>
+    <div><label>Hafıza — Min. Kazanma % (altı = devre dışı)</label><input type="number" id="v40ApMemoryMinWinRate" value="35" min="10" max="60" step="5"></div>
+  </div>
   <div class="v40-ap-rot">
     <label class="regime-toggle-switch"><input type="checkbox" id="v40ApRotation" checked><span class="regime-toggle-slider"></span></label>
     <span>🔄 Rotasyon: sinyali tersine dönen pozisyonu kapat, daha iyi ava geç</span>
@@ -5125,14 +5134,14 @@ function playTradeFeedback(kind) {
   } catch (e) {}
 }
 
-function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals) {
+function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals, autopilot) {
   globalTradeCount++;
   globalTotalPnl += pnl;
   const now = new Date();
   const nowStr = now.toLocaleString('tr-TR');
   const label = pnl >= 0 ? 'KAZANÇ' : 'KAYIP';
 
-  globalTradeHistory.push({ time: nowStr, coin, type: label, price: exitPrice, entryPrice, amount, pnl, confirms, direction: direction || 'long', leverage: leverage || 1, ts: now.getTime(), holdMs: holdMs || null, reasonCategory: reasonCategory || null, entryRegime: entryRegime || null, entrySignals: entrySignals || null });
+  globalTradeHistory.push({ time: nowStr, coin, type: label, price: exitPrice, entryPrice, amount, pnl, confirms, direction: direction || 'long', leverage: leverage || 1, ts: now.getTime(), holdMs: holdMs || null, reasonCategory: reasonCategory || null, entryRegime: entryRegime || null, entrySignals: entrySignals || null, autopilot: !!autopilot });
   if (globalTradeHistory.length > 300) globalTradeHistory.shift();
 
   // ── v36.7: Dinamik Boyutlandırma sayacı ──
@@ -5887,7 +5896,7 @@ async function manualSell(coin) {
     const grossPnl = pos.amount * change * leverage;
     const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
 
-    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null);
+    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
     log(`👆 MANUEL KAPAT (${dir === 'long' ? 'LONG' : 'SHORT'}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
     flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
     state.openPosition = null;
@@ -7329,7 +7338,7 @@ async function coinTick(coin) {
       const grossPartialPnl = partialAmount * leveragedChange;
       const { netPnl: partialPnl, cost: partialCost } = calculateNetPnl(grossPartialPnl, partialAmount, pos.leverage || 1, coin);
 
-      addTrade(coin, price, partialAmount, partialPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'partial_tp', pos.entryRegime || null, pos.entrySignals || null);
+      addTrade(coin, price, partialAmount, partialPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'partial_tp', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
       log(`🎯 KISMİ KÂR ALINDI (%${(closePct*100).toFixed(0)}) | ${coin} ${dir==='long'?'LONG':'SHORT'} | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Net: +${partialPnl.toFixed(2)}$ (Komisyon/Kayma: -${partialCost.toFixed(2)}$)`, 'buy', coin);
       sendTelegramMessage(`🎯 <b>${coin} Kısmi Kâr Alındı</b> (%${(closePct*100).toFixed(0)})\nGiriş: ${formatPrice(pos.entryPrice)} → Şu an: ${formatPrice(price)}\nNet Kâr: +${partialPnl.toFixed(2)} USDT`);
 
@@ -7350,7 +7359,7 @@ async function coinTick(coin) {
       const grossRunnerPnl = runnerCloseAmount * leveragedChange;
       const { netPnl: runnerPnl, cost: runnerCost } = calculateNetPnl(grossRunnerPnl, runnerCloseAmount, pos.leverage || 1, coin);
 
-      addTrade(coin, price, runnerCloseAmount, runnerPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'tp', pos.entryRegime || null, pos.entrySignals || null);
+      addTrade(coin, price, runnerCloseAmount, runnerPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'tp', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
       log(`🏃 RUNNER MODU | ${coin} ${dir==='long'?'LONG':'SHORT'} TP hedefinde %${(closePct2*100).toFixed(0)} kapatıldı (Net: +${runnerPnl.toFixed(2)}$, Komisyon/Kayma: -${runnerCost.toFixed(2)}$). Kalan %${((1-closePct2)*100).toFixed(0)} trailing stop ile trendde koşmaya devam ediyor.`, 'buy', coin);
       sendTelegramMessage(`🏃 <b>${coin} Runner Modu</b>\nTP hedefinde %${(closePct2*100).toFixed(0)} kapatıldı: +${runnerPnl.toFixed(2)} USDT\nKalan kısım trailing stop ile trendde.`);
 
@@ -7387,7 +7396,7 @@ async function coinTick(coin) {
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
       const lvTxt = (pos.leverage || 1) > 1 ? ` ${pos.leverage}x` : '';
-      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null);
+      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
       log(`${pnl >= 0 ? '✅' : '🔴'} ${dirLabel}${lvTxt} KAPANDI (${reason}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
@@ -9111,6 +9120,36 @@ async function scoreSymbol(symbol){
   return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, adx, closeTime };
 }
 
+/* ───────────── 🧠 OTOPİLOT HAFIZASI (v43.1) ─────────────
+   Statik backtest'in aksine, botun KENDİ geçmiş otopilot işlemlerine bakar.
+   Bir coin'de otopilotun son işlemleri kötü gidiyorsa, o coin'i kendiliğinden
+   soğutur — kullanıcı onayı beklemeden, sürekli güncel, ekstra API çağrısı yok
+   (zaten bellekte duran globalTradeHistory üzerinden çalışır). */
+function apMemorySettings(){
+  return {
+    on: document.getElementById('v40ApMemoryToggle')?.checked !== false,
+    lookback: Math.max(2, parseInt(document.getElementById('v40ApMemoryLookback')?.value) || 5),
+    minSample: Math.max(2, parseInt(document.getElementById('v40ApMemoryMinSample')?.value) || 3),
+    minWinRate: parseFloat(document.getElementById('v40ApMemoryMinWinRate')?.value) || 35
+  };
+}
+function autopilotCoinStats(coin){
+  const S = apMemorySettings();
+  const trades = globalTradeHistory.filter(t => t.coin === coin && t.autopilot).slice(-S.lookback);
+  if (!trades.length) return null;
+  const wins = trades.filter(t => t.pnl >= 0).length;
+  const netPnl = trades.reduce((s,t) => s + t.pnl, 0);
+  return { trades: trades.length, wins, winRate: wins / trades.length * 100, netPnl };
+}
+window.autopilotCoinStats = autopilotCoinStats;
+function isAutopilotCoinBlocked(coin){
+  const S = apMemorySettings();
+  if (!S.on) return false;
+  const stats = autopilotCoinStats(coin);
+  if (!stats || stats.trades < S.minSample) return false;
+  return stats.winRate < S.minWinRate;
+}
+
 /* ───────────── 🎯 OTONOM POZİSYON AÇMA ───────────── */
 async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   ensureCoin(short, symbol);
@@ -9166,7 +9205,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
   const change = dir === 'long' ? raw : -raw;
   const grossPnl = pos.amount * change * leverage;
   const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
-  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null);
+  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
   if (setCooldown) { setManualCooldown(coin); try { updateCooldownUI(coin); } catch(e){} }
@@ -9187,7 +9226,11 @@ function apSettings(){
     rotation: document.getElementById('v40ApRotation').checked,
     dynLev: document.getElementById('v40ApDynLev').checked,
     dynLevMin: parseFloat(document.getElementById('v40ApDynLevMin').value) || 1,
-    confirmCycles: Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 2)
+    confirmCycles: Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 2),
+    memoryOn: document.getElementById('v40ApMemoryToggle')?.checked !== false,
+    memoryLookback: parseInt(document.getElementById('v40ApMemoryLookback')?.value) || 5,
+    memoryMinSample: parseInt(document.getElementById('v40ApMemoryMinSample')?.value) || 3,
+    memoryMinWinRate: parseFloat(document.getElementById('v40ApMemoryMinWinRate')?.value) || 35
   };
 }
 function apSave(){ try { lsSet(SK_AP, JSON.stringify({ on: ap.on, s: apSettings() })); } catch(e){} }
@@ -9196,10 +9239,11 @@ function apRestore(){
     const s = JSON.parse(lsGet(SK_AP) || 'null');
     if (!s) return false;
     if (s.s) {
-      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin', confirmCycles:'v40ApConfirmCycles' };
+      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin', confirmCycles:'v40ApConfirmCycles', memoryLookback:'v40ApMemoryLookback', memoryMinSample:'v40ApMemoryMinSample', memoryMinWinRate:'v40ApMemoryMinWinRate' };
       Object.keys(map).forEach(k => { const el = document.getElementById(map[k]); if (el && s.s[k] !== undefined) el.value = s.s[k]; });
       const rot = document.getElementById('v40ApRotation'); if (rot && s.s.rotation !== undefined) rot.checked = s.s.rotation;
       const dl = document.getElementById('v40ApDynLev'); if (dl && s.s.dynLev !== undefined) dl.checked = s.s.dynLev;
+      const mem = document.getElementById('v40ApMemoryToggle'); if (mem && s.s.memoryOn !== undefined) mem.checked = s.s.memoryOn;
     }
     return !!s.on;
   } catch(e){ return false; }
@@ -9366,6 +9410,11 @@ async function apCycle(){
       const r = results.find(x => x.short === short);
       if (!r) return null;
       if (coinStates[short] && coinStates[short].openPosition) return null;
+      if (typeof isAutopilotCoinBlocked === 'function' && isAutopilotCoinBlocked(short)) {
+        const st = autopilotCoinStats(short);
+        brain('🧠 [Hafıza] ' + short + ' teyitli ama son ' + st.trades + ' otopilot işleminde kazanma %' + st.winRate.toFixed(0) + ' (eşik %' + (apMemorySettings().minWinRate) + ') — devre dışı.');
+        return null;
+      }
       if (c.direction === 'short' && tradeMode !== 'futures_sim') return null;
       if (typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)) return null;
       if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(short)) return null;
