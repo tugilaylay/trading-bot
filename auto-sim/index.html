@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v42.0 QUANT+</title>
+<title>TUGAY × QUANT · v43.0 TEYİT ZİNCİRİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v42.0 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.0 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1396,7 +1396,9 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     <div><label>Maks. Toplam Risk %</label><input type="number" id="v40ApMaxExpo" value="60" min="10" max="100" step="5"></div>
     <div><label>Taranacak Evren (Top N)</label><input type="number" id="v40ApUniverseN" value="30" min="10" max="80" step="5"></div>
     <div><label>Dinamik Kaldıraç Alt Sınırı</label><input type="number" id="v40ApDynLevMin" value="1" min="1" max="5" step="0.5"></div>
+    <div><label>Teyit Turu (kapanmış mum)</label><input type="number" id="v40ApConfirmCycles" value="2" min="1" max="4"></div>
   </div>
+  <div class="v40-sub" style="margin-top:6px;">🧠 <b>Teyit Turu:</b> bir coin'in sinyali eşiği geçtikten sonra, o yönde ardışık kaç KAPANMIŞ mum onayı bekleneceği. 1 = eski davranış (anlık, riskli). 2+ önerilir — henüz oluşmakta olan mumun geçici sinyaliyle giriş yapılmasını önler.</div>
   <div class="v40-ap-rot">
     <label class="regime-toggle-switch"><input type="checkbox" id="v40ApRotation" checked><span class="regime-toggle-slider"></span></label>
     <span>🔄 Rotasyon: sinyali tersine dönen pozisyonu kapat, daha iyi ava geç</span>
@@ -6395,8 +6397,9 @@ async function runWalkForwardTest() {
       const trainKlines = klines.slice(0, mid);
       const testKlines = klines.slice(mid); // indikatör ısınması her yarı içinde kendi başına gerçekleşir
 
-      const trainR = simulateStrategy(trainKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
-      const testR = simulateStrategy(testKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
+      const wfConfirm = Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 1);
+      const trainR = simulateStrategy(trainKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct, { confirmBars: wfConfirm });
+      const testR = simulateStrategy(testKlines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct, { confirmBars: wfConfirm });
 
       // Tutarlılık ölçütü: Test yarısı, Eğitim yarısına göre ÇOK daha kötü olmamalı.
       // Basit ama anlamlı bir eşik: Test profit factor >= Eğitim'in %60'ı VE Test kazanma oranı Eğitim'den 15 puandan fazla düşmemeli.
@@ -7813,6 +7816,12 @@ function simulateStrategy(klines, indicatorList, minConfirm, tradeAmount, stopLo
   const minConfirmPct = overrides.minConfirmPct ?? (parseFloat(document.getElementById('minConfirmPct')?.value) || 0.6);
   const weightedMin = totalMaxWeight * minConfirmPct;
 
+  // v43: Otopilotun "Teyit Turu" mantığıyla BİREBİR aynı doğrulama — kaç ardışık KAPANMIŞ
+  // mumda aynı yönde eşik geçilmeli. Varsayılan 1 = eski davranış (geriye dönük uyumlu).
+  // runBacktestAll, otopilotun canlı ayarını (v40ApConfirmCycles) buraya override olarak geçirir.
+  const confirmBars = Math.max(1, overrides.confirmBars ?? 1);
+  let pendingDir = null, pendingStreak = 0;
+
   let position = null, trades = [], wins = 0, losses = 0;
   // v36.5 Optimizer metrics: equity curve, max drawdown, profit factor
   let equity = 0, peakEquity = 0, maxDrawdownAbs = 0;
@@ -7851,15 +7860,23 @@ function simulateStrategy(klines, indicatorList, minConfirm, tradeAmount, stopLo
       // ADX filtresi
       if (adxFilterOn) {
         const adxR = calcADX(highs, lows, closes);
-        if (adxR.adx < adxMin) continue;
+        if (adxR.adx < adxMin) { pendingDir = null; pendingStreak = 0; continue; }
       }
       // Trend gate (EMA Trend bazlı)
       let trendOk = true;
       if (trendGateOn && rawSignals.hasOwnProperty('ematrend')) {
         if (buyScore >= weightedMin && rawSignals.ematrend === 'sell') trendOk = false;
       }
-      if (buyScore >= weightedMin && trendOk) {
+      const rawOk = buyScore >= weightedMin && trendOk;
+      if (rawOk) {
+        pendingStreak = (pendingDir === 'long') ? pendingStreak + 1 : 1;
+        pendingDir = 'long';
+      } else {
+        pendingDir = null; pendingStreak = 0;
+      }
+      if (rawOk && pendingStreak >= confirmBars) {
         position = { entryPrice: price, slPct, tpPct };
+        pendingDir = null; pendingStreak = 0;
       }
     } else {
       const change = (price - position.entryPrice) / position.entryPrice;
@@ -8127,7 +8144,8 @@ async function runComparison() {
 
     const results = combosToTest.map(combo => {
       const minConfirm = Math.max(1, Math.min(combo.indicators.length, Math.round(combo.indicators.length * minConfirmPct)));
-      const sim = simulateStrategy(klines, combo.indicators, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
+      const cmpConfirm = Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 1);
+      const sim = simulateStrategy(klines, combo.indicators, minConfirm, tradeAmount, stopLossPct, takeProfitPct, { confirmBars: cmpConfirm });
       return {
         name: combo.name,
         indicatorNames: combo.indicators.map(id => INDICATOR_DEFS[id].name).join(' + '),
@@ -8216,7 +8234,10 @@ async function runBacktestAll() {
       const klines = await r.json();
       if (!Array.isArray(klines) || klines.length < 60) { log(`⚠️ ${coin} için yeterli veri yok`, 'warn'); continue; }
 
-      const result = simulateStrategy(klines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct);
+      // v43: Otopilotun canlıda kullandığı "Teyit Turu" ayarıyla AYNI değeri backteste de uygula —
+      // böylece "Backtest" butonu, otopilotun gerçekte davranacağı şekli doğrulamış olur.
+      const apConfirmCycles = Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 1);
+      const result = simulateStrategy(klines, activeList, minConfirm, tradeAmount, stopLossPct, takeProfitPct, { confirmBars: apConfirmCycles });
       const { trades, wins, losses, winRate, totalPnl, profitFactor, maxDrawdownPct, equityCurve, strategyScore } = result;
       const pnlColor = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
       const pfColor = profitFactor >= 1.5 ? 'var(--green)' : profitFactor >= 1.0 ? 'var(--yellow)' : 'var(--red)';
@@ -8254,7 +8275,8 @@ async function runBacktestAll() {
     }
   }
 
-  content.innerHTML = allResultsHtml + `<div class="backtest-note">📌 Bu sonuçlar GERÇEK fiyat verisiyle hesaplandı (Binance ana ağ, ${iv} mumlar, ${activeList.length} gösterge: ${activeList.map(id=>INDICATOR_DEFS[id].name).join(', ')}). Komisyon + kayma net K/Z'a dahildir. Geçmiş performans geleceği garanti etmez.</div>`;
+  const apConfirmNote = Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 1);
+  content.innerHTML = allResultsHtml + `<div class="backtest-note">📌 Bu sonuçlar GERÇEK fiyat verisiyle hesaplandı (Binance ana ağ, ${iv} mumlar, ${activeList.length} gösterge: ${activeList.map(id=>INDICATOR_DEFS[id].name).join(', ')}). Otopilot "Teyit Turu" ayarıyla (${apConfirmNote} kapanmış mum) BİREBİR aynı giriş kuralı kullanıldı. Komisyon + kayma net K/Z'a dahildir. Geçmiş performans geleceği garanti etmez.</div>`;
 }
 
 // ───────── Strateji Optimizer (Parametre Tarama) ─────────
@@ -9056,8 +9078,13 @@ async function scoreSymbol(symbol){
   const activeList = getActiveIndicatorList();
   const iv = document.getElementById('interval').value;
   const r = await fetch('https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=' + iv + '&limit=250');
-  const klines = await r.json();
-  if (!Array.isArray(klines) || klines.length < 55) return null;
+  let klines = await r.json();
+  if (!Array.isArray(klines) || klines.length < 56) return null;
+  // v43 FIX: Binance son mumu HENÜZ KAPANMAMIŞ olsa bile döner. Bu mum üzerinden
+  // gösterge hesaplarsak sinyal, mum kapanana kadar değişebilir — "giriş anında %60"
+  // dediği an aslında kararsız/geçici bir veriye dayanıyor olabilir. Kapanmamışsa at.
+  if (klines[klines.length - 1][6] > Date.now()) klines = klines.slice(0, -1);
+  if (klines.length < 55) return null;
   const closes = klines.map(k=>parseFloat(k[4]));
   const highs  = klines.map(k=>parseFloat(k[2]));
   const lows   = klines.map(k=>parseFloat(k[3]));
@@ -9078,7 +9105,10 @@ async function scoreSymbol(symbol){
     if (signal === 'buy') buy += weight; else if (signal === 'sell') sell += weight;
   });
   const netPct = total > 0 ? ((buy - sell) / total) * 100 : 0;
-  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals };
+  let adx = null;
+  try { adx = calcADX(highs, lows, closes).adx; } catch(e){}
+  const closeTime = klines[klines.length-1][6];
+  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, adx, closeTime };
 }
 
 /* ───────────── 🎯 OTONOM POZİSYON AÇMA ───────────── */
@@ -9106,7 +9136,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   const entryCandleCloseTime = klines ? klines[klines.length-1][6] : Date.now();
 
   state.openPosition = {
-    direction, entryPrice: price, amount, leverage, confirms: 0,
+    direction, entryPrice: price, amount, leverage, confirms: scoreInfo.streak || 0,
     entryCandleCloseTime, openedAt: Date.now(), autopilot: true,
     stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased,
     entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }
@@ -9115,7 +9145,8 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   startCoinBot(short); // risk motoru (SL/TP/trailing/acil çıkış) devralır
   const dirTxt = direction === 'long' ? '🟢 LONG' : '🔻 SHORT';
   const levNote = (leverage !== baseLeverage) ? ` (dinamik: ${baseLeverage}x → ${leverage}x, oynaklığa göre ölçeklendi)` : '';
-  try { log('🧠 [Otopilot] ' + dirTxt + (leverage>1?' '+leverage+'x':'') + ' AÇILDI' + levNote + ' | ' + short + ' | Skor: %' + Math.abs(scoreInfo.netPct).toFixed(0) + ' | Giriş: ' + formatPrice(price) + ' | Miktar: ' + amount.toFixed(0) + ' USDT', direction==='long'?'buy':'sell', short); } catch(e){}
+  const streakTxt = scoreInfo.streak ? ' | Teyit: ' + scoreInfo.streak + ' mum' : '';
+  try { log('🧠 [Otopilot] ' + dirTxt + (leverage>1?' '+leverage+'x':'') + ' AÇILDI' + levNote + ' | ' + short + ' | Skor: %' + Math.abs(scoreInfo.netPct).toFixed(0) + streakTxt + ' | Giriş: ' + formatPrice(price) + ' | Miktar: ' + amount.toFixed(0) + ' USDT', direction==='long'?'buy':'sell', short); } catch(e){}
   try { flashPanel(short, direction==='long'?'buy':'sell'); renderPositionCard(short, state, price); } catch(e){}
   try { sendTelegramMessage('🧠 <b>OTOPİLOT: ' + short + ' ' + direction.toUpperCase() + '</b>\nSkor: %' + Math.abs(scoreInfo.netPct).toFixed(0) + '\nFiyat: ' + formatPrice(price) + '\nMiktar: ' + amount.toFixed(0) + ' USDT'); } catch(e){}
   brain('🎯 <b>' + short + '</b> kilitlendi → ' + dirTxt + (levNote?' '+leverage+'x🎚️':'') + ' | skor %' + Math.abs(scoreInfo.netPct).toFixed(0) + ' | ' + amount.toFixed(0) + '$');
@@ -9144,7 +9175,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
 }
 
 /* ───────────── 🧠 OTOPİLOT DÖNGÜSÜ ───────────── */
-let ap = { on: false, timer: null, cycling: false };
+let ap = { on: false, timer: null, cycling: false, candidates: {} };
 function apSettings(){
   return {
     scanMin: parseInt(document.getElementById('v40ApScanMin').value) || 5,
@@ -9155,7 +9186,8 @@ function apSettings(){
     universeN: parseInt(document.getElementById('v40ApUniverseN').value) || 30,
     rotation: document.getElementById('v40ApRotation').checked,
     dynLev: document.getElementById('v40ApDynLev').checked,
-    dynLevMin: parseFloat(document.getElementById('v40ApDynLevMin').value) || 1
+    dynLevMin: parseFloat(document.getElementById('v40ApDynLevMin').value) || 1,
+    confirmCycles: Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 2)
   };
 }
 function apSave(){ try { lsSet(SK_AP, JSON.stringify({ on: ap.on, s: apSettings() })); } catch(e){} }
@@ -9164,7 +9196,7 @@ function apRestore(){
     const s = JSON.parse(lsGet(SK_AP) || 'null');
     if (!s) return false;
     if (s.s) {
-      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin' };
+      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin', confirmCycles:'v40ApConfirmCycles' };
       Object.keys(map).forEach(k => { const el = document.getElementById(map[k]); if (el && s.s[k] !== undefined) el.value = s.s[k]; });
       const rot = document.getElementById('v40ApRotation'); if (rot && s.s.rotation !== undefined) rot.checked = s.s.rotation;
       const dl = document.getElementById('v40ApDynLev'); if (dl && s.s.dynLev !== undefined) dl.checked = s.s.dynLev;
@@ -9199,15 +9231,16 @@ window.v40ToggleAutopilot = function(){
   apStart();
 };
 function apStart(){
-  ap.on = true; apSave(); apRenderState();
-  brain('🟢 <b>OTOPİLOT AKTİF.</b> Kasa: ' + fmt$(vault.balance) + ' | Hedef: en güçlü %' + apSettings().minScore + '+ sinyaller.');
-  try { log('🧠 [Otopilot] Başlatıldı — evren taraması ' + apSettings().scanMin + ' dk\'da bir.', 'system'); } catch(e){}
+  ap.on = true; ap.candidates = {}; apSave(); apRenderState();
+  const cyc = apSettings().confirmCycles;
+  brain('🟢 <b>OTOPİLOT AKTİF.</b> Kasa: ' + fmt$(vault.balance) + ' | Hedef: en güçlü %' + apSettings().minScore + '+ sinyaller, ' + cyc + ' kapanmış mum teyidiyle.');
+  try { log('🧠 [Otopilot] Başlatıldı — evren taraması ' + apSettings().scanMin + ' dk\'da bir, teyit turu: ' + cyc + '.', 'system'); } catch(e){}
   try { requestWakeLock(); } catch(e){}
   apCycle();
   ap.timer = setInterval(apCycle, apSettings().scanMin * 60 * 1000);
 }
 function apStop(reason){
-  ap.on = false; apSave();
+  ap.on = false; ap.candidates = {}; apSave();
   if (ap.timer) { clearInterval(ap.timer); ap.timer = null; }
   apRenderState();
   brain('⚪ Otopilot durdu. ' + (reason || ''));
@@ -9228,6 +9261,10 @@ async function apCycle(){
     await loadUniverse();
     if (!universe.length) { brain('⚠️ Evren boş — Binance\'e ulaşılamadı, sonraki turda tekrar denenecek.'); return; }
 
+    // v43: F&G ve BTC korelasyonu global/ucuz cache'ler — otopilotun kendi turunda tazeleriz,
+    // çünkü bunlar önceden sadece "aktif coin paneli" açık coinler için tazeleniyordu.
+    try { fetchFearGreed(); fetchBtcCorr(); } catch(e){}
+
     // Tarama listesi: en hacimli N + açık pozisyonu olan coinler
     const targets = universe.slice(0, S.universeN).map(u => ({ short: u.short, symbol: u.symbol }));
     Object.keys(coinStates).forEach(c => {
@@ -9246,7 +9283,7 @@ async function apCycle(){
     if (!ap.on) return; // döngü sırasında kapatılmış olabilir
     radarUpdate(results);
 
-    // ── Rotasyon / sinyal-tersine-dönme çıkışı ──
+    // ── Rotasyon / sinyal-tersine-dönme çıkışı (artık KAPANMIŞ mum verisiyle) ──
     if (S.rotation) {
       for (const c of Object.keys(coinStates)) {
         const pos = coinStates[c].openPosition;
@@ -9262,37 +9299,116 @@ async function apCycle(){
       }
     }
 
+    // ── v43: TEYİT ZİNCİRİ ──
+    // Eskiden: eşiği geçen İLK tarama turunda direkt giriş → oluşmakta olan mumun
+    // geçici sinyaline güveniyordu. Şimdi: bir coin'in sinyali aynı yönde art arda
+    // KAPANMIŞ mumlarda (S.confirmCycles kadar) tekrar etmeden pozisyon açılmıyor.
+    // Trend Gate ve ADX filtresi de artık burada, tek coin botuyla AYNI kurallarla uygulanıyor —
+    // önceden otopilot bunları hiç görmüyordu.
+    const adxToggle = document.getElementById('adxMinFilterToggle');
+    const adxFilterOn = !adxToggle || adxToggle.checked !== false;
+    const adxMin = parseFloat(document.getElementById('adxMinValue')?.value) || 25;
+
+    results.forEach(r => {
+      const dir = r.netPct > 0 ? 'long' : (r.netPct < 0 ? 'short' : null);
+      let ok = !!dir && Math.abs(r.netPct) >= S.minScore;
+      if (ok && typeof isTrendGateBlocked === 'function' && isTrendGateBlocked(dir, r.rawSignals)) ok = false;
+      if (ok && adxFilterOn && r.adx != null && r.adx < adxMin) ok = false;
+
+      const prev = ap.candidates[r.short];
+      if (!ok) { if (prev) delete ap.candidates[r.short]; return; }
+
+      if (prev && prev.direction === dir) {
+        if (r.closeTime > prev.closeTime) { prev.streak += 1; prev.closeTime = r.closeTime; }
+        // aynı mum üzerinde tur tekrar çalıştıysa (kısa tarama sıklığı) streak sabit kalır
+      } else {
+        ap.candidates[r.short] = { direction: dir, streak: 1, closeTime: r.closeTime };
+      }
+      ap.candidates[r.short].netPct = r.netPct;
+    });
+    // Evrenden düşen (artık taranmayan) adayları temizle
+    Object.keys(ap.candidates).forEach(short => { if (!results.find(r => r.short === short)) delete ap.candidates[short]; });
+
     // ── Yeni av seçimi ──
     const openCount = getOpenPositionCount();
     const slots = Math.max(0, S.maxPos - openCount);
     if (slots === 0) { brain('😌 Tüm slotlar dolu (' + openCount + '/' + S.maxPos + ') — pozisyonlar risk motorunda.'); return; }
 
+    const confirmedShorts = Object.keys(ap.candidates).filter(s => ap.candidates[s].streak >= S.confirmCycles);
+    if (!confirmedShorts.length) {
+      const watching = Object.keys(ap.candidates)
+        .sort((a,b) => ap.candidates[b].streak - ap.candidates[a].streak)
+        .slice(0, 5)
+        .map(s => s + ' (' + ap.candidates[s].streak + '/' + S.confirmCycles + ' mum)');
+      brain('👀 Eşiği (%' + S.minScore + ') geçen var ama teyit bekleniyor: ' + (watching.length ? watching.join(', ') : '—') + '. Sabır, canım.');
+      return;
+    }
+
+    if (typeof isOutsideTradingHours === 'function' && isOutsideTradingHours()) {
+      brain('⏰ İşlem saatleri dışı — ' + confirmedShorts.length + ' teyitli aday var ama bu tur yeni giriş yok.');
+      return;
+    }
+
     const maxExpo = vault.balance * S.maxExpoPct / 100;
     let amount = Math.floor(vault.balance * S.perPosPct / 100);
     const tradeMode = document.getElementById('tradeMode').value;
+    const mtfOn = document.getElementById('mtfToggle')?.checked;
+    const fundingOn = document.getElementById('fundingFilterToggle')?.checked;
+    const btcCorrOn = document.getElementById('btcCorrToggle')?.checked;
+    const btcCorrThresh = parseFloat(document.getElementById('btcCorrThreshold')?.value) || 3;
+    const fgOn = document.getElementById('fgFilterToggle')?.checked;
+    const fgThresh = parseFloat(document.getElementById('fgThreshold')?.value) || 25;
 
-    const candidates = results
-      .filter(r => Math.abs(r.netPct) >= S.minScore)
-      .filter(r => !(coinStates[r.short] && coinStates[r.short].openPosition))
-      .filter(r => !(r.netPct < 0 && tradeMode !== 'futures_sim'))
-      .filter(r => !(typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)))
-      .filter(r => {
-        // v41.7 FIX: Kayıp Sonrası Coin Soğuması VE Manuel Soğuma artık Otopilot'ta da geçerli.
-        // Önceden bu kontroller yalnızca tekli coin panellerinin kendi döngüsünde vardı —
-        // Otopilot'un evren taraması bu kayıtları hiç sormuyordu, bu yüzden stop yiyen veya
-        // elle kapatılan bir coin (örn. TLM) bir sonraki tarama turunda hemen yeniden açılabiliyordu.
-        if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(r.short)) return false;
-        if (typeof isManualCooldownActive === 'function' && isManualCooldownActive(r.short)) return false;
-        return true;
-      })
-      .sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
+    // Kalan filtreler SADECE teyit turlarını geçmiş adaylara uygulanır (funding/MTF API'leri
+    // her coin için değil, sadece gerçek adaylar için çağrılır — evrenin tamamı için değil).
+    const candidateChecks = await Promise.all(confirmedShorts.map(async short => {
+      const c = ap.candidates[short];
+      const r = results.find(x => x.short === short);
+      if (!r) return null;
+      if (coinStates[short] && coinStates[short].openPosition) return null;
+      if (c.direction === 'short' && tradeMode !== 'futures_sim') return null;
+      if (typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)) return null;
+      if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(short)) return null;
+      if (typeof isManualCooldownActive === 'function' && isManualCooldownActive(short)) return null;
+      if (fgOn && c.direction === 'long' && fearGreedData.value <= fgThresh && fearGreedData.lastFetch > 0) {
+        brain('😱 [F&G] ' + short + ' teyitli ama Aşırı Korku (' + fearGreedData.value + ') — LONG engellendi.');
+        return null;
+      }
+      if (btcCorrOn && short !== 'BTC' && c.direction === 'long' && btcCorrCache.change <= -btcCorrThresh) {
+        brain('🔗 [BTC Korelasyon] ' + short + ' teyitli ama BTC %' + btcCorrCache.change.toFixed(2) + ' düşüyor — LONG engellendi.');
+        return null;
+      }
+      if (fundingOn) {
+        try {
+          await fetchFunding(r.symbol);
+          const rate = getFundingRate(r.symbol);
+          const thresh = parseFloat(document.getElementById('fundingThreshold')?.value) || 0.05;
+          if (rate !== null) {
+            if (c.direction === 'long' && rate >= thresh) { brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — LONG engellendi (sıkışma riski).'); return null; }
+            if (c.direction === 'short' && rate <= -thresh) { brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — SHORT engellendi (sıkışma riski).'); return null; }
+          }
+        } catch(e){}
+      }
+      if (mtfOn) {
+        try {
+          const tf2 = document.getElementById('mtfTf2')?.value || '1h';
+          const tf3 = document.getElementById('mtfTf3')?.value || '4h';
+          const [kl2, kl3] = await Promise.all([getMTFKlines(r.symbol, tf2), getMTFKlines(r.symbol, tf3)]);
+          const trend2 = kl2 ? getMTFTrend(kl2) : 'unknown';
+          const trend3 = kl3 ? getMTFTrend(kl3) : 'unknown';
+          const longOk  = (trend2 === 'bull' || trend2 === 'unknown') && (trend3 === 'bull' || trend3 === 'unknown');
+          const shortOk = (trend2 === 'bear' || trend2 === 'unknown') && (trend3 === 'bear' || trend3 === 'unknown');
+          if (c.direction === 'long' && !longOk) { brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri boğayı onaylamıyor — engellendi.'); return null; }
+          if (c.direction === 'short' && !shortOk) { brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri ayıyı onaylamıyor — engellendi.'); return null; }
+        } catch(e){}
+      }
+      return { ...r, short, direction: c.direction, streak: c.streak };
+    }));
+
+    const candidates = candidateChecks.filter(Boolean).sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
 
     if (!candidates.length) {
-      const coolingNow = Object.keys(lossCooldownUntil || {}).filter(c => lossCooldownUntil[c] > Date.now());
-      const manualCooling = Object.keys(manualCooldownCoins || {});
-      const allCooling = [...new Set([...coolingNow, ...manualCooling])];
-      const coolNote = allCooling.length ? ' (' + allCooling.join(', ') + ' şu an soğumada)' : '';
-      brain('🌫️ Eşiği (%'+S.minScore+') geçen av yok' + coolNote + '. En yakın: ' + (results.sort((a,b)=>Math.abs(b.netPct)-Math.abs(a.netPct))[0] ? results[0].short + ' %' + Math.abs(results[0].netPct).toFixed(0) : '—') + '. Sabır, canım.');
+      brain('🌫️ ' + confirmedShorts.length + ' aday teyit turunu geçti ama kalite filtreleri (rejim/soğuma/funding/MTF/F&G/korelasyon) hiçbirine izin vermedi.');
       return;
     }
 
@@ -9302,11 +9418,10 @@ async function apCycle(){
       if (openExposure() + amount > maxExpo) { brain('🛡️ Maks. risk tavanına (%' + S.maxExpoPct + ') ulaşıldı — bu tur yeni av yok.'); break; }
       if (amount < 10) { brain('⚠️ Kasa çok küçüldü — pozisyon başına tutar 10$ altına düştü.'); break; }
       if (!window.v40FundsOk(amount, cand.short)) break;
-      const dir = cand.netPct > 0 ? 'long' : 'short';
-      const ok = await autopilotOpen(cand.short, cand.symbol, dir, amount, cand);
-      if (ok) opened++;
+      const ok = await autopilotOpen(cand.short, cand.symbol, cand.direction, amount, cand);
+      if (ok) { opened++; delete ap.candidates[cand.short]; }
     }
-    if (!opened) brain('🤔 Adaylar vardı ama filtreler (rejim/soğuma/mod) geçit vermedi. Sonraki tur: ' + S.scanMin + ' dk.');
+    if (!opened) brain('🤔 Teyitli adaylar vardı ama slot/risk sınırı geçit vermedi. Sonraki tur: ' + S.scanMin + ' dk.');
   } catch(e){
     brain('⚠️ Döngü hatası: ' + e.message);
   } finally {
