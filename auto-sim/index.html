@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v41.9.3 QUANT+</title>
+<title>TUGAY × QUANT · v42.0 QUANT+</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v41.9.3 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v42.0 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1430,7 +1430,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   </div>
 
   <!-- 🪙 Coin Panelleri — sayfanın en üstünde, botu açar açmaz aktif coinler görünsün -->
-  <span id="secCoins" style="display:block;position:relative;top:-8px;"></span>
   <div class="coin-grid" id="coinGrid"></div>
 
 
@@ -1548,7 +1547,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: AYARLAR ═══ -->
   <div class="qt-tab-panel" data-tab="settings" id="tabPanel-settings">
-  <span id="secSettings" style="display:block;position:relative;top:-8px;"></span>
   <div class="setup-card">
     <div class="card-title"><span class="step-badge">2</span><span>⚙️ Genel Bot Ayarları (Tüm Coinler İçin)</span></div>
     <div class="form-grid">
@@ -1716,7 +1714,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: RİSK ═══ -->
   <div class="qt-tab-panel" data-tab="risk" id="tabPanel-risk">
-  <span id="secRisk" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" data-accid="riskmgmt">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -1765,23 +1762,9 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
-      <div class="card-title">
-        <span>🎯 Kısmi Kâr Alma (Partial Take-Profit)</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
-        <label class="regime-toggle-switch">
-          <input type="checkbox" id="partialTpToggle">
-          <span class="regime-toggle-slider"></span>
-        </label>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>İlk Hedefte Kapatılacak Oran %</label>
-          <input type="number" id="partialTpPct" value="50" min="10" max="90" step="10" />
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Take-Profit hedefinin yarısına ulaşınca pozisyonun belirttiğin yüzdesi kapatılır (kâr cebe alınır), kalan kısım çalışmaya devam eder. Böylece büyük hareketlerde daha fazla kazanç bırakırken küçük geri çekilmelerde de bir kısım kâr garanti edilir.</div>
-
-      <div class="acc-divider"></div>
+      <!-- v42: "Kısmi Kâr Alma" kartı kaldırıldı — Runner Modu aynı işin daha akıllı hali
+           (TP'de kısmen kapat + kalanı trailing ile koştur). İki benzer özellik yan yana
+           kafa karıştırıyordu. Eski partialTpToggle mantığı kodda zararsız şekilde uykuda. -->
 
       <!-- ── v41: Kademeli TP — Runner Modu ── -->
       <div class="card-title">
@@ -2009,19 +1992,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
-      <!-- ── v37.0: Tarayıcı Bildirimleri ── -->
-      <div class="card-title">
-        <span>🔔 Tarayıcı Bildirimleri</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
-        <label class="regime-toggle-switch">
-          <input type="checkbox" id="browserNotifToggle" onchange="onBrowserNotifToggle(this.checked)">
-          <span class="regime-toggle-slider"></span>
-        </label>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: sekme <b>arka plandayken</b> bile işlem açılış/kapanışlarında işletim sistemi bildirimi gösterilir. Başka sekmede çalışırken veya telefon kilitliyken botu takip etmeni sağlar. İlk açışta tarayıcı izin soracak — "İzin Ver" demen yeterli. Telegram bildirimlerinden bağımsız çalışır.</div>
-
-      <div class="acc-divider"></div>
-
       <div class="card-title">
         <span>💸 Komisyon &amp; Kayma (İşlem Maliyeti)</span>
         <span class="optional-badge">VARSAYILAN AÇIK</span>
@@ -2036,7 +2006,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="slippagePct" value="0.02" min="0" max="0.5" step="0.01" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Binance Vadeli İşlemler'de taker komisyonu, işlem büyüklüğünün (margin × kaldıraç) yaklaşık %0.04-0.05'i kadardır ve hem girişte hem çıkışta ayrı ayrı alınır. Kayma (slippage) ise emrin beklediğinden biraz farklı bir fiyattan gerçekleşmesidir. Gerçekçi olması için artık kapanan her işlemde bu maliyetler K/Z'dan otomatik düşülüyor — gösterilen kâr/zarar artık komisyonsuz "kağıt üstü" bir rakam değil. Sıfır girersen etkisiz olur.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Binance Vadeli İşlemler'de taker komisyonu, işlem büyüklüğünün (margin × kaldıraç) yaklaşık %0.04-0.05'i kadardır ve hem girişte hem çıkışta ayrı ayrı alınır. Kayma (slippage) ise emrin beklediğinden biraz farklı bir fiyattan gerçekleşmesidir. <b style="color:orange;">v42 — Likidite Duyarlı Kayma:</b> girdiğin kayma değeri artık taban değerdir; coin'in 24s hacmine göre otomatik ölçeklenir (≥$500M hacim ×1 · $100-500M ×1.5 · $30-100M ×3 · &lt;$30M ×5). Yani BTC'de %0.02 kalırken VANRY gibi sığ bir coinde gerçekçi şekilde %0.10'a çıkar — "sim'de kazandım, canlıda kazanamadım" şokunu önlemek için. Gerçekçi olması için artık kapanan her işlemde bu maliyetler K/Z'dan otomatik düşülüyor — gösterilen kâr/zarar artık komisyonsuz "kağıt üstü" bir rakam değil. Sıfır girersen etkisiz olur.</div>
 
       <div class="acc-divider"></div>
 
@@ -2107,6 +2077,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ═══ v42: 🧭 PİYASA KORUMASI — 4 ilgili filtre tek katlanır grupta ═══ -->
+      <details class="setup-card" style="margin:0;padding:12px 14px;background:var(--surface2);">
+        <summary style="cursor:pointer;font-weight:700;font-size:13px;">🧭 Piyasa Koruması <span style="font-weight:400;color:var(--muted);font-size:11px;">(Rejim + ADX + Trend Gate + Yatay Engel — 4 filtre, tek amaç: kötü piyasada işlem açtırmamak)</span></summary>
+        <div class="acc-divider"></div>
+
       <div class="card-title">
         <span>🧭 Piyasa Rejimi Filtresi</span>
         <span class="optional-badge">İSTEĞE BAĞLI</span>
@@ -2169,6 +2144,8 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div style="font-size:11.5px;color:var(--muted);line-height:1.6;">
         Yukarıdaki filtre sadece gösterge ağırlığını hafifletir, işlem açmayı ENGELLEMEZ. Bu açıkken, coin <b style="color:var(--text)">"◆ Yatay / Kararsız"</b> rejimindeyse otomatik bot o coin'de HİÇ yeni pozisyon açmaz (zaten açık olan pozisyonlar normal şekilde SL/TP/sinyal ile yönetilmeye devam eder). Manuel AL/SAT'ta ise seni uyarır, istersen yine de açabilirsin. Amaç: lagging göstergelerin en çok yanılttığı ortamda (yatay piyasa) hiç işlem açmamak.
       </div>
+      </details>
+      <!-- ═══ /Piyasa Koruması ═══ -->
 
       <div class="acc-divider"></div>
 
@@ -2190,6 +2167,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ═══ v42: 🔔 BİLDİRİMLER — 3 kanal tek katlanır grupta ═══ -->
+      <details class="setup-card" style="margin:0;padding:12px 14px;background:var(--surface2);">
+        <summary style="cursor:pointer;font-weight:700;font-size:13px;">🔔 Bildirimler <span style="font-weight:400;color:var(--muted);font-size:11px;">(Ses & Titreşim · Tarayıcı · Telegram — 3 kanal)</span></summary>
+        <div class="acc-divider"></div>
+
       <!-- ═══ v41.8: 🔔 Ses & Titreşim Bildirimleri ═══ -->
       <div class="card-title">
         <span>🔔 Ses & Titreşim Bildirimi</span>
@@ -2203,6 +2185,19 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <button class="btn btn-toggle-all" style="flex:1" onclick="playTradeFeedback('buy'); playTradeFeedback('sell');">🔊 Test Et</button>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon açılış/kapanışlarında kısa bir bip sesi + (destekleyen cihazlarda) titreşim verilir — Telegram'a bakmadan hissetmen için. <b>Önemli dürüstlük notu:</b> Titreşim (Vibration API) Android tarayıcılarda çalışır, <b>iOS Safari bunu desteklemez</b> — iPhone'da sadece ses duyarsın, titreşim hissetmezsin. Ses için sekmenin arka planda da açık olması ve telefon sessize alınmamış olması gerekir.</div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v37.0: Tarayıcı Bildirimleri ── -->
+      <div class="card-title">
+        <span>🔔 Tarayıcı Bildirimleri</span>
+        <span class="optional-badge">İSTEĞE BAĞLI</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="browserNotifToggle" onchange="onBrowserNotifToggle(this.checked)">
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: sekme <b>arka plandayken</b> bile işlem açılış/kapanışlarında işletim sistemi bildirimi gösterilir. Başka sekmede çalışırken veya telefon kilitliyken botu takip etmeni sağlar. İlk açışta tarayıcı izin soracak — "İzin Ver" demen yeterli. Telegram bildirimlerinden bağımsız çalışır.</div>
 
       <div class="acc-divider"></div>
 
@@ -2236,6 +2231,8 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </label>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: AL/SAT işlemleri ve pozisyon kapanışları doğrudan Telegram'a bildirim olarak gönderilir. Tarayıcı sekmesi açık olmalı (telefon kilitliyken JS duraklayabilir). Bilgiler sadece tarayıcında saklanır, kaydedilmez. <b>v41:</b> Otomatik haftalık rapor açıksa, her Pazar 20:00'den sonra sekme açıkken haftanın özeti (K/Z, kazanma oranı, en iyi/kötü coin, kapanış sebepleri) bir kez Telegram'a gönderilir.</div>
+      </details>
+      <!-- ═══ /Bildirimler ═══ -->
 
     </div>
   </details>
@@ -2246,7 +2243,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: ANALİZ ═══ -->
   <div class="qt-tab-panel" data-tab="analytics" id="tabPanel-analytics">
-  <span id="secAnalytics" style="display:block;position:relative;top:-8px;"></span>
   <details class="setup-card acc-card" id="backtestCompareDetails" data-accid="backtest">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -2438,7 +2434,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: LOG ═══ -->
   <div class="qt-tab-panel" data-tab="log" id="tabPanel-log">
-  <span id="secLog" style="display:block;position:relative;top:-8px;"></span>
   <div class="log-card">
     <div class="log-header">
       <div class="card-title" style="margin:0">📋 Bot Günlüğü (Tüm Coinler)</div>
@@ -2732,7 +2727,7 @@ const RISK_PROFILES = {
     values: {
       leverage: '2', stopLoss: '2', takeProfit: '5', minConfirmPct: '0.7',
       trailingStopToggle: true, trailingStopPct: '1.2',
-      partialTpToggle: true, partialTpPct: '50', tp2Toggle: false,
+      tp2Toggle: false,
       dailyLossLimitToggle: true, dailyLossLimitPct: '20',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '10',
       maxPositionsToggle: true, maxPositionsCount: '2',
@@ -2756,7 +2751,7 @@ const RISK_PROFILES = {
     values: {
       leverage: '2', stopLoss: '2', takeProfit: '6', minConfirmPct: '0.6',
       trailingStopToggle: true, trailingStopPct: '1.5',
-      partialTpToggle: true, partialTpPct: '50', tp2Toggle: true, tp2Pct: '60',
+      tp2Toggle: true, tp2Pct: '60',
       dailyLossLimitToggle: true, dailyLossLimitPct: '30',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '15',
       maxPositionsToggle: true, maxPositionsCount: '3',
@@ -2780,7 +2775,7 @@ const RISK_PROFILES = {
     values: {
       leverage: '3', stopLoss: '2.5', takeProfit: '8', minConfirmPct: '0.55',
       trailingStopToggle: true, trailingStopPct: '2',
-      partialTpToggle: false, tp2Toggle: true, tp2Pct: '50',
+      tp2Toggle: true, tp2Pct: '50',
       dailyLossLimitToggle: true, dailyLossLimitPct: '50',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '25',
       maxPositionsToggle: true, maxPositionsCount: '5',
@@ -3230,9 +3225,6 @@ function checkSettingsConflicts() {
     const issues = [];
 
     // 1) Kısmi TP, ana TP'den büyük/eşitse hiç tetiklenmez
-    if (on('partialTpToggle') && num('partialTpPct') >= num('takeProfit')) {
-      issues.push(`⚠️ [Çakışma] Kısmi TP (%${num('partialTpPct')}) ana Take-Profit'ten (%${num('takeProfit')}) küçük olmalı — aksi hâlde kısmi satış hiç gerçekleşmez.`);
-    }
     // 2) Max kaldıraçlı zarar sınırı, kaldıraçlı SL'den küçükse normal SL asla çalışmaz
     const levSL = num('stopLoss') * (parseFloat(document.getElementById('leverage')?.value) || 1);
     if (on('maxLevLossToggle') && !on('atrTpSlToggle') && num('maxLevLossPct') <= levSL) {
@@ -4996,14 +4988,26 @@ async function testTelegram() {
 // alınır — kaldıraç ne kadar yüksekse, marja göre ücretin etkisi de o kadar büyür.
 // Tüm kapanış noktaları (manuel kapat, kısmi TP, otomatik SL/TP/sinyal kapanışı) bunu kullanır,
 // böylece loga yazılan ve gerçekten kaydedilen K/Z HER ZAMAN aynı (net) rakam olur.
-function calculateNetPnl(grossPnl, amount, leverage) {
+function calculateNetPnl(grossPnl, amount, leverage, coin) {
   // 🛡️ Guard: Komisyon ve kayma değerleri makul aralıkta tutulur.
   // localStorage'dan bozuk değer gelirse (örn. 280 yerine 50 girilmesi gerekiyordu)
   // notional tüm pozisyonu siler — max %5 ile sınırlandırılır (gerçekte %0.05 + %0.02).
   const rawCommission = parseFloat(document.getElementById('commissionPct')?.value);
   const rawSlippage = parseFloat(document.getElementById('slippagePct')?.value);
   const commissionPct = (!isNaN(rawCommission) && rawCommission >= 0) ? Math.min(rawCommission, 0.5) : 0.05;
-  const slippagePct   = (!isNaN(rawSlippage)   && rawSlippage   >= 0) ? Math.min(rawSlippage,   0.5) : 0.02;
+  let slippagePct   = (!isNaN(rawSlippage)   && rawSlippage   >= 0) ? Math.min(rawSlippage,   0.5) : 0.02;
+
+  // ═══ v42: LİKİDİTE DUYARLI KAYMA ═══
+  // Sabit %0.02 kayma BTC için gerçekçi ama VANRY/TLM gibi sığ coinlerde gerçek kayma bunun
+  // 3-5 katı olabilir — "sim'de kazandım, canlıda kazanamadım" şokunun 1 numaralı sebebi.
+  // Coin'in 24s USDT hacmine göre kayma otomatik ölçeklenir (coinDetailData zaten 3dk'da bir dolar):
+  //   ≥ $500M hacim → ×1 (BTC/ETH ligi)  ·  $100-500M → ×1.5  ·  $30-100M → ×3  ·  < $30M → ×5
+  if (coin && coinDetailData[coin] && coinDetailData[coin].volume) {
+    const vol = coinDetailData[coin].volume;
+    const mult = vol >= 500e6 ? 1 : vol >= 100e6 ? 1.5 : vol >= 30e6 ? 3 : 5;
+    slippagePct = Math.min(slippagePct * mult, 0.5);
+  }
+
   // 🛡️ Guard: amount negatife düşmüşse (partial TP bug artıklarından) 0 kabul et
   const safeAmount = Math.max(amount, 0);
   const notional = safeAmount * (leverage || 1);
@@ -5469,6 +5473,20 @@ function renderKellyLite() {
     <div style="color:var(--muted);font-size:10px;margin-top:6px;">📌 Bu panel bilgilendirme amaçlıdır, işlem miktarına otomatik müdahale etmez. Kelly formülü geçmiş performansın devam edeceğini varsayar — kripto piyasasında bu varsayım sık bozulur, o yüzden hep yarım Kelly ve altında kalınır.</div>`;
 }
 
+// ───────── v42: 📉 Max Drawdown — tepe noktadan en derin düşüş ─────────
+// Toplam K/Z tek başına yanıltıcıdır: +50$ görünen bir hesap, yolda -120$'a düşüp
+// toparlanmış olabilir. Gerçek dayanıklılığın ölçüsü budur — canlıya geçmeden bilinmeli.
+function computeMaxDrawdown() {
+  if (!pnlHistory || pnlHistory.length < 2) return null;
+  let peak = pnlHistory[0].pnl, maxDD = 0;
+  pnlHistory.forEach(p => {
+    if (p.pnl > peak) peak = p.pnl;
+    const dd = peak - p.pnl;
+    if (dd > maxDD) maxDD = dd;
+  });
+  return { maxDD, peak };
+}
+
 // ───────── v41: Bot Sağlığı Kartı ─────────
 function renderBotHealth() {
   const el = document.getElementById('botHealthCard');
@@ -5479,6 +5497,12 @@ function renderBotHealth() {
   const parts = [];
   // Koruma sayısı
   parts.push(chip('🛡️', `<b>${countActiveProtections()}/${RISK_CHIP_DEFS.length}</b> koruma`, null));
+  // v42: Max Drawdown — tepe noktadan en derin düşüş (dayanıklılık ölçüsü)
+  const dd = computeMaxDrawdown();
+  if (dd && dd.maxDD > 0) {
+    const ddColor = dd.maxDD >= 100 ? 'var(--red)' : dd.maxDD >= 40 ? 'var(--yellow)' : 'var(--green)';
+    parts.push(chip('📉', `Max Drawdown: <b>-${dd.maxDD.toFixed(2)}$</b>`, ddColor));
+  }
   // Günlük K/Z durumu
   const dailyOn = document.getElementById('dailyLossLimitToggle')?.checked;
   if (dailyOn) {
@@ -5859,7 +5883,7 @@ async function manualSell(coin) {
     const rawChange = (price - pos.entryPrice) / pos.entryPrice;
     const change = dir === 'long' ? rawChange : -rawChange;
     const grossPnl = pos.amount * change * leverage;
-    const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage);
+    const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
 
     addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null);
     log(`👆 MANUEL KAPAT (${dir === 'long' ? 'LONG' : 'SHORT'}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
@@ -7300,7 +7324,7 @@ async function coinTick(coin) {
       const closePct = Math.min(Math.max(rawPct, 1), 99) / 100;
       const partialAmount = pos.amount * closePct;
       const grossPartialPnl = partialAmount * leveragedChange;
-      const { netPnl: partialPnl, cost: partialCost } = calculateNetPnl(grossPartialPnl, partialAmount, pos.leverage || 1);
+      const { netPnl: partialPnl, cost: partialCost } = calculateNetPnl(grossPartialPnl, partialAmount, pos.leverage || 1, coin);
 
       addTrade(coin, price, partialAmount, partialPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'partial_tp', pos.entryRegime || null, pos.entrySignals || null);
       log(`🎯 KISMİ KÂR ALINDI (%${(closePct*100).toFixed(0)}) | ${coin} ${dir==='long'?'LONG':'SHORT'} | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Net: +${partialPnl.toFixed(2)}$ (Komisyon/Kayma: -${partialCost.toFixed(2)}$)`, 'buy', coin);
@@ -7321,7 +7345,7 @@ async function coinTick(coin) {
       const closePct2 = Math.min(Math.max(rawTp2, 1), 99) / 100;
       const runnerCloseAmount = pos.amount * closePct2;
       const grossRunnerPnl = runnerCloseAmount * leveragedChange;
-      const { netPnl: runnerPnl, cost: runnerCost } = calculateNetPnl(grossRunnerPnl, runnerCloseAmount, pos.leverage || 1);
+      const { netPnl: runnerPnl, cost: runnerCost } = calculateNetPnl(grossRunnerPnl, runnerCloseAmount, pos.leverage || 1, coin);
 
       addTrade(coin, price, runnerCloseAmount, runnerPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'tp', pos.entryRegime || null, pos.entrySignals || null);
       log(`🏃 RUNNER MODU | ${coin} ${dir==='long'?'LONG':'SHORT'} TP hedefinde %${(closePct2*100).toFixed(0)} kapatıldı (Net: +${runnerPnl.toFixed(2)}$, Komisyon/Kayma: -${runnerCost.toFixed(2)}$). Kalan %${((1-closePct2)*100).toFixed(0)} trailing stop ile trendde koşmaya devam ediyor.`, 'buy', coin);
@@ -7348,7 +7372,7 @@ async function coinTick(coin) {
         pos.amount = 0;
       }
       const grossPnl = pos.amount * leveragedChange;
-      const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, pos.leverage || 1);
+      const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, pos.leverage || 1, coin);
       let reason, reasonCategory;
       if (liquidated)        { reason = '💥 LİKİDASYON'; reasonCategory = 'liquidation'; }
       else if (hitTrailingStop) { reason = `İz Süren Stop (en iyi: ${pos.bestPrice.toFixed(2)})`; reasonCategory = 'trailing'; }
@@ -7517,7 +7541,6 @@ document.addEventListener('visibilitychange', async () => {
 // ───────── v38.0: Risk Özeti Çipleri & Sistem Durumu Şeridi ─────────
 const RISK_CHIP_DEFS = [
   { id: 'trailingStopToggle',    icon: '📉', name: 'Trailing Stop' },
-  { id: 'partialTpToggle',       icon: '🎯', name: 'Kısmi TP' },
   { id: 'breakevenToggle',       icon: '🛡️', name: 'Breakeven' },
   { id: 'dailyLossLimitToggle',  icon: '🛑', name: 'Günlük Limit' },
   { id: 'perCoinLossLimitToggle',icon: '🎯', name: 'Coin Limiti' },
@@ -9111,7 +9134,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
   const raw = (price - pos.entryPrice) / pos.entryPrice;
   const change = dir === 'long' ? raw : -raw;
   const grossPnl = pos.amount * change * leverage;
-  const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage);
+  const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
   addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null);
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
