@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.1 OTOPİLOT HAFIZASI</title>
+<title>TUGAY × QUANT · v43.2 STABİL</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.1 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.2 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -4769,6 +4769,30 @@ function renderPositionCard(coin, state, currentPrice) {
   const manSellBtn = document.getElementById('manSell-' + coin);
 
   if (!pos) {
+    // v43.2 FIX: Bu boş-pozisyon dalı, her fiyat tikinde (birkaç saniyede bir) yeniden
+    // çalışıyor ve updateCooldownUI()'ın bir kereliğine bastığı "Soğumayı Kaldır" butonunun
+    // üzerine yazıyordu — bir sonraki tikte buton sessizce kayboluyordu. Artık soğuma durumu
+    // burada da kontrol ediliyor, buton her render'da kalıcı olarak yeniden çiziliyor.
+    if (isManualCooldownActive(coin)) {
+      el.className = 'position-card empty';
+      el.innerHTML = `
+        <div style="text-align:center;padding:10px 0;">
+          <div style="font-size:22px;margin-bottom:6px;">🧊</div>
+          <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:4px;">Manuel Soğuma Aktif</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Bu coinde otomatik işlem açılmayacak.</div>
+          <button onclick="resetCooldown('${coin}')" style="
+            background:rgba(14,124,74,0.15);color:var(--green);border:1px solid rgba(14,124,74,0.4);
+            border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+            ✅ Soğumayı Kaldır — Otomatik İşleme İzin Ver
+          </button>
+        </div>
+      `;
+      if (manBuyBtn) manBuyBtn.disabled = false;
+      const tradeModeCd = document.getElementById('tradeMode') ? document.getElementById('tradeMode').value : 'spot';
+      if (manSellBtn) manSellBtn.disabled = (tradeModeCd !== 'futures_sim');
+      renderDashboardSummary();
+      return;
+    }
     el.className = 'position-card empty';
     const tradeMode = document.getElementById('tradeMode') ? document.getElementById('tradeMode').value : 'spot';
     el.innerHTML = tradeMode === 'futures_sim'
@@ -4839,8 +4863,12 @@ function renderPositionCard(coin, state, currentPrice) {
     saveSettings();
   }
 
-  const costNow = pos.amount * leverage * (commPct + slipPct) / 100 * 2;
-  const netNow = pnlUsd - costNow; // komisyon ve kayma düşüldükten sonra ele geçen
+  // v43.2 FIX: Bu panel önizlemesi eskiden komisyon+kaymayı SABİT (flat) bir formülle
+  // hesaplıyordu — ama gerçek kapanışta calculateNetPnl() fonksiyonu, düşük hacimli
+  // coinlerde (örn. WLD, VANRY) kaymayı otomatik 1.5x-5x büyütüyor (Likidite Duyarlı Kayma).
+  // Sonuç: panel "şunu kazanacaksın" derken, gerçek satışta likidite çarpanı yüzünden daha
+  // düşük bir net tutar geliyordu. Artık İKİSİ DE TEK KAYNAKTAN (calculateNetPnl) hesaplanıyor.
+  const { netPnl: netNow, cost: costNow } = calculateNetPnl(pnlUsd, pos.amount, leverage, coin);
   const netColor = netNow >= 0 ? 'var(--green)' : 'var(--red)';
   const netIcon = netNow >= 0 ? '💰' : '📉';
   // Başabaş noktası: komisyonu karşılamak için gereken minimum kaldıraçlı % değişim
