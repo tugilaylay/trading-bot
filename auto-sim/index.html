@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.2 STABİL</title>
+<title>TUGAY × QUANT · v43.3 İZ SÜREN STOP DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.2 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.3 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1765,11 +1765,15 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       </div>
       <div class="form-grid">
         <div class="form-group">
+          <label>Aktivasyon Eşiği % (kaldıraçlı kâr)</label>
+          <input type="number" id="trailingActivationPct" value="1.2" min="0.1" max="10" step="0.1" />
+        </div>
+        <div class="form-group">
           <label>Takip Mesafesi %</label>
           <input type="number" id="trailingStopPct" value="1.5" min="0.3" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon kâra geçtikçe stop-loss seviyesi de arkasından gelir (en iyi noktanın belirttiğin % kadar altında/üstünde kalır), böylece kazancın bir kısmı kilitlenir. Sabit Stop-Loss ile birlikte çalışır — hangisi önce tetiklenirse o uygulanır.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon kâra geçtikçe stop-loss seviyesi de arkasından gelir (en iyi noktanın belirttiğin % kadar altında/üstünde kalır), böylece kazancın bir kısmı kilitlenir. Sabit Stop-Loss ile birlikte çalışır — hangisi önce tetiklenirse o uygulanır. <b style="color:orange;">v43.3 FIX:</b> Eskiden "en iyi fiyat" girişten <b>0.01%</b> bile iyi olsa devreye giriyordu — yani neredeyse her pozisyon anlık gürültüyle "iz sürmeye" başlıyor ve gerçek bir kâr hiç oluşmadan zararla kapanıyordu. Artık İz Süren Stop, pozisyon en az <b>Aktivasyon Eşiği</b> kadar kaldıraçlı kâra geçmeden hiç devreye girmiyor — önce gerçek bir kâr olmalı ki "izlenecek" bir şey olsun.</div>
 
       <div class="acc-divider"></div>
 
@@ -2737,7 +2741,7 @@ const RISK_PROFILES = {
     label: '🛡️ Korumacı',
     values: {
       leverage: '2', stopLoss: '2', takeProfit: '5', minConfirmPct: '0.7',
-      trailingStopToggle: true, trailingStopPct: '1.2',
+      trailingStopToggle: true, trailingStopPct: '1.2', trailingActivationPct: '1.0',
       tp2Toggle: false,
       dailyLossLimitToggle: true, dailyLossLimitPct: '20',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '10',
@@ -2761,7 +2765,7 @@ const RISK_PROFILES = {
     label: '⚖️ Dengeli',
     values: {
       leverage: '2', stopLoss: '2', takeProfit: '6', minConfirmPct: '0.6',
-      trailingStopToggle: true, trailingStopPct: '1.5',
+      trailingStopToggle: true, trailingStopPct: '1.5', trailingActivationPct: '1.2',
       tp2Toggle: true, tp2Pct: '60',
       dailyLossLimitToggle: true, dailyLossLimitPct: '30',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '15',
@@ -2785,7 +2789,7 @@ const RISK_PROFILES = {
     label: '🔥 Agresif',
     values: {
       leverage: '3', stopLoss: '2.5', takeProfit: '8', minConfirmPct: '0.55',
-      trailingStopToggle: true, trailingStopPct: '2',
+      trailingStopToggle: true, trailingStopPct: '2', trailingActivationPct: '1.5',
       tp2Toggle: true, tp2Pct: '50',
       dailyLossLimitToggle: true, dailyLossLimitPct: '50',
       perCoinLossLimitToggle: true, perCoinLossLimitPct: '25',
@@ -3126,7 +3130,7 @@ const SETTINGS_FIELD_IDS = [
   'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
-  'trailingStopToggle', 'trailingStopPct', 'partialTpToggle', 'partialTpPct',
+  'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'partialTpToggle', 'partialTpPct',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
@@ -3294,6 +3298,7 @@ function loadSettings() {
       { id: 'stopLoss',       min: 0.1,   max: 50,   def: 3    },
       { id: 'takeProfit',     min: 0.1,   max: 100,  def: 5    },
       { id: 'trailingStopPct',min: 0.1,   max: 20,   def: 1    },
+      { id: 'trailingActivationPct', min: 0.1, max: 10, def: 1.2 },
       { id: 'circuitBreakerCount', min: 2, max: 15,  def: 4    }, // v37.0
     ];
     guards.forEach(({ id, min, max, def }) => {
@@ -7269,19 +7274,31 @@ async function coinTick(coin) {
     const liquidated = (pos.leverage || 1) > 1 && leveragedChange <= -0.95;
 
     // ───────── İz Süren Stop-Loss (Trailing Stop) ─────────
+    // v43.3 FIX: Eskiden bestPrice, girişten 0.001% bile iyi olsa güncelleniyordu ("everProfited"
+    // sadece bestPrice !== entryPrice diye bakıyordu) — yani sıradan fiyat gürültüsü bile "iz
+    // sürmeye" başlıyor, sonra normal bir geri çekilmede pozisyon HİÇ gerçek kâra ulaşmadan
+    // zararla kapanıyordu. Bu yüzden "İz Süren Stop" kapanışları %0 kazanma gösteriyordu —
+    // aslında gizlenmiş, gecikmeli bir stop-loss'tan farksızdı. Artık bir aktivasyon eşiği var:
+    // pozisyon önce gerçekten Aktivasyon Eşiği kadar kaldıraçlı kâra geçmeli, ancak o zaman
+    // "en iyi fiyat" takibi başlar ve trailing stop devreye girebilir.
     const trailingOn = document.getElementById('trailingStopToggle') && document.getElementById('trailingStopToggle').checked;
+    const trailActivationPct = (parseFloat(document.getElementById('trailingActivationPct')?.value) || 1.2) / 100;
     if (trailingOn) {
-      const trailPct = parseFloat(document.getElementById('trailingStopPct').value) / 100;
-      if (pos.bestPrice === undefined) pos.bestPrice = pos.entryPrice;
-      if (dir === 'long' && price > pos.bestPrice) pos.bestPrice = price;
-      if (dir === 'short' && price < pos.bestPrice) pos.bestPrice = price;
+      if (!pos.trailingArmed && leveragedChange >= trailActivationPct) {
+        pos.trailingArmed = true;
+        pos.bestPrice = price; // izleme, aktivasyon anındaki fiyattan başlar — gürültüden değil
+        log(`📉 [İz Süren Stop] ${coin} — %${(leveragedChange*100).toFixed(2)} kâra ulaştı, takip aktive edildi (en iyi: ${formatPrice(price)}).`, 'system', coin);
+      }
+      if (pos.trailingArmed) {
+        if (dir === 'long' && price > pos.bestPrice) pos.bestPrice = price;
+        if (dir === 'short' && price < pos.bestPrice) pos.bestPrice = price;
+      }
     }
-    const trailingChange = (pos.bestPrice !== undefined)
+    const trailingChange = (pos.trailingArmed && pos.bestPrice !== undefined)
       ? (dir === 'long' ? (price - pos.bestPrice) / pos.bestPrice : -(price - pos.bestPrice) / pos.bestPrice)
       : null;
     const leveragedTrailingChange = trailingChange !== null ? trailingChange * (pos.leverage || 1) : null;
-    const everProfited = pos.bestPrice !== undefined && pos.bestPrice !== pos.entryPrice;
-    const hitTrailingStop = trailingOn && everProfited && leveragedTrailingChange !== null
+    const hitTrailingStop = trailingOn && !!pos.trailingArmed && leveragedTrailingChange !== null
       && leveragedTrailingChange <= -parseFloat(document.getElementById('trailingStopPct').value) / 100;
 
     // ── v36.7: Breakeven Stop ──
