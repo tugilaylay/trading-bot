@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.3 İZ SÜREN STOP DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v43.4 SIZINTI KAPANDI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.3 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.4 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -7446,6 +7446,18 @@ async function coinTick(coin) {
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
       state.openPosition = null;
+
+      // v43.4 FIX: Otopilotun açtığı bir pozisyon OTOMATİK (SL/TP/trailing/sinyal) kapandığında
+      // bu coin'in KENDİ bağımsız coinTick döngüsü online kalmaya devam ediyordu — ve bu döngü,
+      // teyit zinciri YOK, otopilot hafızası YOK, kendi ham ağırlıklı-oy mantığıyla saniyeler
+      // içinde AYNI coin'e sessizce yeniden giriyordu. Otopilotun tüm teyit/hafıza koruması
+      // by-pass ediliyordu — GRAM'ın art arda short'lanmasının asıl sebebi tam olarak buydu.
+      // Artık otopilotun açtığı bir pozisyon otomatik kapanınca bu coin'in bağımsız botu durur;
+      // coin'e yeniden girmek isteniyorsa bu SADECE apCycle'ın teyit+hafıza zincirinden geçerek olur.
+      if (pos.autopilot) {
+        log(`🧠 [Otopilot] ${coin} — bağımsız coin botu durduruldu. Yeniden giriş sadece otopilotun teyit turlarından geçerek olur.`, 'system', coin);
+        stopCoinBot(coin);
+      }
     }
   }
 
@@ -9254,6 +9266,12 @@ async function forceClose(coin, reasonTxt, setCooldown){
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
   if (setCooldown) { setManualCooldown(coin); try { updateCooldownUI(coin); } catch(e){} }
+  // v43.4 FIX: rotasyonla kapanan otopilot pozisyonları da aynı sızıntıya açıktı — bağımsız
+  // coinTick döngüsü çalışmaya devam edip coin'i teyitsiz/hafızasız tekrar açabiliyordu.
+  if (pos.autopilot && !setCooldown) {
+    log(`🧠 [Otopilot] ${coin} — rotasyonla kapandı, bağımsız coin botu durduruldu.`, 'system', coin);
+    try { stopCoinBot(coin); } catch(e){}
+  }
   try { renderPositionCard(coin, state, price); } catch(e){}
   renderVault();
 }
