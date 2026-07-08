@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.4 SIZINTI KAPANDI</title>
+<title>TUGAY × QUANT · v43.5 İZ SÜREN STOP TABANI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.4 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.5 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -7298,8 +7298,26 @@ async function coinTick(coin) {
       ? (dir === 'long' ? (price - pos.bestPrice) / pos.bestPrice : -(price - pos.bestPrice) / pos.bestPrice)
       : null;
     const leveragedTrailingChange = trailingChange !== null ? trailingChange * (pos.leverage || 1) : null;
-    const hitTrailingStop = trailingOn && !!pos.trailingArmed && leveragedTrailingChange !== null
+    const hitTrailingStopByDistance = trailingOn && !!pos.trailingArmed && leveragedTrailingChange !== null
       && leveragedTrailingChange <= -parseFloat(document.getElementById('trailingStopPct').value) / 100;
+
+    // v43.5 FIX: Takip Mesafesi, Aktivasyon Eşiği'nden büyük ayarlanabiliyor (varsayılan:
+    // aktivasyon %1.2, mesafe %1.5) — bu durumda pozisyon armed olur olmaz ters dönerse
+    // %1.2 - %1.5 = -%0.3 ile NET ZARARLA kapanabiliyordu. "İz Süren Stop" adı altında
+    // gizli, gecikmeli bir stop-loss'a dönüşüyordu; v43.3 sadece erken armed olmayı
+    // düzeltmişti, mesafe > eşik durumunu düzeltmemişti. Artık armed olduktan sonra
+    // pozisyon, komisyon+kayma sonrası gerçek başa baş seviyesinin (calculateBreakevenTP —
+    // TP ipucunda zaten kullanılan aynı fonksiyon) ALTINA asla düşürülmüyor. İki koşuldan
+    // hangisi önce tetiklenirse pozisyon o an kapanır; parametre kombinasyonu ne olursa
+    // olsun garanti taban her zaman gerçek başa baş oluyor.
+    const commissionPctG = parseFloat(document.getElementById('commissionPct')?.value) || 0;
+    const slippagePctG = parseFloat(document.getElementById('slippagePct')?.value) || 0;
+    const breakevenFloorPct = trailingOn && !!pos.trailingArmed
+      ? calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100
+      : null;
+    const hitTrailingFloor = trailingOn && !!pos.trailingArmed && breakevenFloorPct !== null
+      && leveragedChange <= breakevenFloorPct;
+    const hitTrailingStop = hitTrailingStopByDistance || hitTrailingFloor;
 
     // ── v36.7: Breakeven Stop ──
     const breakevenOn = document.getElementById('breakevenToggle')?.checked;
@@ -7432,6 +7450,7 @@ async function coinTick(coin) {
       const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, pos.leverage || 1, coin);
       let reason, reasonCategory;
       if (liquidated)        { reason = '💥 LİKİDASYON'; reasonCategory = 'liquidation'; }
+      else if (hitTrailingFloor && !hitTrailingStopByDistance) { reason = `📉 İz Süren Stop — Başa Baş Tabanı (en iyi: ${pos.bestPrice.toFixed(2)}, taban: %${(breakevenFloorPct*100).toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitTrailingStop) { reason = `İz Süren Stop (en iyi: ${pos.bestPrice.toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitBreakevenSL)  { reason = '🛡️ Breakeven Stop (giriş fiyatı koruması)'; reasonCategory = 'breakeven'; }
       else if (emergencyExit)   { reason = '🚨 Acil Çıkış (Max Zarar Cap)'; reasonCategory = 'sl'; }
