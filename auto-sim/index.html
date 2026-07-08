@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.5 İZ SÜREN STOP TABANI</title>
+<title>TUGAY × QUANT · v43.6 OTO-ÖLÇEKLİ EŞİK</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1095,7 +1095,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.5 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.6 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1767,6 +1767,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <div class="form-group">
           <label>Aktivasyon Eşiği % (kaldıraçlı kâr)</label>
           <input type="number" id="trailingActivationPct" value="1.2" min="0.1" max="10" step="0.1" />
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;font-weight:normal;color:var(--muted);">
+            <input type="checkbox" id="autoScaleTrailingActivation" checked style="width:auto;">
+            🔗 Kaldıraçla Otomatik Ölçekle
+          </label>
         </div>
         <div class="form-group">
           <label>Takip Mesafesi %</label>
@@ -2822,6 +2826,7 @@ function _applyProfileValues(values) {
   checkSettingsConflicts();
   renderSystemStrip();
   updateAllTpBreakevenHints();
+  autoScaleTrailingActivation(); // v43.6: preset uygulanınca eşiği kaldıraca göre güvenli tarafta tut
 }
 
 function applyRiskProfile(key) {
@@ -3130,7 +3135,7 @@ const SETTINGS_FIELD_IDS = [
   'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
-  'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'partialTpToggle', 'partialTpPct',
+  'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
@@ -3328,7 +3333,11 @@ function attachSettingsAutoSave() {
     if (!el) return;
     el.addEventListener('change', updateAllTpBreakevenHints);
     el.addEventListener('input', updateAllTpBreakevenHints);
+    el.addEventListener('change', autoScaleTrailingActivation);
+    el.addEventListener('input', autoScaleTrailingActivation);
   });
+  const autoScaleEl = document.getElementById('autoScaleTrailingActivation');
+  if (autoScaleEl) autoScaleEl.addEventListener('change', autoScaleTrailingActivation);
   attachInputClamps(); // v41.9.2: risk alanlarına anlamsız değer girişini engelleyen kalıcı kilit
 }
 
@@ -6021,6 +6030,34 @@ function calculateBreakevenTP(leverage, commissionPct, slippagePct) {
   return (leverage || 1) * ((commissionPct || 0) + (slippagePct || 0)) * 2;
 }
 
+// v43.6: Kaldıraç → Aktivasyon Eşiği otomatik ölçekleme.
+// v43.5'teki taban (calculateBreakevenTP) kaldıraçla orantılı büyür — bu yüzden
+// Aktivasyon Eşiği sabit kalır ve kaldıraç yükseltilirse, taban eşiğin ÜSTÜNE
+// çıkabilir. O zaman trailing armed olur olmaz taban hemen tetiklenir: pozisyon
+// zarar etmez ama trend'i hiç koşturamadan anında kapanır — "iz süren stop" fiilen
+// işlevsiz kalır. Bu fonksiyon, kullanıcı "Kaldıraçla Otomatik Ölçekle" kutusunu
+// kapatmadığı sürece, eşiği her zaman tabanın en az 1.75 katında tutar; böylece
+// taban sadece gerçek bir geri dönüşte devreye girer, arm anında değil.
+function autoScaleTrailingActivation() {
+  const autoEl = document.getElementById('autoScaleTrailingActivation');
+  const actEl = document.getElementById('trailingActivationPct');
+  if (!autoEl || !actEl || !autoEl.checked) return; // kullanıcı manuel kontrolü tercih etti
+  const tradeModeEl = document.getElementById('tradeMode');
+  const tradeMode = tradeModeEl ? tradeModeEl.value : 'spot';
+  const leverage = tradeMode === 'futures_sim' ? (parseFloat(document.getElementById('leverage')?.value) || 1) : 1;
+  const commissionPct = parseFloat(document.getElementById('commissionPct')?.value) || 0;
+  const slippagePct = parseFloat(document.getElementById('slippagePct')?.value) || 0;
+  const floorPct = calculateBreakevenTP(leverage, commissionPct, slippagePct);
+  const SAFETY_MULTIPLIER = 1.75; // taban ile eşik arasında rahat, koşturulabilir bir pay bırak
+  const recommended = Math.max(0.1, Math.round(floorPct * SAFETY_MULTIPLIER * 10) / 10);
+  const current = parseFloat(actEl.value);
+  if (current === recommended) return; // zaten güvenli seviyede, gereksiz log/kayıt yok
+  actEl.value = recommended;
+  log(`🔗 [Oto-Ölçek] Kaldıraç ${leverage}x → Aktivasyon Eşiği otomatik %${recommended}'e ayarlandı (taban: %${floorPct.toFixed(2)}, güvenlik payı: ${SAFETY_MULTIPLIER}x). Kapatmak için "Kaldıraçla Otomatik Ölçekle" kutusunun işaretini kaldır.`, 'system');
+  saveSettings();
+  updateAllTpBreakevenHints();
+}
+
 // Bir coin panelindeki "kırılma noktası" ipucunu günceller: mevcut TP ayarı, o kaldıraçta
 // komisyonu karşılıyor mu, yoksa rahat bir kâr payı bırakıyor mu — renkli olarak gösterir.
 function updateTpBreakevenHint(coin) {
@@ -8640,6 +8677,7 @@ window.addEventListener('load', () => {
   attachSettingsAutoSave();
   renderSystemStrip(); // v38.0: sistem şeridi + risk çipleri ilk yükleme
   updateAllTpBreakevenHints();
+  autoScaleTrailingActivation(); // v43.6: sayfa açılışında da kaldıraç/eşik tutarlılığını kontrol et
   // ── v41 başlangıç kancaları ──
   if (document.getElementById('fundingFilterToggle')?.checked) fetchFunding('BTCUSDT'); // Bot Sağlığı için BTC funding
   checkAutoWeeklyReport();
