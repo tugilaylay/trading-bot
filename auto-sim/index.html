@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.6 OTO-ÖLÇEKLİ EŞİK</title>
+<title>TUGAY × QUANT · v43.7 GÖRSEL CİLA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -357,6 +357,12 @@
     background: linear-gradient(135deg, var(--green), var(--accent2)); color: #04150b;
     flex-shrink: 0; box-shadow: 0 0 10px rgba(14,124,74,0.35);
   }
+  /* v43.7: adım rozetli başlıklara "defter sekmesi" hissi veren ince accent çizgi */
+  .card-title:has(.step-badge) {
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+    margin-left: -10px;
+  }
   .optional-badge {
     font-size: 9px; font-weight: 700; color: var(--muted); background: var(--surface3);
     padding: 3px 8px; border-radius: 100px; letter-spacing: 0.5px;
@@ -637,7 +643,11 @@
   .log-body { height: 200px; overflow-y: auto; padding: 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.75; }
   .log-body::-webkit-scrollbar { width: 4px; }
   .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .log-line { display: flex; gap: 10px; align-items: flex-start; padding: 2px 0; }
+  .log-line { display: flex; gap: 10px; align-items: flex-start; padding: 2px 0 2px 8px; margin-left: -8px; border-left: 2px solid transparent; transition: border-color 0.2s; }
+  .log-line:has(.log-msg.buy) { border-left-color: var(--green); }
+  .log-line:has(.log-msg.sell) { border-left-color: var(--red); }
+  .log-line:has(.log-msg.warn) { border-left-color: var(--yellow); }
+  .log-line:has(.log-msg.system) { border-left-color: var(--border); }
   .log-time { color: var(--muted); flex-shrink: 0; font-size: 10.5px; }
   .log-msg.info { color: var(--text); }
   .log-msg.buy { color: var(--green); font-weight: 600; }
@@ -1095,7 +1105,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.6 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.7 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1159,6 +1169,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
   <div class="hero-pnl-wrap" id="secDashboard">
     <div class="hero-label">TOPLAM K/Z</div>
     <div class="hero-pnl-number neutral" id="globalPnl">+0.00 $</div>
+    <canvas id="heroSparkline" title="Son işlemlerin kümülatif K/Z eğrisi" style="width:100%;height:34px;display:block;margin:2px 0 12px;"></canvas>
     <div class="hero-badges">
       <span class="hero-badge" id="heroBadgeWinRate">Win: —</span>
       <span class="hero-badge" id="heroBadgeTrades">0 işlem</span>
@@ -3929,10 +3940,93 @@ function loadFromStorage() {
   } catch(e) {}
 }
 
+let _lastDisplayedPnl = 0;
+let _pnlAnimFrame = null;
 function updateGlobalPnlDisplay() {
   const el = document.getElementById('globalPnl');
-  el.textContent = (globalTotalPnl >= 0 ? '+' : '') + globalTotalPnl.toFixed(2) + ' $';
-  el.style.color = globalTotalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  const from = _lastDisplayedPnl;
+  const to = globalTotalPnl;
+  el.style.color = to >= 0 ? 'var(--green)' : 'var(--red)';
+  if (_pnlAnimFrame) cancelAnimationFrame(_pnlAnimFrame);
+  const start = performance.now();
+  const DUR = 450;
+  function step(now) {
+    const t = Math.min(1, (now - start) / DUR);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const current = from + (to - from) * eased;
+    el.textContent = (current >= 0 ? '+' : '') + current.toFixed(2) + ' $';
+    if (t < 1) { _pnlAnimFrame = requestAnimationFrame(step); }
+    else { _lastDisplayedPnl = to; }
+  }
+  _pnlAnimFrame = requestAnimationFrame(step);
+  try { drawHeroSparkline(); } catch(e) {}
+}
+
+// v43.7: Hero K/Z rakamının hemen altında minik kümülatif eğri — Analiz sekmesindeki
+// tam equity grafiğine gitmeden, tek bakışta "yön" hissi verir. Aynı pnlHistory verisini
+// kullanır, tema renklerini CSS custom property'lerden okur (kağıt/gece ikisinde de doğru).
+function drawHeroSparkline() {
+  const canvas = document.getElementById('heroSparkline');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  if (!pnlHistory || pnlHistory.length < 2) return;
+
+  const cs = getComputedStyle(document.documentElement);
+  const green = cs.getPropertyValue('--green').trim() || '#3FBE80';
+  const red = cs.getPropertyValue('--red').trim() || '#E2685C';
+  const borderCol = cs.getPropertyValue('--border').trim() || '#3A3424';
+
+  const values = pnlHistory.map(p => p.pnl);
+  const minV = Math.min(0, ...values);
+  const maxV = Math.max(0, ...values);
+  const range = (maxV - minV) || 1;
+  const pad = 3;
+  const points = pnlHistory.map((p, i) => ({
+    x: pad + (i / (pnlHistory.length - 1)) * (w - pad * 2),
+    y: h - pad - ((p.pnl - minV) / range) * (h - pad * 2)
+  }));
+  const zeroY = h - pad - ((0 - minV) / range) * (h - pad * 2);
+
+  ctx.strokeStyle = borderCol;
+  ctx.globalAlpha = 0.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(w, zeroY); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  const last = values[values.length - 1];
+  const lineColor = last >= 0 ? green : red;
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, lineColor + '33');
+  grad.addColorStop(1, lineColor + '00');
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, h);
+  ctx.lineTo(points[0].x, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 1.75;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  const lp = points[points.length - 1];
+  ctx.beginPath();
+  ctx.arc(lp.x, lp.y, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
 }
 
 // ───────── Log ─────────
@@ -8699,7 +8793,7 @@ window.addEventListener('load', () => {
     log(`📂 ${globalTradeHistory.length} işlem yüklendi | Toplam K/Z: ${globalTotalPnl>=0?'+':''}${globalTotalPnl.toFixed(2)} $`, 'system');
   }
 });
-window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); drawGlobalEquityChart(); });
+window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); drawGlobalEquityChart(); try { drawHeroSparkline(); } catch(e){} });
 </script>
 <script>
 /* ═══ v39.0 PAPER TERMINAL — canlı katman ═══ */
@@ -8722,6 +8816,7 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
       // ikincil grafikleri de tazele ki renkleri güncellensin
       try { drawGlobalEquityChart(); } catch(e){}
       try { drawMiniEquityChart(); } catch(e){}
+      try { drawHeroSparkline(); } catch(e){}
       try { if (typeof coinStates === 'object') Object.keys(coinStates).forEach(c => { try { drawSparkline && drawSparkline(c); } catch(e){} }); } catch(e){}
     });
   }
