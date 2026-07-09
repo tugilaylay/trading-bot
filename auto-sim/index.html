@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.9 NEON & BÜYÜK DOKUNUŞLAR</title>
+<title>TUGAY × QUANT · v43.10 CANLI MUM AKORDEONU</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -409,6 +409,15 @@
   .scanner-table td { padding: 10px 12px; border-bottom: 1px solid rgba(35,45,66,0.5); font-family: var(--mono); font-size: 12px; }
   .scanner-table tr.scan-buy { background: rgba(14,124,74,0.06); }
   .scanner-table tr.scan-sell { background: rgba(196,58,47,0.06); }
+
+  /* v43.10: Tarama satırı akordeonu — satıra dokunca altında mum grafiği açılır */
+  .scan-row-clickable { cursor: pointer; transition: background 0.15s; }
+  .scan-row-clickable:active { background: var(--surface3) !important; }
+  .scan-row-chevron { color: var(--muted); font-size: 9px; margin-left: 2px; transition: transform 0.2s; display: inline-block; }
+  .scan-row-clickable.scan-row-open .scan-row-chevron { transform: rotate(180deg); color: var(--accent); }
+  .scan-row-clickable.scan-row-open { background: var(--surface3) !important; }
+  .scan-detail-row td { padding: 12px !important; background: var(--surface2); border-bottom: 2px solid var(--border) !important; }
+  .scan-detail-body { min-height: 40px; }
   .btn-apply-signal { background: rgba(14,124,74,0.15); color: var(--green); border: 1px solid rgba(14,124,74,0.4); border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--font); }
   .btn-apply-signal:hover { background: rgba(14,124,74,0.25); }
   .btn-clear { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); flex: 0 0 auto; padding: 13px 16px; }
@@ -1146,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.9 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.10 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6182,6 +6191,166 @@ async function manualSell(coin) {
 
 // Average True Range (ATR) hesaplar — coin'in son `period` mumdaki ortalama gerçek fiyat
 // aralığını, yani oynaklığını ölçer. Standart formül: TR = max(yüksek-düşük, |yüksek-öncekiKapanış|, |düşük-öncekiKapanış|)
+// v43.10: Tarama satırı akordeon grafiği için seri (dizi) bazlı gösterge hesaplayıcılar.
+// calculateATR yalnızca SON değeri döndürüyordu — bunlar tüm mum boyunca bir seri üretir,
+// böylece EMA/VWAP/SuperTrend gibi göstergeler mum grafiğinin üzerine çizgi olarak çizilebilir.
+function emaSeries(values, period) {
+  if (!values || values.length < period) return values.map(() => null);
+  const k = 2 / (period + 1);
+  const out = new Array(values.length).fill(null);
+  let sma = values.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  out[period - 1] = sma;
+  let prev = sma;
+  for (let i = period; i < values.length; i++) {
+    prev = values[i] * k + prev * (1 - k);
+    out[i] = prev;
+  }
+  return out;
+}
+function smaSeries(values, period) {
+  const out = new Array(values.length).fill(null);
+  for (let i = period - 1; i < values.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += values[j];
+    out[i] = sum / period;
+  }
+  return out;
+}
+function stddevSeries(values, period, meanArr) {
+  const out = new Array(values.length).fill(null);
+  for (let i = period - 1; i < values.length; i++) {
+    const mean = meanArr[i];
+    if (mean === null) continue;
+    let sq = 0;
+    for (let j = i - period + 1; j <= i; j++) sq += Math.pow(values[j] - mean, 2);
+    out[i] = Math.sqrt(sq / period);
+  }
+  return out;
+}
+function atrSeries(highs, lows, closes, period = 14) {
+  const trs = [null];
+  for (let i = 1; i < highs.length; i++) {
+    trs.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i-1]), Math.abs(lows[i] - closes[i-1])));
+  }
+  const out = new Array(highs.length).fill(null);
+  let prev = null;
+  for (let i = period; i < trs.length; i++) {
+    if (prev === null) {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) sum += trs[j];
+      prev = sum / period;
+    } else {
+      prev = (prev * (period - 1) + trs[i]) / period;
+    }
+    out[i] = prev;
+  }
+  return out;
+}
+function vwapSeries(closes, highs, lows, volumes) {
+  const out = new Array(closes.length).fill(null);
+  let cumPV = 0, cumV = 0;
+  for (let i = 0; i < closes.length; i++) {
+    const tp = (highs[i] + lows[i] + closes[i]) / 3;
+    cumPV += tp * (volumes[i] || 0);
+    cumV += (volumes[i] || 0);
+    out[i] = cumV > 0 ? cumPV / cumV : closes[i];
+  }
+  return out;
+}
+function supertrendSeries(highs, lows, closes, period = 10, mult = 3) {
+  const atr = atrSeries(highs, lows, closes, period);
+  const line = new Array(closes.length).fill(null);
+  const dir = new Array(closes.length).fill(1);
+  let upperPrev = null, lowerPrev = null;
+  for (let i = 0; i < closes.length; i++) {
+    if (atr[i] === null) continue;
+    const mid = (highs[i] + lows[i]) / 2;
+    let upperBand = mid + mult * atr[i];
+    let lowerBand = mid - mult * atr[i];
+    if (upperPrev !== null && closes[i-1] <= upperPrev) upperBand = Math.min(upperBand, upperPrev);
+    if (lowerPrev !== null && closes[i-1] >= lowerPrev) lowerBand = Math.max(lowerBand, lowerPrev);
+    let d = dir[i-1] || 1;
+    if (closes[i] > upperBand) d = 1;
+    else if (closes[i] < lowerBand) d = -1;
+    dir[i] = d;
+    line[i] = d === 1 ? lowerBand : upperBand;
+    upperPrev = upperBand; lowerPrev = lowerBand;
+  }
+  return { line, dir };
+}
+function psarSeries(highs, lows, step = 0.02, maxStep = 0.2) {
+  const out = new Array(highs.length).fill(null);
+  if (highs.length < 2) return out;
+  let bull = true, af = step, ep = highs[0], sar = lows[0];
+  for (let i = 1; i < highs.length; i++) {
+    sar = sar + af * (ep - sar);
+    if (bull) {
+      if (lows[i] < sar) { bull = false; sar = ep; ep = lows[i]; af = step; }
+      else { if (highs[i] > ep) { ep = highs[i]; af = Math.min(maxStep, af + step); } }
+    } else {
+      if (highs[i] > sar) { bull = true; sar = ep; ep = highs[i]; af = step; }
+      else { if (lows[i] < ep) { ep = lows[i]; af = Math.min(maxStep, af + step); } }
+    }
+    out[i] = sar;
+  }
+  return out;
+}
+function donchianSeries(highs, lows, period = 20) {
+  const upper = new Array(highs.length).fill(null), lower = new Array(highs.length).fill(null);
+  for (let i = period - 1; i < highs.length; i++) {
+    upper[i] = Math.max(...highs.slice(i - period + 1, i + 1));
+    lower[i] = Math.min(...lows.slice(i - period + 1, i + 1));
+  }
+  return { upper, lower };
+}
+
+// Fiyat ölçeğinde çizilebilen (overlay) göstergeler için seri üretir — sadece
+// KULLANICININ O AN AKTİF SEÇTİĞİ göstergeler hesaplanır, gereksiz iş yapılmaz.
+const OVERLAY_INDICATOR_IDS = new Set(['ematrend','macross','vwap','boll','supertrend','psar','keltner','donchian']);
+function buildOverlaySeries(candles, activeIndicators) {
+  const closes = candles.map(c => c.c), highs = candles.map(c => c.h), lows = candles.map(c => c.l), vols = candles.map(c => c.v || 0);
+  const overlays = {};
+  activeIndicators.forEach(id => {
+    if (!OVERLAY_INDICATOR_IDS.has(id)) return;
+    try {
+      if (id === 'ematrend') {
+        overlays.ematrend = { type: 'lines', color: '#D9A441', lines: [
+          { series: emaSeries(closes, 50), color: '#D9A441', label: 'EMA50' },
+          { series: emaSeries(closes, 200), color: '#8B6FD9', label: 'EMA200' }
+        ]};
+      } else if (id === 'macross') {
+        overlays.macross = { type: 'lines', lines: [
+          { series: emaSeries(closes, 9), color: '#3FBE80', label: 'EMA9' },
+          { series: emaSeries(closes, 21), color: '#E2685C', label: 'EMA21' }
+        ]};
+      } else if (id === 'vwap') {
+        overlays.vwap = { type: 'lines', lines: [{ series: vwapSeries(closes, highs, lows, vols), color: '#2FE6FF', label: 'VWAP' }] };
+      } else if (id === 'boll') {
+        const mid = smaSeries(closes, 20), sd = stddevSeries(closes, 20, mid);
+        overlays.boll = { type: 'band', color: 'rgba(139,111,217,0.5)', fill: 'rgba(139,111,217,0.08)',
+          upper: mid.map((m,i) => m !== null && sd[i] !== null ? m + sd[i]*2 : null),
+          lower: mid.map((m,i) => m !== null && sd[i] !== null ? m - sd[i]*2 : null),
+          mid: mid, midColor: '#8B6FD9' };
+      } else if (id === 'keltner') {
+        const mid = emaSeries(closes, 20), atr = atrSeries(highs, lows, closes, 10);
+        overlays.keltner = { type: 'band', color: 'rgba(47,230,255,0.5)', fill: 'rgba(47,230,255,0.06)',
+          upper: mid.map((m,i) => m !== null && atr[i] !== null ? m + atr[i]*1.5 : null),
+          lower: mid.map((m,i) => m !== null && atr[i] !== null ? m - atr[i]*1.5 : null) };
+      } else if (id === 'donchian') {
+        const { upper, lower } = donchianSeries(highs, lows, 20);
+        overlays.donchian = { type: 'band', color: 'rgba(224,146,46,0.5)', fill: 'rgba(224,146,46,0.05)', upper, lower };
+      } else if (id === 'supertrend') {
+        const { line, dir } = supertrendSeries(highs, lows, closes, 10, 3);
+        overlays.supertrend = { type: 'directional', series: line, dir };
+      } else if (id === 'psar') {
+        overlays.psar = { type: 'dots', series: psarSeries(highs, lows), color: '#E0B23A' };
+      }
+    } catch(e) { /* bir gösterge hesaplanamazsa diğerlerini etkilemesin */ }
+  });
+  return overlays;
+}
+
+
 function calculateATR(highs, lows, closes, period = 14) {
   if (!highs || highs.length < period + 1) return null;
   const trueRanges = [];
@@ -6196,6 +6365,202 @@ function calculateATR(highs, lows, closes, period = 14) {
   const recent = trueRanges.slice(-period);
   return recent.reduce((a, b) => a + b, 0) / recent.length;
 }
+
+// v43.10: Tarama satırı akordeonunda kullanılan statik mum grafiği çizici — canlı
+// grafikten farklı olarak tek seferlik render, ama seçili göstergeleri (EMA, VWAP,
+// SuperTrend, Bollinger vb.) fiyatın üzerine çizer.
+function renderScanChartCanvas(canvas, candles, overlays) {
+  if (!canvas || !candles || candles.length === 0) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  if (!W || !H) return;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const cs = getComputedStyle(document.documentElement);
+  const UP = cs.getPropertyValue('--green').trim() || '#3FBE80';
+  const DOWN = cs.getPropertyValue('--red').trim() || '#E2685C';
+  const MUTED = cs.getPropertyValue('--muted').trim() || '#9C9478';
+  const GRID = cs.getPropertyValue('--border').trim() || '#3A3424';
+
+  const padL = 4, padR = 52, padT = 10, padB = 16;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  // overlay değerlerini de fiyat aralığına dahil et — bant/çizgi ekranın dışına taşmasın
+  let lo = Infinity, hi = -Infinity;
+  candles.forEach(k => { if (k.l < lo) lo = k.l; if (k.h > hi) hi = k.h; });
+  Object.values(overlays).forEach(ov => {
+    const allSeries = ov.type === 'band' ? [ov.upper, ov.lower]
+      : ov.type === 'lines' ? ov.lines.map(l => l.series)
+      : ov.type === 'directional' ? [ov.series]
+      : ov.type === 'dots' ? [ov.series] : [];
+    allSeries.forEach(s => (s || []).forEach(v => { if (v !== null && v !== undefined) { if (v < lo) lo = v; if (v > hi) hi = v; } }));
+  });
+  const pad = (hi - lo) * 0.05 || hi * 0.001; lo -= pad; hi += pad;
+  const y = p => padT + plotH * (1 - (p - lo) / (hi - lo));
+  const n = candles.length, step = plotW / n, cw = Math.max(1.5, step * 0.6);
+  const x = i => padL + step * i + step / 2;
+
+  // ızgara
+  ctx.strokeStyle = GRID; ctx.globalAlpha = 0.5; ctx.lineWidth = 1;
+  ctx.fillStyle = MUTED; ctx.font = '500 8.5px IBM Plex Mono, monospace'; ctx.textAlign = 'left';
+  for (let i = 0; i <= 3; i++) {
+    const gy = padT + plotH * i / 3;
+    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + plotW, gy); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillText(formatPrice(hi - (hi - lo) * i / 3), padL + plotW + 6, gy + 3);
+    ctx.globalAlpha = 0.5;
+  }
+  ctx.globalAlpha = 1;
+
+  // bantlar (Bollinger / Keltner / Donchian) — mumların ALTINDA, dolgulu
+  Object.values(overlays).filter(o => o.type === 'band').forEach(ov => {
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < n; i++) {
+      if (ov.upper[i] === null) continue;
+      const px = x(i), py = y(ov.upper[i]);
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      if (ov.lower[i] === null) continue;
+      ctx.lineTo(x(i), y(ov.lower[i]));
+    }
+    ctx.closePath();
+    ctx.fillStyle = ov.fill; ctx.fill();
+    [['upper', ov.upper], ['lower', ov.lower]].forEach(([, series]) => {
+      ctx.beginPath(); let st = false;
+      series.forEach((v, i) => { if (v === null) return; const px = x(i), py = y(v); if (!st) { ctx.moveTo(px, py); st = true; } else ctx.lineTo(px, py); });
+      ctx.strokeStyle = ov.color; ctx.lineWidth = 1; ctx.stroke();
+    });
+    if (ov.mid) {
+      ctx.beginPath(); let st = false;
+      ov.mid.forEach((v, i) => { if (v === null) return; const px = x(i), py = y(v); if (!st) { ctx.moveTo(px, py); st = true; } else ctx.lineTo(px, py); });
+      ctx.strokeStyle = ov.midColor; ctx.lineWidth = 1; ctx.setLineDash([2,2]); ctx.stroke(); ctx.setLineDash([]);
+    }
+  });
+
+  // mumlar
+  for (let i = 0; i < n; i++) {
+    const k = candles[i], px = x(i);
+    const col = k.c >= k.o ? UP : DOWN;
+    ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px, y(k.h)); ctx.lineTo(px, y(k.l)); ctx.stroke();
+    ctx.fillStyle = col;
+    const yo = y(k.o), yc = y(k.c);
+    ctx.fillRect(px - cw/2, Math.min(yo, yc), cw, Math.max(1, Math.abs(yc - yo)));
+  }
+
+  // düz çizgi göstergeler (EMA/MA CROSS/VWAP)
+  Object.values(overlays).filter(o => o.type === 'lines').forEach(ov => {
+    ov.lines.forEach(line => {
+      ctx.beginPath(); let st = false;
+      line.series.forEach((v, i) => { if (v === null) return; const px = x(i), py = y(v); if (!st) { ctx.moveTo(px, py); st = true; } else ctx.lineTo(px, py); });
+      ctx.strokeStyle = line.color; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+  });
+
+  // yön değiştiren çizgiler (SuperTrend) — yükseliş yeşil, düşüş kırmızı segmentler
+  Object.values(overlays).filter(o => o.type === 'directional').forEach(ov => {
+    for (let i = 1; i < n; i++) {
+      if (ov.series[i] === null || ov.series[i-1] === null) continue;
+      ctx.beginPath();
+      ctx.moveTo(x(i-1), y(ov.series[i-1]));
+      ctx.lineTo(x(i), y(ov.series[i]));
+      ctx.strokeStyle = ov.dir[i] === 1 ? UP : DOWN;
+      ctx.lineWidth = 1.75; ctx.stroke();
+    }
+  });
+
+  // nokta göstergeler (PSAR)
+  Object.values(overlays).filter(o => o.type === 'dots').forEach(ov => {
+    ov.series.forEach((v, i) => {
+      if (v === null) return;
+      ctx.beginPath(); ctx.arc(x(i), y(v), 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = ov.color; ctx.fill();
+    });
+  });
+
+  // son fiyat rozeti
+  const last = candles[n-1];
+  const ly = y(last.c);
+  ctx.strokeStyle = MUTED; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, ly); ctx.lineTo(padL + plotW, ly); ctx.stroke(); ctx.setLineDash([]);
+  const chipCol = last.c >= last.o ? UP : DOWN;
+  ctx.fillStyle = chipCol;
+  ctx.fillRect(padL + plotW + 2, ly - 9, padR - 6, 18);
+  ctx.fillStyle = cs.getPropertyValue('--chip-ink').trim() || '#14120C';
+  ctx.font = '700 9.5px IBM Plex Mono, monospace'; ctx.textAlign = 'left';
+  ctx.fillText(formatPrice(last.c), padL + plotW + 7, ly + 3);
+}
+
+// Fiyat ölçeğine çizilemeyen (osilatör tipi) aktif göstergeler için kompakt sinyal rozeti şeridi
+function renderScanIndicatorChips(container, candles, activeIndicators) {
+  const closes = candles.map(c => c.c), highs = candles.map(c => c.h), lows = candles.map(c => c.l);
+  const ctxData = { closes, highs, lows, klines: null, price: closes[closes.length - 1] };
+  const chips = activeIndicators.filter(id => !OVERLAY_INDICATOR_IDS.has(id)).map(id => {
+    const def = INDICATOR_DEFS[id];
+    if (!def) return '';
+    let result = { signal: 'hold', label: '?' };
+    try { result = def.compute(ctxData); } catch(e) {}
+    const bg = result.signal === 'buy' ? 'rgba(63,190,128,0.18)' : result.signal === 'sell' ? 'rgba(226,104,92,0.18)' : 'rgba(156,148,120,0.12)';
+    const tc = result.signal === 'buy' ? 'var(--green)' : result.signal === 'sell' ? 'var(--red)' : 'var(--muted)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:${tc};border-radius:100px;padding:3px 9px;font-size:9.5px;font-weight:700;white-space:nowrap;">${def.name} ${result.label || ''}</span>`;
+  }).join('');
+  container.innerHTML = chips
+    ? `<div style="font-size:9px;color:var(--muted);margin:8px 0 5px;text-transform:uppercase;">📐 Fiyat grafiğine çizilemeyen göstergeler (anlık sinyal)</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${chips}</div>`
+    : '';
+}
+
+// Tarama satırına dokununca akordeon açılır/kapanır — aynı anda tek satır açık kalır
+let _scanDetailOpenSymbol = null;
+async function toggleScanCoinDetail(symbol, name, color) {
+  const rowId = 'scanDetailRow-' + symbol;
+  const existingRow = document.getElementById(rowId);
+  document.querySelectorAll('.scan-detail-row').forEach(r => { if (r.id !== rowId) r.style.display = 'none'; });
+  document.querySelectorAll('.scan-row-clickable').forEach(r => r.classList.toggle('scan-row-open', r.dataset.symbol === symbol));
+  if (!existingRow) return;
+
+  const willOpen = existingRow.style.display === 'none' || !existingRow.style.display;
+  if (_scanDetailOpenSymbol === symbol && !willOpen) {
+    existingRow.style.display = 'none';
+    _scanDetailOpenSymbol = null;
+    return;
+  }
+  existingRow.style.display = '';
+  _scanDetailOpenSymbol = symbol;
+  if (existingRow.dataset.loaded === '1') return;
+
+  const body = existingRow.querySelector('.scan-detail-body');
+  const iv = document.getElementById('interval').value;
+  const ivLabel = (() => { try { const el = document.getElementById('interval'); return el.options[el.selectedIndex].text; } catch(e) { return iv; } })();
+  body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;">⏳ ${name} · ${ivLabel} mum grafiği yükleniyor...</div>`;
+
+  try {
+    const klines = await fetchKlines(symbol, iv);
+    if (!klines || klines.length === 0) { body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:11px;">⚠️ Veri alınamadı.</div>`; return; }
+    const candles = klines.map(k => ({ t: +k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] }));
+    const activeIndicators = getActiveIndicatorList();
+    const overlays = buildOverlaySeries(candles, activeIndicators);
+
+    body.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:700;color:${color};">${name}/USDT · ${ivLabel} mum</span>
+        <span style="font-size:9.5px;color:var(--muted);">${candles.length} mum · genel ayarlardaki aralık</span>
+      </div>
+      <canvas class="scan-detail-canvas" style="width:100%;height:150px;display:block;"></canvas>
+      <div class="scan-detail-chips"></div>`;
+    const canvas = body.querySelector('.scan-detail-canvas');
+    renderScanChartCanvas(canvas, candles, overlays);
+    renderScanIndicatorChips(body.querySelector('.scan-detail-chips'), candles, activeIndicators);
+    existingRow.dataset.loaded = '1';
+  } catch(e) {
+    body.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:11px;">⚠️ Grafik yüklenemedi: ${e.message}</div>`;
+  }
+}
+
 
 // ATR'yi referans oynaklık yüzdesiyle karşılaştırıp temel "İşlem Miktarı"nı 0.3x-2x aralığında
 // ölçekler: daha oynak bir coin'de pozisyon küçülür, daha sakin bir coin'de büyür — amaç her
@@ -8393,15 +8758,19 @@ async function runScanner() {
     const sigLabel = dominantSignal === 'buy' ? `🟢 AL ${buyScore.toFixed(1)}/${activeList.length}` : dominantSignal === 'sell' ? `🔴 SAT ${sellScore.toFixed(1)}/${activeList.length}` : '— Nötr';
     const strongEnough = (dominantSignal === 'buy' && buyScore >= minConfirm) || (dominantSignal === 'sell' && sellScore >= minConfirm);
     const applyBtn = strongEnough
-      ? `<button class="btn-apply-signal" onclick="applyScannerSignal('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">Bu Sinyali Uygula</button>`
+      ? `<button class="btn-apply-signal" onclick="event.stopPropagation(); applyScannerSignal('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">Bu Sinyali Uygula</button>`
       : `<span style="color:var(--muted);font-size:10.5px">Yetersiz onay</span>`;
+    // v43.10: satıra dokununca o coin'in seçili mum aralığındaki grafiği aşağıda açılır
     return `
-      <tr class="${rowCls}">
-        <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:18px;height:18px;border-radius:50%;background:${coinDef.color};display:inline-block;"></span>${coinDef.short}</span></td>
+      <tr class="${rowCls} scan-row-clickable" data-symbol="${coinDef.symbol}" onclick="toggleScanCoinDetail('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">
+        <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:18px;height:18px;border-radius:50%;background:${coinDef.color};display:inline-block;"></span>${coinDef.short}<span class="scan-row-chevron">▾</span></span></td>
         <td>${price.toLocaleString('tr-TR',{maximumFractionDigits:4})}</td>
         <td><span class="regime-badge ${regimeInfo.regime}" style="margin-left:0">${regimeInfo.label}</span></td>
         <td style="font-weight:700">${sigLabel}</td>
         <td>${applyBtn}</td>
+      </tr>
+      <tr class="scan-detail-row" id="scanDetailRow-${coinDef.symbol}" style="display:none" data-loaded="0">
+        <td colspan="5"><div class="scan-detail-body">Yükleniyor...</div></td>
       </tr>`;
   }).join('');
 
