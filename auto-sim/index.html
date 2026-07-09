@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.11 RENK ANAHTARI</title>
+<title>TUGAY × QUANT · v43.12 SOĞUMA DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.11 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.12 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5348,12 +5348,21 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
   if (pnl >= 0) cbLossStreak = 0; else cbLossStreak++;
   checkCircuitBreaker();
 
-  // ── v41: Kayıp sonrası coin soğuması — SADECE SL/likidasyonla zararlı kapananlar tetikler.
-  // TP, sinyal, trailing, breakeven kapanışları soğuma başlatmaz (bunlar "kaos" değildir).
-  if (pnl < 0 && (reasonCategory === 'sl' || reasonCategory === 'liquidation') && document.getElementById('lossCooldownToggle')?.checked) {
+  // ── v41: Kayıp sonrası coin soğuması — zararla kapanan "kaotik" çıkışlar tetikler.
+  // v43.12 FIX: Bu kural eskiden sadece SL/likidasyonu sayıyordu, çünkü İz Süren Stop
+  // (trailing) o zamanlar SADECE kârda kapanabiliyordu — "kaos değil" varsayımı doğruydu.
+  // v43.5'te trailing'e eklediğimiz başa-baş tabanı sayesinde artık trailing (ve breakeven)
+  // KÜÇÜK BİR ZARARLA da kapanabiliyor — SENT'te gördüğün art arda aç/kapa döngüsü tam
+  // olarak buydu: trailing zararla kapatıyordu ama soğumayı hiç tetiklemiyordu, bot aynı
+  // kaotik harekete saniyeler içinde geri giriyordu. Artık trailing/breakeven de ZARARLA
+  // kapanırsa soğumayı tetikler. TP, manuel ve sinyal kapanışları (bunlar zaten kâr/karar
+  // amaçlı, kaos belirtisi değil) hâlâ soğuma başlatmaz.
+  const CHAOS_LOSS_REASONS = ['sl', 'liquidation', 'trailing', 'breakeven'];
+  if (pnl < 0 && CHAOS_LOSS_REASONS.includes(reasonCategory) && document.getElementById('lossCooldownToggle')?.checked) {
     setLossCooldown(coin);
     const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
-    log(`🧊 [Kayıp Soğuması] ${coin} — Stop-Loss zararı sonrası ${mins} dk soğuma başladı. Bu sürede sadece ${coin}'de yeni pozisyon açılmayacak.`, 'system', coin);
+    const reasonTxt = REASON_LABELS_SHORT?.[reasonCategory] || reasonCategory;
+    log(`🧊 [Kayıp Soğuması] ${coin} — ${reasonTxt} zararı sonrası ${mins} dk soğuma başladı. Bu sürede sadece ${coin}'de yeni pozisyon açılmayacak.`, 'system', coin);
   }
 
   pnlHistory.push({ t: now.getTime(), pnl: globalTotalPnl });
