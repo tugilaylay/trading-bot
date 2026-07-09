@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.8 YENİDEN DÜZEN</title>
+<title>TUGAY × QUANT · v43.9 NEON & BÜYÜK DOKUNUŞLAR</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -413,6 +413,21 @@
   .btn-apply-signal:hover { background: rgba(14,124,74,0.25); }
   .btn-clear { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); flex: 0 0 auto; padding: 13px 16px; }
   .btn-toggle-all { background: var(--surface2); color: var(--accent); border: 1px solid rgba(184,134,11,0.3); flex: 0 0 auto; padding: 9px 14px; font-size: 11px; }
+
+  /* v43.9: "Şimdi Tara" artık gri bir kutu değil — dikkat çeksin diye ayrı bir kimlik */
+  .btn-scan-hero {
+    display: block; padding: 16px 14px; font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
+    color: #fff; border: none; border-radius: 14px; cursor: pointer; font-family: var(--font);
+    background: linear-gradient(135deg, var(--accent2), #2E9E6B 85%);
+    box-shadow: 0 4px 18px rgba(139,111,217,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
+    animation: scanPulse 2.4s ease-in-out infinite;
+    transition: transform 0.12s;
+  }
+  .btn-scan-hero:active { transform: scale(0.97); }
+  @keyframes scanPulse {
+    0%, 100% { box-shadow: 0 4px 18px rgba(139,111,217,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset; }
+    50% { box-shadow: 0 4px 28px rgba(63,190,128,0.55), 0 0 0 1px rgba(255,255,255,0.08) inset; }
+  }
 
   /* ───────── Indicator selector grid ───────── */
   .indicator-selector-grid {
@@ -969,6 +984,17 @@
   .qt-exec-step.done { color: var(--text); opacity: 0.85; }
   .qt-exec-step.done b { color: var(--green); }
 
+  /* v43.9: Execution Cycle şeridi artık her adımda farklı bir neon renkte yanıyor —
+     sabit yeşil yerine sırayla kırmızı/yeşil/sarı/mor/camgöbeği/pembe arasında döner. */
+  .qt-exec-step.neon-red    { background: #FF3B5C !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(255,59,92,0.6); }
+  .qt-exec-step.neon-green  { background: #39FF88 !important; color: #04170C !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(57,255,136,0.6); }
+  .qt-exec-step.neon-yellow { background: #FFE94D !important; color: #241D02 !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(255,233,77,0.6); }
+  .qt-exec-step.neon-purple { background: #C24DFF !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(194,77,255,0.6); }
+  .qt-exec-step.neon-cyan   { background: #2FE6FF !important; color: #032226 !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(47,230,255,0.6); }
+  .qt-exec-step.neon-pink   { background: #FF4DD2 !important; color: #fff !important; opacity: 1 !important; box-shadow: 0 0 16px rgba(255,77,210,0.6); }
+  .qt-exec-step[class*="neon-"] { outline: 1.5px solid rgba(255,255,255,0.5); outline-offset: -1.5px; }
+  .qt-exec-step[class*="neon-"] b { color: inherit !important; opacity: 0.75; }
+
   /* ── HERO P&L: dev rakam + amber fosforlu kalem vurgusu ── */
   .hero-pnl-wrap { padding: 26px 20px 18px !important; }
   .hero-label {
@@ -1087,6 +1113,20 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
 }
 .qt-tab-btn { position: relative; }
 .qt-tab-btn:active { transform: scale(0.94); }
+
+/* v43.9: Telefonda "Masaüstü Görünüm" açıldığında sayfa geniş bir viewport'a
+   sıkıştığı için alt sekme çubuğu minicik kalıyordu — geniş ekranlarda büyütüp
+   ortalıyoruz, artık dokunması/seçmesi kolay. */
+@media (min-width: 640px) {
+  .qt-tabbar {
+    max-width: 760px; left: 50%; right: auto; transform: translateX(-50%);
+    border-radius: 18px 18px 0 0; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+    gap: 4px;
+  }
+  .qt-tab-btn { font-size: 14px; padding: 10px 10px; gap: 6px; }
+  .qt-tab-btn .qt-tab-icon { font-size: 27px; }
+  .qt-tab-btn.active::before { width: 30px; height: 3px; top: -9px; }
+}
 .qt-tab-badge {
   position: absolute; top: 2px; right: 18%; min-width: 8px; height: 8px; border-radius: 50%;
   background: var(--red); border: 1.5px solid var(--surface);
@@ -1106,7 +1146,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.8 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.9 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1431,7 +1471,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     </summary>
     <div class="acc-body">
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">İstersen önce hangi coin'in en güçlü sinyali verdiğini görmek için tara. Zorunlu değil — direkt aşağıdan coin seçip devam edebilirsin.</div>
-    <button class="btn-toggle-all" style="width:100%;padding:11px;" onclick="runScanner()">🔄 Şimdi Tara</button>
+    <button class="btn-scan-hero" style="width:100%;" onclick="runScanner()">🔍 ŞİMDİ TARA</button>
     <div id="scannerContent" style="margin-top:12px;">
       <div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">Henüz taranmadı.</div>
     </div>
@@ -8924,6 +8964,9 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
   // ── Execution Cycle animasyonu ──
   let step = -1, cycles = 0;
   const steps = () => document.querySelectorAll('.qt-exec-step');
+  // v43.9: her adım aktif olduğunda paletten farklı bir neon renk alır; döngü (cycles)
+  // ilerledikçe başlangıç rengi de kayar, böylece her turda renk dizilimi değişir.
+  const NEON_PALETTE = ['neon-red', 'neon-green', 'neon-yellow', 'neon-purple', 'neon-cyan', 'neon-pink'];
   function advance(){
     const running = runningCoins().length > 0;
     const els = steps();
@@ -8947,7 +8990,7 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
 
     if (!running){
       step = -1;
-      els.forEach(el => el.classList.remove('active','done'));
+      els.forEach(el => el.classList.remove('active','done', ...NEON_PALETTE));
       return;
     }
     step = (step + 1) % els.length;
@@ -8957,8 +9000,11 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
       if (cc) cc.textContent = '#' + cycles;
     }
     els.forEach((el,i) => {
-      el.classList.toggle('active', i === step);
+      const isActive = i === step;
+      el.classList.remove(...NEON_PALETTE);
+      el.classList.toggle('active', isActive);
       el.classList.toggle('done', i < step);
+      if (isActive) el.classList.add(NEON_PALETTE[(i + cycles) % NEON_PALETTE.length]);
     });
   }
   setInterval(advance, 950);
