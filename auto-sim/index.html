@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.10 CANLI MUM AKORDEONU</title>
+<title>TUGAY × QUANT · v43.11 RENK ANAHTARI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.10 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.11 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6327,23 +6327,23 @@ function buildOverlaySeries(candles, activeIndicators) {
         overlays.vwap = { type: 'lines', lines: [{ series: vwapSeries(closes, highs, lows, vols), color: '#2FE6FF', label: 'VWAP' }] };
       } else if (id === 'boll') {
         const mid = smaSeries(closes, 20), sd = stddevSeries(closes, 20, mid);
-        overlays.boll = { type: 'band', color: 'rgba(139,111,217,0.5)', fill: 'rgba(139,111,217,0.08)',
+        overlays.boll = { type: 'band', legendName: 'Bollinger Bantları', color: 'rgba(139,111,217,0.5)', fill: 'rgba(139,111,217,0.08)',
           upper: mid.map((m,i) => m !== null && sd[i] !== null ? m + sd[i]*2 : null),
           lower: mid.map((m,i) => m !== null && sd[i] !== null ? m - sd[i]*2 : null),
           mid: mid, midColor: '#8B6FD9' };
       } else if (id === 'keltner') {
         const mid = emaSeries(closes, 20), atr = atrSeries(highs, lows, closes, 10);
-        overlays.keltner = { type: 'band', color: 'rgba(47,230,255,0.5)', fill: 'rgba(47,230,255,0.06)',
+        overlays.keltner = { type: 'band', legendName: 'Keltner Kanalı', color: 'rgba(47,230,255,0.5)', fill: 'rgba(47,230,255,0.06)',
           upper: mid.map((m,i) => m !== null && atr[i] !== null ? m + atr[i]*1.5 : null),
           lower: mid.map((m,i) => m !== null && atr[i] !== null ? m - atr[i]*1.5 : null) };
       } else if (id === 'donchian') {
         const { upper, lower } = donchianSeries(highs, lows, 20);
-        overlays.donchian = { type: 'band', color: 'rgba(224,146,46,0.5)', fill: 'rgba(224,146,46,0.05)', upper, lower };
+        overlays.donchian = { type: 'band', legendName: 'Donchian Kanalı', color: 'rgba(224,146,46,0.5)', fill: 'rgba(224,146,46,0.05)', upper, lower };
       } else if (id === 'supertrend') {
         const { line, dir } = supertrendSeries(highs, lows, closes, 10, 3);
-        overlays.supertrend = { type: 'directional', series: line, dir };
+        overlays.supertrend = { type: 'directional', legendName: 'SuperTrend', series: line, dir };
       } else if (id === 'psar') {
-        overlays.psar = { type: 'dots', series: psarSeries(highs, lows), color: '#E0B23A' };
+        overlays.psar = { type: 'dots', legendName: 'PSAR', series: psarSeries(highs, lows), color: '#E0B23A' };
       }
     } catch(e) { /* bir gösterge hesaplanamazsa diğerlerini etkilemesin */ }
   });
@@ -6365,6 +6365,33 @@ function calculateATR(highs, lows, closes, period = 14) {
   const recent = trueRanges.slice(-period);
   return recent.reduce((a, b) => a + b, 0) / recent.length;
 }
+
+// v43.11: "Hangi çizgi hangi gösterge?" — overlay verisinden okunaklı bir renk anahtarı üretir
+function buildOverlayLegend(overlays) {
+  const chips = [];
+  Object.values(overlays).forEach(ov => {
+    if (ov.type === 'lines') {
+      ov.lines.forEach(l => chips.push({ color: l.color, label: l.label }));
+    } else if (ov.type === 'band') {
+      chips.push({ color: ov.color, label: ov.legendName, dashed: true });
+      if (ov.mid) chips.push({ color: ov.midColor, label: ov.legendName + ' Orta', dashed: true });
+    } else if (ov.type === 'directional') {
+      chips.push({ color: 'var(--green)', label: ov.legendName + ' (Yükseliş)' });
+      chips.push({ color: 'var(--red)', label: ov.legendName + ' (Düşüş)' });
+    } else if (ov.type === 'dots') {
+      chips.push({ color: ov.color, label: ov.legendName, dot: true });
+    }
+  });
+  if (chips.length === 0) return `<div style="font-size:9.5px;color:var(--muted);margin:4px 0 8px;">Fiyat grafiğine çizilebilecek aktif bir gösterge yok (EMA Trend, VWAP, Bollinger, SuperTrend, MA Cross, PSAR, Keltner, Donchian'dan birini Ayarlar'da açarsan burada çizgi olarak görünür).</div>`;
+  const items = chips.map(c => {
+    const swatch = c.dot
+      ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c.color};"></span>`
+      : `<span style="display:inline-block;width:14px;height:2.5px;border-radius:2px;background:${c.color};${c.dashed ? 'background-image:linear-gradient(90deg,'+c.color+' 60%,transparent 0);background-size:5px 2.5px;' : ''}"></span>`;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:9.5px;color:var(--text);white-space:nowrap;">${swatch}${c.label}</span>`;
+  }).join('');
+  return `<div style="display:flex;flex-wrap:wrap;gap:9px;margin:6px 0 8px;padding:7px 9px;background:var(--surface3);border-radius:8px;">${items}</div>`;
+}
+
 
 // v43.10: Tarama satırı akordeonunda kullanılan statik mum grafiği çizici — canlı
 // grafikten farklı olarak tek seferlik render, ama seçili göstergeleri (EMA, VWAP,
@@ -6550,6 +6577,7 @@ async function toggleScanCoinDetail(symbol, name, color) {
         <span style="font-size:11px;font-weight:700;color:${color};">${name}/USDT · ${ivLabel} mum</span>
         <span style="font-size:9.5px;color:var(--muted);">${candles.length} mum · genel ayarlardaki aralık</span>
       </div>
+      ${buildOverlayLegend(overlays)}
       <canvas class="scan-detail-canvas" style="width:100%;height:150px;display:block;"></canvas>
       <div class="scan-detail-chips"></div>`;
     const canvas = body.querySelector('.scan-detail-canvas');
