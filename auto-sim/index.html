@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v44.1 ATR TRAILING + TEYİT TURU</title>
+<title>TUGAY × QUANT · v44.2 ÜST GRAFİK WS DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.1 📐</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.2 🔧</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -9914,11 +9914,27 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
       } catch(e){ /* ağ hatası — bir sonraki turda dener */ }
     }
 
+    let lastRestFetchAt = 0;
     async function fetchPrice(){
       try {
-        const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-        const d = await r.json();
-        const p = +d.price;
+        // v44.2 FIX: Bu üst mum grafiği widget'ı, dosyanın geri kalanından TAMAMEN AYRI bir
+        // fetchPrice() kullanıyordu — global WS entegrasyonundan habersiz, sabit 2.5 sn'de
+        // bir REST çekiyordu. "WS CANLI" yazsa da bu grafik hâlâ eski hızda akıyordu, Tugay'ın
+        // fark ettiği gecikme tam olarak buydu. Artık önce WebSocket önbelleğine bakıyor —
+        // taze veri varsa (< 3 sn) SIFIR ağ isteğiyle, saniyede ~1 kez gerçekten canlı akar.
+        // WS koptuğunda REST'e döner ama spam olmasın diye en fazla 2.5 sn'de bir dener.
+        const w = (typeof wsLive !== 'undefined') ? wsLive.prices[symbol] : null;
+        let p;
+        if (w && (Date.now() - w.t) < 3000) {
+          p = w.p;
+        } else {
+          const now = Date.now();
+          if (now - lastRestFetchAt < 2500) return; // WS yok ama REST'i de spamlamayalım
+          lastRestFetchAt = now;
+          const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+          const d = await r.json();
+          p = +d.price;
+        }
         if (!p || !candles.length) return;
         if (p > lastPrice) flashDir = 1; else if (p < lastPrice) flashDir = -1;
         if (p !== lastPrice) flashT = performance.now();
@@ -10028,7 +10044,9 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
       stop();
       fetchKlines(); fetchPrice();
       klineTimer = setInterval(fetchKlines, 20000);
-      priceTimer = setInterval(fetchPrice, 2500);
+      // v44.2: WS önbelleği ücretsiz olduğu için artık 2.5 sn yerine 1 sn'de bir kontrol
+      // edilebiliyor — WS bağlıyken grafik gerçekten saniyede bir tazeleniyor.
+      priceTimer = setInterval(fetchPrice, 1000);
       if (reduceMotion){ rafId = null; setInterval(() => draw(performance.now()), 2500); }
       else rafId = requestAnimationFrame(loop);
     }
