@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v43.13 TUR ONAYI DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v44.0 WEBSOCKET + KELLY + MONTE CARLO</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v43.13 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.0 ⚡</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1829,6 +1829,51 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ── v44.0: Kelly Boyutlandırma ── -->
+      <div class="card-title">
+        <span>🧮 Kelly Boyutlandırma</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v44 — YENİ</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="kellySizingToggle">
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Bot Sağlığı kartında zaten hesaplanan <b>yarım Kelly</b> değeri artık pozisyon boyutuna gerçekten uygulanır. Son 50 işlemde istatistiksel edge güçlüyse (yarım Kelly &gt; %2) miktar <b>1.5x'e kadar büyür</b>, edge zayıf/negatifse <b>0.5x'e düşer</b>. En az 10 kapanmış işlem gerekir — veri yoksa hiçbir şey değişmez. ATR boyutlandırma ve Dinamik Boyut ile üst üste çalışır; mutlak tavan (baz miktarın 1.5 katı) her durumda geçerlidir. Profesyonel fonların "kazanırken büyü, kaybederken küçül" prensibinin matematiksel hali.</div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v44.0: Equity Curve Throttle ── -->
+      <div class="card-title">
+        <span>🐢 Equity Freni (Kâr Eğrisi Yavaşlatıcı)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v44 — YENİ</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="equityThrottleToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: botun kendi kümülatif kâr eğrisi, son 10 işlemlik kendi ortalamasının <b>altına</b> inmişse (strateji "soğuk dönemde"), yeni pozisyonlar <b>yarı boyutla</b> açılır. Eğri ortalamanın üstüne çıkınca otomatik normale döner. Devre Kesici'nin yumuşak versiyonu: tamamen durmak yerine hasarı sınırlayarak stratejinin toparlanmasına izin verir. En az 12 kapanmış işlem gerekir.</div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v44.0: Zaman Stopu ── -->
+      <div class="card-title">
+        <span>⌛ Zaman Stopu (Ölü Pozisyon Kapatma)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v44 — YENİ</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="timeStopToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Maks. Bekleme (mum sayısı)</label>
+          <input type="number" id="timeStopCandles" value="12" min="2" max="100" step="1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon belirtilen mum sayısı boyunca ne TP'ye ne SL'e gitmediyse ve hâlâ <b>başa baş komisyon tabanının altındaysa</b> otomatik kapatılır. Mantık: sinyal doğruysa fiyat makul sürede yürür; yürümediyse tez çürümüştür ve o sermaye başka fırsatta çalışmalıdır. <b>Kârdaki pozisyona asla dokunmaz</b> — onları trailing/runner yönetir. 5m grafikte 12 mum = 1 saat; 1h grafikte 12 mum = yarım gün.</div>
+
+      <div class="acc-divider"></div>
+
       <div class="card-title">
         <span>🛑 Toplam Günlük Zarar Limiti</span>
         <span class="optional-badge">İSTEĞE BAĞLI</span>
@@ -2439,6 +2484,16 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <button class="btn btn-toggle-all" style="flex:1" onclick="runWalkForwardTest()">🔀 Walk-Forward Testi Çalıştır</button>
     </div>
     <div id="walkForwardResult" style="margin-top:14px;"></div>
+  </details>
+
+  <!-- 🎲 v44.0: Monte Carlo Simülasyonu -->
+  <details class="setup-card acc-card" data-accid="montecarlo">
+    <summary>🎲 Monte Carlo Simülasyonu <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v44 — YENİ</span></summary>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Geçmiş işlemlerin K/Z değerleri <b>1000 kez rastgele yeniden dizilir</b> (bootstrap). Aynı işlemler farklı sırayla gelseydi kasa nasıl görünürdü? Bu, tek bir geçmişin şansına aldanmayı önler: <b>"En kötü %5 senaryoda drawdown ne olurdu?"</b> sorusunun cevabı, gerçek risk toleransını belirlemenin profesyonel yoludur. En az 15 kapanmış işlem gerekir.</div>
+    <div class="btn-row">
+      <button class="btn btn-toggle-all" style="flex:1" onclick="runMonteCarlo()">🎲 1000 Simülasyon Çalıştır</button>
+    </div>
+    <div id="monteCarloResult" style="margin-top:14px;"></div>
   </details>
 
   <!-- 💾 v37.0: Yedekleme & Geri Yükleme Merkezi -->
@@ -3223,7 +3278,9 @@ const SETTINGS_FIELD_IDS = [
   'fundingFilterToggle', 'fundingThreshold',
   'lossCooldownToggle', 'lossCooldownMin',
   'tp2Toggle', 'tp2Pct',
-  'weeklyReportToggle'
+  'weeklyReportToggle',
+  // v44.0: Kelly boyutlandırma, equity freni, zaman stopu
+  'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -4870,7 +4927,101 @@ async function fetchKlines(symbol, interval) {
   }
   return null;
 }
+// ───────── v44.0: WebSocket Canlı Fiyat Akışı ─────────
+// Eskiden HER fiyat, ayrı bir REST isteğiyle çekiliyordu: coin başına 4-5 sn'de bir
+// fetch → dakikada yüzlerce istek, rate-limit riski, pil/veri tüketimi ve en önemlisi
+// GECİKME (fiyat, istekler arası pencerede SL'i delip geçebiliyordu). Artık tüm
+// COIN_CONFIG sembolleri için TEK bir WebSocket bağlantısı açılır (miniTicker,
+// saniyede 1 push). fetchPrice() önce WS önbelleğine bakar — taze veri (<10 sn)
+// varsa AĞ İSTEĞİ HİÇ YAPILMAZ. WS koparsa otomatik yeniden bağlanır (üstel bekleme,
+// maks 30 sn) ve o sırada eski REST yolu aynen devreye girer — sıfır risk, salt kazanç.
+const WS_HOSTS = ['wss://stream.binance.com:9443', 'wss://stream.binance.com:443', 'wss://data-stream.binance.vision'];
+const wsLive = { conn: null, prices: {}, status: 'off', lastMsg: 0, retries: 0, hostIdx: 0, reconnectTimer: null };
+
+function wsStreamUrl() {
+  const streams = Object.values(COIN_CONFIG).map(c => c.symbol.toLowerCase() + '@miniTicker').join('/');
+  return WS_HOSTS[wsLive.hostIdx % WS_HOSTS.length] + '/stream?streams=' + streams;
+}
+
+function wsConnect() {
+  if (wsLive.conn && (wsLive.conn.readyState === WebSocket.OPEN || wsLive.conn.readyState === WebSocket.CONNECTING)) return;
+  try {
+    wsLive.status = 'connecting';
+    updateWsBadge();
+    const ws = new WebSocket(wsStreamUrl());
+    wsLive.conn = ws;
+    ws.onopen = () => {
+      wsLive.status = 'live';
+      wsLive.retries = 0;
+      updateWsBadge();
+      log('⚡ [WebSocket] Canlı fiyat akışı bağlandı — ' + Object.keys(COIN_CONFIG).length + ' coin tek bağlantıdan gerçek zamanlı akıyor. REST istekleri artık sadece yedek.', 'system');
+    };
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        const d = msg.data;
+        if (d && d.e === '24hrMiniTicker' && d.s && d.c) {
+          const p = parseFloat(d.c);
+          if (!isNaN(p)) {
+            wsLive.prices[d.s] = { p, t: Date.now() };
+            wsLive.lastMsg = Date.now();
+          }
+        }
+      } catch(e) {}
+    };
+    ws.onclose = () => { wsLive.status = 'down'; updateWsBadge(); wsScheduleReconnect(); };
+    ws.onerror  = () => { try { ws.close(); } catch(e) {} };
+  } catch(e) {
+    wsLive.status = 'down';
+    updateWsBadge();
+    wsScheduleReconnect();
+  }
+}
+
+function wsScheduleReconnect() {
+  if (wsLive.reconnectTimer) return;
+  wsLive.retries++;
+  wsLive.hostIdx++; // her denemede sıradaki hosta geç
+  const delay = Math.min(2000 * Math.pow(2, Math.min(wsLive.retries - 1, 4)), 30000);
+  wsLive.reconnectTimer = setTimeout(() => {
+    wsLive.reconnectTimer = null;
+    wsConnect();
+  }, delay);
+}
+
+// Bekçi: 45 sn mesaj gelmezse bağlantı "zombi" olmuş demektir — kapat, yeniden bağlan.
+setInterval(() => {
+  if (wsLive.status === 'live' && Date.now() - wsLive.lastMsg > 45000) {
+    log('⚠️ [WebSocket] 45 sn veri gelmedi — bağlantı yenileniyor.', 'warn');
+    try { wsLive.conn.close(); } catch(e) {}
+  }
+}, 15000);
+
+// Küçük durum rozeti (sağ alt): ⚡ CANLI / 🔌 REST YEDEK
+function updateWsBadge() {
+  let b = document.getElementById('wsBadge');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'wsBadge';
+    b.style.cssText = 'position:fixed;bottom:14px;right:14px;z-index:9999;font-family:var(--mono);font-size:10px;font-weight:700;padding:5px 10px;border-radius:100px;letter-spacing:0.5px;pointer-events:none;backdrop-filter:blur(6px);transition:all 0.4s;';
+    document.body.appendChild(b);
+  }
+  if (wsLive.status === 'live') {
+    b.textContent = '⚡ WS CANLI';
+    b.style.background = 'rgba(14,124,74,0.18)'; b.style.color = 'var(--green)'; b.style.border = '1px solid rgba(14,124,74,0.4)';
+  } else if (wsLive.status === 'connecting') {
+    b.textContent = '⏳ WS BAĞLANIYOR';
+    b.style.background = 'rgba(255,165,0,0.15)'; b.style.color = 'orange'; b.style.border = '1px solid rgba(255,165,0,0.35)';
+  } else {
+    b.textContent = '🔌 REST YEDEK';
+    b.style.background = 'rgba(196,58,47,0.15)'; b.style.color = 'var(--red)'; b.style.border = '1px solid rgba(196,58,47,0.35)';
+  }
+}
+
 async function fetchPrice(symbol) {
+  // v44.0: Önce WebSocket önbelleği — taze veri varsa ağ isteği YOK.
+  const w = wsLive.prices[symbol];
+  if (w && (Date.now() - w.t) < 10000) return w.p;
   for (const host of TICKER_API_HOSTS) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -5059,6 +5210,10 @@ function renderPositionCard(coin, state, currentPrice) {
         Brüt ${pnlUsd>=0?'+':''}${pnlUsd.toFixed(2)}$ · Komisyon/Kayma -${costNow.toFixed(2)}$${breakevenMsg}
       </div>
     </div>
+    <div style="margin:8px 0 2px;">
+      <div style="font-size:9px;color:var(--muted);letter-spacing:0.5px;margin-bottom:2px;display:flex;justify-content:space-between;"><span>📈 CANLI K/Z YOLCULUĞU (kaldıraçlı %)</span><span id="posSparkLast-${coin}"></span></div>
+      <canvas id="posSpark-${coin}" height="44" style="width:100%;height:44px;display:block;border-radius:8px;background:rgba(0,0,0,0.15);"></canvas>
+    </div>
     <div class="pos-progress-wrap">
       <div class="pos-progress-fill" style="width:${progressPct}%; background: linear-gradient(90deg, var(--red), var(--yellow), var(--green));"></div>
     </div>
@@ -5080,7 +5235,53 @@ function renderPositionCard(coin, state, currentPrice) {
     </div>
     <div style="font-size:9.5px;color:var(--muted);margin-top:6px;text-align:center">${pos.atrBased ? '📐 SL/TP bu coin\'in giriş anındaki ATR\'sine göre ayarlandı · ' : ''}SL/TP her zaman aktif, bekleme sadece gösterge çıkışını etkiler${leverage>1?' · Likidasyon: -%'+(95/leverage).toFixed(0)+' fiyat hareketi':''}</div>
   `;
+  drawPosSparkline(coin, pos, stopLoss, takeProfit);
   renderDashboardSummary();
+}
+
+// ── v44.0: Pozisyon kartı içi canlı PnL sparkline ──
+// Pozisyon açıldığından beri kaldıraçlı K/Z yolculuğunu çizer: sıfır çizgisi (kesikli),
+// SL/TP referans bantları ve mevcut noktaya göre yeşil/kırmızı dolgu. HiDPI destekli.
+function drawPosSparkline(coin, pos, stopLoss, takeProfit) {
+  const cv = document.getElementById('posSpark-' + coin);
+  if (!cv || !pos || !pos.pnlHist || pos.pnlHist.length < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 260, H = 44;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const data = pos.pnlHist;
+  const slPct = -(stopLoss * 100), tpPct = takeProfit * 100;
+  // Ölçek: veri aralığı + SL/TP bantlarını da kapsa ki referanslar hep görünsün
+  let lo = Math.min(...data, slPct * 0.6, -0.2);
+  let hi = Math.max(...data, tpPct * 0.6, 0.2);
+  const pad = (hi - lo) * 0.12 || 0.1; lo -= pad; hi += pad;
+  const y = v => H - ((v - lo) / (hi - lo)) * H;
+  const x = i => (i / (data.length - 1)) * W;
+  // Sıfır çizgisi (kesikli)
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, y(0)); ctx.lineTo(W, y(0)); ctx.stroke();
+  ctx.setLineDash([]);
+  // TP/SL referans çizgileri (soluk)
+  if (y(tpPct) > 2)      { ctx.strokeStyle = 'rgba(14,124,74,0.3)';  ctx.beginPath(); ctx.moveTo(0, y(tpPct)); ctx.lineTo(W, y(tpPct)); ctx.stroke(); }
+  if (y(slPct) < H - 2)  { ctx.strokeStyle = 'rgba(196,58,47,0.3)';  ctx.beginPath(); ctx.moveTo(0, y(slPct)); ctx.lineTo(W, y(slPct)); ctx.stroke(); }
+  // PnL alan dolgusu + çizgi — mevcut duruma göre renk
+  const last = data[data.length - 1];
+  const col = last >= 0 ? '14,124,74' : '196,58,47';
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, `rgba(${col},0.30)`); grad.addColorStop(1, `rgba(${col},0.02)`);
+  ctx.beginPath(); ctx.moveTo(0, y(0));
+  data.forEach((v, i) => ctx.lineTo(x(i), y(v)));
+  ctx.lineTo(W, y(0)); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath();
+  data.forEach((v, i) => i === 0 ? ctx.moveTo(x(i), y(v)) : ctx.lineTo(x(i), y(v)));
+  ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 1.6; ctx.stroke();
+  // Son nokta işareti
+  ctx.beginPath(); ctx.arc(x(data.length - 1), y(last), 2.4, 0, Math.PI * 2);
+  ctx.fillStyle = `rgb(${col})`; ctx.fill();
+  const lbl = document.getElementById('posSparkLast-' + coin);
+  if (lbl) { lbl.textContent = (last >= 0 ? '+' : '') + last.toFixed(2) + '%'; lbl.style.color = last >= 0 ? 'var(--green)' : 'var(--red)'; lbl.style.fontWeight = '700'; }
 }
 
 // ───────── Manuel Soğuma UI ─────────
@@ -5387,7 +5588,7 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
 const REASON_LABELS_SHORT = {
   sl: '🔴 SL', tp: '🎯 TP', trailing: '📉 İz Süren',
   breakeven: '🛡️ Breakeven', liquidation: '💥 Likidasyon',
-  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP'
+  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman'
 };
 function renderTradeTable() {
   const body = document.getElementById('tradeBody');
@@ -5516,7 +5717,7 @@ function formatDuration(ms) {
 const REASON_LABELS = {
   sl: '🔴 Stop-Loss', tp: '🎯 Take-Profit', trailing: '📉 İz Süren Stop',
   liquidation: '💥 Likidasyon', signal: '🔁 Gösterge Sinyali',
-  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP'
+  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman Stopu'
 };
 const REGIME_LABELS = {
   sideways: '◆ Yatay/Kararsız', uptrend: '▲ Yükseliş Trendi',
@@ -5693,6 +5894,100 @@ function renderTimeAnalysis() {
 // Kripto gürültüsü için endüstri pratiği "yarım Kelly" veya çeyrek Kelly'dir — biz
 // yarım Kelly gösterip her zaman muhafazakâr yorumluyoruz. Bu bir ÖNERİ panelidir,
 // işlem miktarına otomatik müdahale ETMEZ.
+// ───────── v44.0: Monte Carlo Simülasyonu ─────────
+// Geçmiş işlem PnL'lerinden 1000 bootstrap dizilimi üretir; her dizilim için nihai
+// K/Z ve maksimum drawdown hesaplanır. Sonuç: p5/p50/p95 yüzdelik dilimleri +
+// negatif bitme olasılığı + nihai K/Z histogramı.
+function runMonteCarlo() {
+  const el = document.getElementById('monteCarloResult');
+  if (!el) return;
+  const pnls = globalTradeHistory.map(t => t.pnl).filter(p => typeof p === 'number' && !isNaN(p));
+  if (pnls.length < 15) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--yellow);padding:10px;border:1px solid rgba(255,165,0,0.3);border-radius:10px;background:rgba(255,165,0,0.08);">⚠️ En az 15 kapanmış işlem gerekli — şu an ${pnls.length} var. Bot biraz daha işlem yaptıktan sonra tekrar dene.</div>`;
+    return;
+  }
+  const RUNS = 1000, N = pnls.length;
+  const finals = [], maxDDs = [];
+  for (let r = 0; r < RUNS; r++) {
+    let eq = 0, peak = 0, dd = 0;
+    for (let i = 0; i < N; i++) {
+      eq += pnls[(Math.random() * N) | 0]; // yerine koymalı örnekleme (bootstrap)
+      if (eq > peak) peak = eq;
+      const cur = peak - eq;
+      if (cur > dd) dd = cur;
+    }
+    finals.push(eq); maxDDs.push(dd);
+  }
+  finals.sort((a, b) => a - b); maxDDs.sort((a, b) => a - b);
+  const pct = (arr, p) => arr[Math.min(Math.floor(arr.length * p), arr.length - 1)];
+  const f5 = pct(finals, 0.05), f50 = pct(finals, 0.5), f95 = pct(finals, 0.95);
+  const d50 = pct(maxDDs, 0.5), d95 = pct(maxDDs, 0.95);
+  const negPct = (finals.filter(f => f < 0).length / RUNS * 100);
+  const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '$';
+  const cl = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Histogram: nihai K/Z dağılımı, 24 kova
+  const BINS = 24;
+  const lo = finals[0], hi = finals[finals.length - 1];
+  const bw = (hi - lo) / BINS || 1;
+  const bins = new Array(BINS).fill(0);
+  finals.forEach(f => bins[Math.min(((f - lo) / bw) | 0, BINS - 1)]++);
+  const maxBin = Math.max(...bins);
+  const bars = bins.map((c, i) => {
+    const mid = lo + (i + 0.5) * bw;
+    const h = Math.max((c / maxBin) * 100, c > 0 ? 4 : 0);
+    return `<div title="${fmt(mid)}: ${c} senaryo" style="flex:1;display:flex;align-items:flex-end;"><div style="width:100%;height:${h}%;border-radius:3px 3px 0 0;background:${mid >= 0 ? 'rgba(14,124,74,0.65)' : 'rgba(196,58,47,0.65)'};"></div></div>`;
+  }).join('');
+  const zeroLeft = hi > lo ? Math.max(0, Math.min(100, ((0 - lo) / (hi - lo)) * 100)) : 50;
+
+  const riskVerdict = negPct > 30
+    ? `<b style="color:var(--red);">Senaryoların %${negPct.toFixed(0)}'i zararla bitiyor</b> — mevcut edge kırılgan; pozisyon boyutunu küçük tut, filtreleri sıkılaştır.`
+    : negPct > 10
+      ? `Senaryoların %${negPct.toFixed(0)}'i zararla bitiyor — kabul edilebilir ama <b>en kötü %5 drawdown'a (${d95.toFixed(0)}$) kasan dayanmalı</b>.`
+      : `<b style="color:var(--green);">Senaryoların sadece %${negPct.toFixed(1)}'i zararla bitiyor</b> — edge istatistiksel olarak sağlam görünüyor. Yine de p95 drawdown (${d95.toFixed(0)}$) her zaman mümkün: kasa buna hazır olmalı.`;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px;">
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:0.5px;">KÖTÜ SENARYO (p5)</div>
+        <div style="font-size:16px;font-weight:800;color:${cl(f5)};">${fmt(f5)}</div>
+      </div>
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:0.5px;">MEDYAN (p50)</div>
+        <div style="font-size:16px;font-weight:800;color:${cl(f50)};">${fmt(f50)}</div>
+      </div>
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:0.5px;">İYİ SENARYO (p95)</div>
+        <div style="font-size:16px;font-weight:800;color:${cl(f95)};">${fmt(f95)}</div>
+      </div>
+      <div style="padding:10px;border-radius:10px;background:rgba(196,58,47,0.06);border:1px solid rgba(196,58,47,0.25);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:0.5px;">DRAWDOWN p50 / p95</div>
+        <div style="font-size:16px;font-weight:800;color:var(--red);">-${d50.toFixed(0)}$ / -${d95.toFixed(0)}$</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Nihai K/Z dağılımı — ${RUNS} senaryo, ${N} işlem/senaryo (▼ sıfır çizgisi)</div>
+    <div style="position:relative;height:70px;display:flex;gap:2px;align-items:stretch;padding:2px;background:rgba(0,0,0,0.15);border-radius:10px;border:1px solid var(--border);">
+      ${bars}
+      <div style="position:absolute;left:${zeroLeft}%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,0.45);"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);">🧠 <b>Yorum:</b> ${riskVerdict}</div>
+  `;
+  log(`🎲 [Monte Carlo] ${RUNS} senaryo tamamlandı — Medyan: ${fmt(f50)} · Kötü %5: ${fmt(f5)} · p95 Drawdown: -${d95.toFixed(0)}$ · Zararla bitme olasılığı: %${negPct.toFixed(1)}`, 'system');
+}
+
+// ── v44.0: Equity Curve Throttle yardımcı fonksiyonu ──
+// Son 40 işlemin kümülatif PnL eğrisini kurar; son nokta, eğrinin son 10 noktasının
+// ortalamasının altındaysa { below: true } döner. En az 12 işlem ister.
+function equityThrottleState() {
+  const tr = globalTradeHistory.slice(-40);
+  if (tr.length < 12) return { below: false, curve: null };
+  let eq = 0;
+  const curve = tr.map(t => (eq += t.pnl));
+  const maP = 10;
+  const ma = curve.slice(-maP).reduce((a, b) => a + b, 0) / maP;
+  return { below: curve[curve.length - 1] < ma, curve, ma };
+}
+
 function computeKellyLite() {
   const trades = globalTradeHistory.slice(-50); // son 50 işlem — güncel piyasa davranışı
   if (trades.length < 20) return null;
@@ -7683,6 +7978,43 @@ async function coinTick(coin) {
     }
   }
 
+  // ── v44.0: Kelly Boyutlandırma ──
+  // Kelly analizi zaten hesaplanıyordu ama sadece EKRANDA gösteriliyordu — bot uygulamıyordu.
+  // Artık toggle açıkken, son 50 işlemin yarım-Kelly değerine göre pozisyon ölçeklenir:
+  // yarım Kelly %2 = 1.0x referans; edge güçlüyse 1.5x'e kadar büyür, edge negatifse 0.5x'e
+  // düşer. Min 10 işlem şartı var (istatistik yoksa dokunma). Mutlak tavan yine geçerli.
+  if (document.getElementById('kellySizingToggle')?.checked && !state.openPosition) {
+    const kk = computeKellyLite();
+    if (kk && kk.n >= 10) {
+      const kMult = kk.halfKelly <= 0 ? 0.5 : Math.min(Math.max(kk.halfKelly / 0.02, 0.5), 1.5);
+      if (Math.abs(kMult - 1) > 0.01) {
+        effectiveTradeAmount = Math.min(Math.max(effectiveTradeAmount * kMult, 10), tradeAmount * 1.5);
+        if (state._lastKellyMult !== kMult.toFixed(2)) {
+          state._lastKellyMult = kMult.toFixed(2);
+          log(`🧮 [Kelly Boyut] ${coin} — Son ${kk.n} işlem: yarım Kelly %${(kk.halfKelly*100).toFixed(1)} → işlem miktarı ×${kMult.toFixed(2)} = ${effectiveTradeAmount.toFixed(0)} USDT`, 'info', coin);
+        }
+      } else { state._lastKellyMult = '1.00'; }
+    }
+  }
+
+  // ── v44.0: Equity Curve Throttle (Kâr Eğrisi Freni) ──
+  // Botun kendi kümülatif PnL eğrisi, kendi 10-işlemlik ortalamasının ALTINA inmişse
+  // strateji "soğuk dönemde" demektir — devre kesici gibi tamamen durdurmak yerine
+  // pozisyon boyutunu yarıya indirir. Eğri ortalamanın üstüne çıkınca otomatik normale döner.
+  if (document.getElementById('equityThrottleToggle')?.checked && !state.openPosition) {
+    const et = equityThrottleState();
+    if (et.below) {
+      effectiveTradeAmount = Math.max(effectiveTradeAmount * 0.5, 10);
+      if (!state._eqThrottleLogged) {
+        state._eqThrottleLogged = true;
+        log(`🐢 [Equity Freni] ${coin} — Kâr eğrisi kendi 10-işlem ortalamasının altında (soğuk dönem). Yeni pozisyonlar ×0.5 boyutla açılacak; eğri toparlanınca otomatik normale döner.`, 'warn', coin);
+      }
+    } else if (state._eqThrottleLogged) {
+      state._eqThrottleLogged = false;
+      log(`✅ [Equity Freni] ${coin} — Kâr eğrisi ortalamanın üstüne çıktı, pozisyon boyutu normale döndü.`, 'system', coin);
+    }
+  }
+
   // ── v36.7: Fear & Greed + BTC Korelasyon önbellekleri güncelle ──
   fetchFearGreed();
   if (coin !== 'BTC') fetchBtcCorr();
@@ -7913,6 +8245,11 @@ async function coinTick(coin) {
     const change = dir === 'long' ? rawChange : -rawChange;
     const leveragedChange = change * (pos.leverage || 1);
 
+    // v44.0: Pozisyonun canlı PnL geçmişi — pozisyon kartındaki sparkline'ı besler.
+    if (!pos.pnlHist) pos.pnlHist = [];
+    pos.pnlHist.push(+(leveragedChange * 100).toFixed(3));
+    if (pos.pnlHist.length > 150) pos.pnlHist.shift();
+
     const newCandleFormed = lastCandleCloseTime > pos.entryCandleCloseTime;
     const minHoldMs = getMinHoldMs();
     const realTimeElapsed = (Date.now() - pos.openedAt) >= minHoldMs;
@@ -8083,7 +8420,25 @@ async function coinTick(coin) {
       effHitTakeProfit = false;
     }
 
-    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit;
+    // ───────── v44.0: Zaman Stopu (Ölü Pozisyon Kapatma) ─────────
+    // Pozisyon N mum boyunca ne TP'ye ne SL'e gitmediyse ve hâlâ gerçek kârda değilse
+    // (başa baş komisyon tabanının altındaysa) kapatılır. Gerekçe: sinyal doğruysa fiyat
+    // makul sürede yürür; yürümediyse tez çürümüştür ve sermaye başka fırsatta
+    // kullanılmak üzere serbest bırakılmalıdır. Kârda olan pozisyona DOKUNMAZ —
+    // onları trailing/runner yönetir.
+    let hitTimeStop = false;
+    if (document.getElementById('timeStopToggle')?.checked && !liquidated && !hitStopLoss && !effHitTakeProfit && !hitTrailingStop) {
+      const IV_MS = { '1m': 60000, '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000 };
+      const tsCandles = Math.max(parseInt(document.getElementById('timeStopCandles')?.value) || 12, 2);
+      const candlesHeld = (Date.now() - (pos.openedAt || Date.now())) / (IV_MS[iv] || 300000);
+      const beFloorTs = calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100;
+      if (candlesHeld >= tsCandles && leveragedChange < beFloorTs) {
+        hitTimeStop = true;
+        log(`⌛ [Zaman Stopu] ${coin} — ${Math.floor(candlesHeld)} mum geçti (limit: ${tsCandles}), pozisyon hâlâ başa baş altında (%${(leveragedChange*100).toFixed(2)}). Tez çürüdü, sermaye serbest bırakılıyor.`, 'warn', coin);
+      }
+    }
+
+    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit || hitTimeStop;
 
     if (shouldClose) {
       // 🛡️ Guard: pos.amount negatife düşmüşse (partial TP %100+ bug artığı) 0'a sabitle.
@@ -8103,6 +8458,7 @@ async function coinTick(coin) {
       else if (emergencyExit)   { reason = '🚨 Acil Çıkış (Max Zarar Cap)'; reasonCategory = 'sl'; }
       else if (hitStopLoss)     { reason = 'Stop-Loss'; reasonCategory = 'sl'; }
       else if (effHitTakeProfit) { reason = 'Take-Profit'; reasonCategory = 'tp'; }
+      else if (hitTimeStop)     { reason = '⌛ Zaman Stopu (pozisyon yürümedi)'; reasonCategory = 'time'; }
       else { reason = `${dir === 'long' ? sellCount : buyCount}/${activeList.length} onay`; reasonCategory = 'signal'; }
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
@@ -8292,6 +8648,9 @@ const RISK_CHIP_DEFS = [
   { id: 'fundingFilterToggle',   icon: '💰', name: 'Funding Filtre' },   // v41
   { id: 'lossCooldownToggle',    icon: '🧊', name: 'Kayıp Soğuması' },   // v41
   { id: 'tp2Toggle',             icon: '🏃', name: 'Runner TP' },        // v41
+  { id: 'kellySizingToggle',     icon: '🧮', name: 'Kelly Boyut' },      // v44
+  { id: 'equityThrottleToggle',  icon: '🐢', name: 'Equity Freni' },     // v44
+  { id: 'timeStopToggle',        icon: '⌛', name: 'Zaman Stopu' },      // v44
 ];
 
 function renderRiskChips() {
@@ -9247,6 +9606,9 @@ async function tickerTick() {
 function startTicker() {
   tickerTick();
   setInterval(tickerTick, 8000);
+  // v44.0: WebSocket canlı fiyat akışını başlat — tüm fetchPrice çağrıları otomatik hızlanır.
+  wsConnect();
+  updateWsBadge();
 }
 
 // ───────── Init ─────────
