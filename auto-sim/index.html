@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v44.0 WEBSOCKET + KELLY + MONTE CARLO</title>
+<title>TUGAY × QUANT · v44.1 ATR TRAILING + TEYİT TURU</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.0 ⚡</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.1 📐</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1802,6 +1802,33 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="trailingStopPct" value="1.5" min="0.3" step="0.1" />
         </div>
       </div>
+      <div class="acc-divider" style="margin:10px 0;"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="atrTrailingScaleToggle" checked style="width:auto;">
+            📐 ATR-Bağıl Ölçekle <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);font-size:9px;">v44.1</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Referans Oynaklık % (ATR/Fiyat)</label>
+          <input type="number" id="atrTrailingRefPct" value="0.5" min="0.1" max="3" step="0.1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Açıkken: her coin'in kendi ATR/Fiyat oranı, yukarıdaki Aktivasyon Eşiği ve Takip Mesafesi'ni <b>otomatik ölçekler</b> (0.6x–3x arası). PEPE gibi doğası gereği oynak bir coinde eşikler genişler (normal gürültü "kâr" sanılıp armed olmaz); BTC gibi sakin coinde davranış hemen hemen sabit kalır. Referans oynaklık, "normal" kabul edilen ATR/Fiyat yüzdesidir — bir coin bunun 2 katı oynaksa eşikler de ~2 katına çıkar.</div>
+      <div class="form-grid" style="margin-top:10px;">
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="trailingConfirmToggle" checked style="width:auto;">
+            ✅ Kapanışa Teyit Turu Ekle <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);font-size:9px;">v44.1</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Gereken Ardışık Tick</label>
+          <input type="number" id="trailingConfirmTicks" value="2" min="1" max="10" step="1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Açıkken: İz Süren Stop'un kapanış tetiği (mesafe VEYA başa-baş tabanı), tek bir anlık tikte değil, <b>art arda N tick boyunca kesintisiz</b> sürerse kapanışı gerçekleştirir. Bu bir zaman kilidi DEĞİLDİR — coin isterse birkaç saniyede, isterse dakikalarca sürede çıkabilir; tek şart anlık titremeyle değil gerçek bir dönüşle kapanmasıdır. Sinyal çıkışındaki "Gürültü Filtresi" ile aynı mantık, trailing'e uygulanmış hali.</div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon kâra geçtikçe stop-loss seviyesi de arkasından gelir (en iyi noktanın belirttiğin % kadar altında/üstünde kalır), böylece kazancın bir kısmı kilitlenir. Sabit Stop-Loss ile birlikte çalışır — hangisi önce tetiklenirse o uygulanır. <b style="color:orange;">v43.3 FIX:</b> Eskiden "en iyi fiyat" girişten <b>0.01%</b> bile iyi olsa devreye giriyordu — yani neredeyse her pozisyon anlık gürültüyle "iz sürmeye" başlıyor ve gerçek bir kâr hiç oluşmadan zararla kapanıyordu. Artık İz Süren Stop, pozisyon en az <b>Aktivasyon Eşiği</b> kadar kaldıraçlı kâra geçmeden hiç devreye girmiyor — önce gerçek bir kâr olmalı ki "izlenecek" bir şey olsun.</div>
 
       <div class="acc-divider"></div>
@@ -3280,7 +3307,8 @@ const SETTINGS_FIELD_IDS = [
   'tp2Toggle', 'tp2Pct',
   'weeklyReportToggle',
   // v44.0: Kelly boyutlandırma, equity freni, zaman stopu
-  'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles'
+  'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles',
+  'atrTrailingScaleToggle', 'atrTrailingRefPct', 'trailingConfirmToggle', 'trailingConfirmTicks'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -8266,12 +8294,33 @@ async function coinTick(coin) {
     // pozisyon önce gerçekten Aktivasyon Eşiği kadar kaldıraçlı kâra geçmeli, ancak o zaman
     // "en iyi fiyat" takibi başlar ve trailing stop devreye girebilir.
     const trailingOn = document.getElementById('trailingStopToggle') && document.getElementById('trailingStopToggle').checked;
-    const trailActivationPct = (parseFloat(document.getElementById('trailingActivationPct')?.value) || 1.2) / 100;
+    const baseTrailActivationPct = (parseFloat(document.getElementById('trailingActivationPct')?.value) || 1.2) / 100;
+    const baseTrailDistancePct   = (parseFloat(document.getElementById('trailingStopPct')?.value) || 1.5) / 100;
+
+    // ── v44.1: ATR-Bağıl Trailing Ölçekleme ──
+    // PEPE gibi doğası gereği oynak coinlerde sabit %1.2 aktivasyon eşiği, coin'in normal
+    // "nefes alışını" bile kâr sanıp anında armed oluyor, sonra ilk geri çekilmede küçük bir
+    // zararla kapanıyordu — bu BTC için gerçek bir sinyal olabilecek hareket, PEPE için gürültü.
+    // Artık her coin'in kendi ATR'sinin fiyata oranı bir "oynaklık katsayısı" üretir: referans
+    // oynaklıktan (%0.5, düzenlenebilir) ne kadar fazla oynaksa eşik ve mesafe de o kadar
+    // genişler (0.6x–3x arası sınırlı). Sakin coinde davranış aynı kalır, oynak coinde bot
+    // gürültüyle armed olmadan önce gerçekten anlamlı bir hareket bekler.
+    const atrScaleOn = document.getElementById('atrTrailingScaleToggle')?.checked;
+    let trailScaleMult = 1;
+    if (atrScaleOn && price > 0) {
+      const atrPct = atr / price;
+      const refPct = (parseFloat(document.getElementById('atrTrailingRefPct')?.value) || 0.5) / 100;
+      trailScaleMult = Math.min(Math.max(atrPct / refPct, 0.6), 3);
+    }
+    const trailActivationPct = baseTrailActivationPct * trailScaleMult;
+    const trailDistancePct   = baseTrailDistancePct * trailScaleMult;
+
     if (trailingOn) {
       if (!pos.trailingArmed && leveragedChange >= trailActivationPct) {
         pos.trailingArmed = true;
         pos.bestPrice = price; // izleme, aktivasyon anındaki fiyattan başlar — gürültüden değil
-        log(`📉 [İz Süren Stop] ${coin} — %${(leveragedChange*100).toFixed(2)} kâra ulaştı, takip aktive edildi (en iyi: ${formatPrice(price)}).`, 'system', coin);
+        const scaleTxt = atrScaleOn && Math.abs(trailScaleMult - 1) > 0.05 ? ` (ATR ölçek ×${trailScaleMult.toFixed(2)})` : '';
+        log(`📉 [İz Süren Stop] ${coin} — %${(leveragedChange*100).toFixed(2)} kâra ulaştı, takip aktive edildi (en iyi: ${formatPrice(price)})${scaleTxt}.`, 'system', coin);
       }
       if (pos.trailingArmed) {
         if (dir === 'long' && price > pos.bestPrice) pos.bestPrice = price;
@@ -8282,8 +8331,8 @@ async function coinTick(coin) {
       ? (dir === 'long' ? (price - pos.bestPrice) / pos.bestPrice : -(price - pos.bestPrice) / pos.bestPrice)
       : null;
     const leveragedTrailingChange = trailingChange !== null ? trailingChange * (pos.leverage || 1) : null;
-    const hitTrailingStopByDistance = trailingOn && !!pos.trailingArmed && leveragedTrailingChange !== null
-      && leveragedTrailingChange <= -parseFloat(document.getElementById('trailingStopPct').value) / 100;
+    const rawHitTrailingStopByDistance = trailingOn && !!pos.trailingArmed && leveragedTrailingChange !== null
+      && leveragedTrailingChange <= -trailDistancePct;
 
     // v43.5 FIX: Takip Mesafesi, Aktivasyon Eşiği'nden büyük ayarlanabiliyor (varsayılan:
     // aktivasyon %1.2, mesafe %1.5) — bu durumda pozisyon armed olur olmaz ters dönerse
@@ -8299,8 +8348,28 @@ async function coinTick(coin) {
     const breakevenFloorPct = trailingOn && !!pos.trailingArmed
       ? calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100
       : null;
-    const hitTrailingFloor = trailingOn && !!pos.trailingArmed && breakevenFloorPct !== null
+    const rawHitTrailingFloor = trailingOn && !!pos.trailingArmed && breakevenFloorPct !== null
       && leveragedChange <= breakevenFloorPct;
+    const rawHitTrailing = rawHitTrailingStopByDistance || rawHitTrailingFloor;
+
+    // ── v44.1: İz Süren Stop Teyit Turu ──
+    // PEPE olayının asıl sebebi buydu: armed olduktan 5 sn sonra TEK bir anlık tikte fiyat
+    // tabanın altına indi diye pozisyon anında kapandı — coin'in az daha beklese toparlanıp
+    // toparlanmayacağına hiç bakılmadı. Zaman kilidi YANLIŞ çözüm olurdu (gerçekten çıkması
+    // gereken coin çıkamaz hale gelirdi) — bunun yerine SÜRE değil TEYİT arıyoruz: kapanış
+    // tetiği art arda N ardışık tick boyunca (varsayılan 2) kesintisiz sürmeli. Coin isterse
+    // 6 saniyede, isterse 6 dakikada çıkabilir — tek şart, "gerçekten dönmüş" olması.
+    const trailConfirmOn = document.getElementById('trailingConfirmToggle')?.checked;
+    if (rawHitTrailing) {
+      pos.trailExitStreak = (pos.trailExitStreak || 0) + 1;
+    } else {
+      pos.trailExitStreak = 0;
+    }
+    const trailRequiredStreak = trailConfirmOn ? (parseInt(document.getElementById('trailingConfirmTicks')?.value) || 2) : 1;
+    const trailConfirmed = rawHitTrailing && pos.trailExitStreak >= trailRequiredStreak;
+
+    const hitTrailingStopByDistance = trailConfirmed && rawHitTrailingStopByDistance;
+    const hitTrailingFloor = trailConfirmed && rawHitTrailingFloor;
     const hitTrailingStop = hitTrailingStopByDistance || hitTrailingFloor;
 
     // ── v36.7: Breakeven Stop ──
@@ -8651,6 +8720,8 @@ const RISK_CHIP_DEFS = [
   { id: 'kellySizingToggle',     icon: '🧮', name: 'Kelly Boyut' },      // v44
   { id: 'equityThrottleToggle',  icon: '🐢', name: 'Equity Freni' },     // v44
   { id: 'timeStopToggle',        icon: '⌛', name: 'Zaman Stopu' },      // v44
+  { id: 'atrTrailingScaleToggle',icon: '📐', name: 'ATR Trailing' },     // v44.1
+  { id: 'trailingConfirmToggle', icon: '✅', name: 'Trailing Teyit' },   // v44.1
 ];
 
 function renderRiskChips() {
