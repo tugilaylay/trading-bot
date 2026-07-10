@@ -5073,7 +5073,7 @@ function renderPositionCard(coin, state, currentPrice) {
       <span class="pos-label">Miktar</span><span class="pos-value">${pos.amount} USDT${leverage>1?' · '+leverage+'x':''}</span>
     </div>
     <div class="pos-row">
-      <span class="pos-label">Giriş Onayı</span><span class="pos-value" style="color:var(--accent)">${pos.confirms}/${totalIndicators} ✓</span>
+      <span class="pos-label">${pos.autopilot && pos.confirmCyclesRequired ? 'Tur Onayı' : 'Giriş Onayı'}</span><span class="pos-value" style="color:var(--accent)">${pos.autopilot && pos.confirmCyclesRequired ? (pos.confirms + '/' + pos.confirmCyclesRequired + ' tur onayı') : (pos.confirms + '/' + totalIndicators + ' ✓')}</span>
     </div>
     <div class="pos-row">
       <span class="pos-label">Gösterge Çıkışı</span><span class="pos-value" style="color:${remainingMs>0?'var(--yellow)':'var(--green)'};font-size:11px">${holdInfo}</span>
@@ -9911,6 +9911,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
 
   state.openPosition = {
     direction, entryPrice: price, amount, leverage, confirms: scoreInfo.streak || 0,
+    confirmCyclesRequired: scoreInfo.confirmCyclesRequired || 1,
     entryCandleCloseTime, openedAt: Date.now(), autopilot: true,
     stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased,
     entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }
@@ -10192,7 +10193,7 @@ async function apCycle(){
           if (c.direction === 'short' && !shortOk) { brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri ayıyı onaylamıyor — engellendi.'); return null; }
         } catch(e){}
       }
-      return { ...r, short, direction: c.direction, streak: c.streak };
+      return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.confirmCycles };
     }));
 
     const candidates = candidateChecks.filter(Boolean).sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
