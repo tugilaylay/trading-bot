@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v44.2 ÜST GRAFİK WS DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v44.3 ANLIK COIN PANELİ + RİSK BEKÇİSİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.2 🔧</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.3 👁️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5067,6 +5067,69 @@ async function fetchPrice(symbol) {
   }
   return null;
 }
+
+// ───────── v44.3: Hızlı Canlı Tik (WS-Sürümlü Görsel Yenileme + Acil Risk Bekçisi) ─────────
+// Tugay'ın sorusu doğruydu: coin panelleri hâlâ 4-8 sn'lik ana döngüde yenileniyordu, WS'in
+// asıl hızı ekrana yansımıyordu. Ama tam döngüyü saniyeye çekmek (indikatörler + kline REST
+// isteği dahil) rate-limit riski yaratırdı. Çözüm: SADECE görseli ve hayati risk kontrolünü
+// WS önbelleğinden saniyede bir besleyen ayrı, ücretsiz bir katman. Kapanış KARARI hâlâ
+// TEK bir yerden — coinTick — veriliyor; bu fonksiyon mantığı asla tekrarlamıyor, sadece
+// "şimdi gerçekten bak" diyerek coinTick'i erken tetikliyor. İki yerde birbirinden sapabilecek
+// kapanış mantığı riski böylece hiç oluşmuyor.
+const fastWatch = { lastTriggered: {} };
+function fastLiveTick() {
+  Object.keys(coinStates).forEach(coin => {
+    const state = coinStates[coin];
+    if (!state || !state.botRunning) return;
+    const cfg = COIN_CONFIG[coin];
+    if (!cfg) return;
+    const w = wsLive.prices[cfg.symbol];
+    if (!w || (Date.now() - w.t) > 3000) return; // taze WS verisi yoksa dokunma, normal döngü devam eder
+
+    // ── Görsel: fiyat rozeti anlık tazelenir (ağ isteği yok) ──
+    const priceEl = document.getElementById('price-' + coin);
+    if (priceEl) {
+      const prevPrice = state.lastTickPrice;
+      priceEl.textContent = formatPrice(w.p);
+      if (prevPrice && w.p !== prevPrice) {
+        priceEl.classList.remove('tick-up', 'tick-down');
+        void priceEl.offsetWidth;
+        priceEl.classList.add(w.p > prevPrice ? 'tick-up' : 'tick-down');
+      }
+      state.lastTickPrice = w.p;
+    }
+
+    if (!state.openPosition) return;
+    const pos = state.openPosition;
+    const dir = pos.direction || 'long';
+    const rawChange = (w.p - pos.entryPrice) / pos.entryPrice;
+    const change = dir === 'long' ? rawChange : -rawChange;
+    const leveragedChange = change * (pos.leverage || 1);
+
+    // ── Görsel: pozisyon kartı + K/Z sparkline anlık tazelenir ──
+    if (!pos.pnlHist) pos.pnlHist = [];
+    pos.pnlHist.push(+(leveragedChange * 100).toFixed(3));
+    if (pos.pnlHist.length > 240) pos.pnlHist.shift();
+    renderPositionCard(coin, state, w.p);
+
+    // ── Acil Risk Bekçisi: likidasyon/acil-çıkış/SL eşiğine YAKLAŞTIYSA coinTick'i erken tetikle ──
+    // Normal koşullarda bu blok hiç çalışmaz (eşiklerin çok altında kalınır) — REST maliyeti
+    // sadece gerçekten riskli anlarda devreye girer, rate-limit'e dokunmaz.
+    const maxLevLossEl = document.getElementById('maxLevLossPct');
+    const maxLevLoss = maxLevLossEl ? (parseFloat(maxLevLossEl.value) || 8) / 100 : 0.08;
+    const stopLoss = (pos.stopLossPct !== undefined && pos.stopLossPct !== null) ? pos.stopLossPct : getEffectiveSetting(coin, 'stopLoss', true);
+    const liquidRisk    = (pos.leverage || 1) > 1 && leveragedChange <= -0.90;
+    const emergencyRisk = leveragedChange <= -(maxLevLoss * 0.80);
+    const slRisk        = leveragedChange <= -(stopLoss * 0.95);
+    if (liquidRisk || emergencyRisk || slRisk) {
+      const now = Date.now();
+      if (now - (fastWatch.lastTriggered[coin] || 0) < 1200) return; // aynı coin'i art arda tetiklemeyelim
+      fastWatch.lastTriggered[coin] = now;
+      coinTick(coin); // gerçek kapanış kararı tamamen coinTick'in kendi (tek) mantığından geçer
+    }
+  });
+}
+setInterval(fastLiveTick, 1000);
 
 // ───────── UI update helpers ─────────
 function setIndicator(coin, key, value, signal, label) {
