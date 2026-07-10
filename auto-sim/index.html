@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.0 AKILLI BOT — CVD + OTOPSİ + ARENA + SİNEMA</title>
+<title>TUGAY × QUANT · v45.1 SİNEMA COIN KİMLİĞİ DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.0 🧠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.1 🎬</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6395,8 +6395,17 @@ async function openCinema(idx) {
   const ivMs = IV_MS[iv] || 300000;
   const openedAt = t.ts - (t.holdMs || ivMs * 10);
   const startTime = openedAt - 25 * ivMs, endTime = t.ts + 8 * ivMs;
-  const cfg = COIN_CONFIG[t.coin];
-  if (!cfg) return;
+  // v45.1 FIX: COIN_CONFIG'e sadece o an tarama/otopilot tarafından eklenen coinler
+  // GEÇİCİ olarak giriyordu — kalıcı hiçbir yere kaydedilmiyordu. Sayfa yenilenince ya da
+  // otopilot o coin'i tarama listesinden çıkarınca kayıt siliniyordu; işlem geçmişi
+  // (kalıcı) coin'e hâlâ referans veriyordu ama Sinema kimliği bulamayıp SESSİZCE çıkıyordu
+  // — bu yüzden BTC/ETH gibi sabit coinlerde çalışıyor, PEPE/SENT gibi sonradan eklenenlerde
+  // çalışmıyordu. Artık kayıt yoksa standart Binance sembolü (COIN+USDT) varsayılıp devam
+  // ediliyor — aynı fallback deseni botun başka yerlerinde zaten kullanılıyor.
+  const cfg = COIN_CONFIG[t.coin] || { symbol: t.coin + 'USDT', name: t.coin + '/USDT' };
+  if (!COIN_CONFIG[t.coin]) {
+    log(`ℹ️ [Sinema] ${t.coin} artık botun aktif coin listesinde kayıtlı değil (muhtemelen sayfa yenilendi) — sembol otomatik tahmin edilerek (${cfg.symbol}) devam ediliyor.`, 'info');
+  }
 
   let overlay = document.getElementById('cinemaOverlay');
   if (!overlay) {
