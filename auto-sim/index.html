@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v44.3 ANLIK COIN PANELİ + RİSK BEKÇİSİ</title>
+<title>TUGAY × QUANT · v44.4 YANIP SÖNME DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1155,7 +1155,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.3 👁️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.4 🩹</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5091,12 +5091,21 @@ function fastLiveTick() {
     if (priceEl) {
       const prevPrice = state.lastTickPrice;
       priceEl.textContent = formatPrice(w.p);
-      if (prevPrice && w.p !== prevPrice) {
+      // v44.4 FIX: Bu "parla" efekti (tickPop) eskiden 4-8 sn'lik coinTick'te HER değişimde
+      // tetikleniyordu — o aralıkta bir fiyat değişimi zaten anlamlıydı. Ama fastLiveTick
+      // saniyede bir çalışınca aynı "her değişimde parla" kuralı, kriptonun normal saniyelik
+      // 1 cent'lik mikro titremesinde bile ateşlendi — kart sürekli yanıp söner hale geldi.
+      // Artık sadece GERÇEKTEN görünür bir hareket (fiyatın binde 3'ünden fazlası) parlamayı
+      // tetikliyor; sayı metni yine her saniye doğru gösteriliyor, sadece flaş spamlanmıyor.
+      const MEANINGFUL_PCT = 0.0003; // %0.03
+      if (prevPrice && Math.abs(w.p - prevPrice) / prevPrice > MEANINGFUL_PCT) {
         priceEl.classList.remove('tick-up', 'tick-down');
         void priceEl.offsetWidth;
         priceEl.classList.add(w.p > prevPrice ? 'tick-up' : 'tick-down');
+        state.lastTickPrice = w.p;
+      } else if (!prevPrice) {
+        state.lastTickPrice = w.p;
       }
-      state.lastTickPrice = w.p;
     }
 
     if (!state.openPosition) return;
