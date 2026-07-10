@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v44.4 YANIP SÖNME DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v45.0 AKILLI BOT — CVD + OTOPSİ + ARENA + SİNEMA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -133,6 +133,7 @@
       linear-gradient(180deg, rgba(184,134,11,0.02) 0%, transparent 60%);
     border-bottom: 1px solid rgba(184,134,11,0.08);
     position: relative;
+    overflow: hidden; /* v45.0: aurora perdesi dışarı taşmasın */
   }
   .hero-pnl-wrap::before {
     content: '';
@@ -141,6 +142,24 @@
     width: 1px; height: 40px;
     background: linear-gradient(180deg, rgba(184,134,11,0.6), transparent);
   }
+
+  /* v45.0: Aurora — hero'nun arkasında yavaşça nefes alan renk perdesi */
+  .hero-pnl-wrap::after {
+    content: ''; position: absolute; inset: -40%;
+    background:
+      radial-gradient(ellipse 45% 35% at 25% 40%, rgba(14,124,74,0.14), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 75% 60%, rgba(91,63,168,0.12), transparent 70%),
+      radial-gradient(ellipse 35% 30% at 55% 25%, rgba(240,185,11,0.08), transparent 70%);
+    animation: auroraDrift 16s ease-in-out infinite alternate;
+    pointer-events: none; z-index: 0; filter: blur(18px);
+  }
+  .hero-pnl-wrap > * { position: relative; z-index: 1; }
+  @keyframes auroraDrift {
+    0%   { transform: translate(-4%, -3%) rotate(-2deg) scale(1); }
+    50%  { transform: translate(3%, 2%) rotate(1deg) scale(1.06); }
+    100% { transform: translate(-2%, 4%) rotate(-1deg) scale(1.02); }
+  }
+  @media (prefers-reduced-motion: reduce) { .hero-pnl-wrap::after { animation: none; } }
   .hero-label {
     font-size: 9px;
     color: var(--muted);
@@ -1155,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v44.4 🩹</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.0 🧠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1901,6 +1920,43 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ── v45.0: Akıllı Veri Filtreleri ── -->
+      <div class="card-title">
+        <span>🌊 CVD Akış Filtresi (Emir Akışı)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45 — AKILLI</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="cvdFilterToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Botun yeni duyusu: WebSocket'ten her gerçekleşen işlemin <b>agresif tarafı</b> okunur (taker alım − taker satım = CVD). Göstergelerin hepsi aynı mum verisinin türeviyken bu, tamamen bağımsız bir bilgi kanalıdır. Açıkken: LONG sinyali gelse bile son 60 saniyede gerçek para <b>net satıyorsa</b> (akış oranı &lt; −%15) giriş engellenir — boş yükselişe binilmez. SHORT için tersi. Sadece çalışan coinlerin akışı dinlenir; veri yoksa filtre kendini devre dışı bırakır.</div>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
+        <span>🐑 Kalabalık Filtresi (Long/Short Oranı)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45 — AKILLI</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="crowdFilterToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Binance Futures'un halka açık pozisyonlanma verisi: hesapların Long/Short oranı. Açıkken: oran <b>≥ 3</b> ise (piyasanın ezici çoğunluğu zaten long) yeni LONG engellenir — kalabalığın en yoğun olduğu yer, squeeze'in başladığı yerdir. Oran <b>≤ 0.33</b> ise SHORT engellenir. Coin detay şeridinde ⚔️ L/S ve 📜 OI çipleri olarak da görünür (5 dk'da bir güncellenir).</div>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
+        <span>⚔️ Strateji Arenası (Gölge Varyantlar)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45 — AKILLI</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="arenaToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: her gerçek pozisyon açılışında iki gölge strateji (🅱️ Sabırlı Avcı, 🅲 Hızlı Tahsildar) aynı girişi <b>sanal olarak</b> kopyalar ve kendi çıkış kurallarıyla yönetir. Kasaya asla dokunmazlar. Sonuçlar Analiz → Strateji Arenası'nda yan yana birikir.</div>
+
+      <div class="acc-divider"></div>
+
       <div class="card-title">
         <span>🛑 Toplam Günlük Zarar Limiti</span>
         <span class="optional-badge">İSTEĞE BAĞLI</span>
@@ -2521,6 +2577,23 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <button class="btn btn-toggle-all" style="flex:1" onclick="runMonteCarlo()">🎲 1000 Simülasyon Çalıştır</button>
     </div>
     <div id="monteCarloResult" style="margin-top:14px;"></div>
+  </details>
+
+  <!-- 🧠 v45.0: Otopsi Motoru -->
+  <details class="setup-card acc-card" data-accid="autopsy">
+    <summary>🧠 Otopsi Motoru — Desen Madenciliği <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45 — AKILLI</span></summary>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Bot artık her açılışta göstergelerin, saatin, günün, rejimin ve oynaklığın <b>fotoğrafını</b> çekiyor. Bu motor, kapanmış işlemleri koşul koşul madenler ve genelden belirgin sapan desenleri bulur: <b>"ADX&lt;20 girişlerinde %78 kayıp"</b>, <b>"gece saatlerinde kazanma %25"</b> gibi. Bot kendi zaaflarını ve süper güçlerini sana söyler — sen de ayarları tahminle değil kanıtla değiştirirsin.</div>
+    <div class="btn-row">
+      <button class="btn btn-toggle-all" style="flex:1" onclick="runAutopsy()">🧠 Desenleri Madenle</button>
+    </div>
+    <div id="autopsyResult" style="margin-top:14px;"></div>
+  </details>
+
+  <!-- ⚔️ v45.0: Strateji Arenası -->
+  <details class="setup-card acc-card" data-accid="arena">
+    <summary>⚔️ Strateji Arenası — Gölge Varyantlar <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45 — AKILLI</span></summary>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Gerçek bot her pozisyon açtığında, iki gölge strateji <b>aynı girişi sanal olarak kopyalar</b> ama çıkışı kendi felsefesiyle yönetir — kasaya asla dokunmadan. Haftalar içinde "acaba trailing'i genişletsem mi?" sorusunun cevabı tahmin değil, <b>yan yana kanıt</b> olur. 🏆 rozetli varyant o an önde olandır.</div>
+    <div id="arenaResult"></div>
   </details>
 
   <!-- 💾 v37.0: Yedekleme & Geri Yükleme Merkezi -->
@@ -3308,7 +3381,9 @@ const SETTINGS_FIELD_IDS = [
   'weeklyReportToggle',
   // v44.0: Kelly boyutlandırma, equity freni, zaman stopu
   'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles',
-  'atrTrailingScaleToggle', 'atrTrailingRefPct', 'trailingConfirmToggle', 'trailingConfirmTicks'
+  'atrTrailingScaleToggle', 'atrTrailingRefPct', 'trailingConfirmToggle', 'trailingConfirmTicks',
+  // v45.0: akıllı filtreler + arena
+  'cvdFilterToggle', 'crowdFilterToggle', 'arenaToggle'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -4981,6 +5056,7 @@ function wsConnect() {
     ws.onopen = () => {
       wsLive.status = 'live';
       wsLive.retries = 0;
+      if (typeof cvdEngine !== 'undefined') cvdEngine.subscribed.clear(); // v45.0: yeni bağlantıda abonelikler sıfırdan kurulur
       updateWsBadge();
       log('⚡ [WebSocket] Canlı fiyat akışı bağlandı — ' + Object.keys(COIN_CONFIG).length + ' coin tek bağlantıdan gerçek zamanlı akıyor. REST istekleri artık sadece yedek.', 'system');
     };
@@ -4994,6 +5070,12 @@ function wsConnect() {
             wsLive.prices[d.s] = { p, t: Date.now() };
             wsLive.lastMsg = Date.now();
           }
+        } else if (d && d.e === 'aggTrade' && d.s) {
+          // v45.0: Emir akışı (order flow) — her gerçekleşen işlemde taker yönü okunur.
+          // m=true → alıcı "maker" yani AGRESİF taraf SATICI (taker sell). CVD = taker
+          // alım − taker satım; fiyattan türetilemeyen, tamamen bağımsız bir bilgi kanalı.
+          cvdIngest(d.s, parseFloat(d.p) * parseFloat(d.q), d.m === true);
+          wsLive.lastMsg = Date.now();
         }
       } catch(e) {}
     };
@@ -5024,6 +5106,118 @@ setInterval(() => {
     try { wsLive.conn.close(); } catch(e) {}
   }
 }, 15000);
+
+// ───────── v45.0: CVD — Emir Akışı Motoru (botun "işitme duyusu") ─────────
+// Tüm göstergeler aynı mum verisinin farklı makyajlarıydı; CVD ise gerçekleşen her
+// işlemin agresif tarafını sayar: taker alım − taker satım. Fiyat yükselirken CVD
+// düşüyorsa yükseliş boş demektir. aggTrade akışı yoğun olduğundan SADECE çalışan
+// (botRunning) coinlere abone olunur; saniyelik kovalar halinde 5 dk'lık halka tutulur.
+const cvdEngine = { buf: {}, subscribed: new Set(), subId: 100 };
+
+function cvdIngest(symbol, notionalUsd, isTakerSell) {
+  if (!cvdEngine.buf[symbol]) cvdEngine.buf[symbol] = [];
+  const buf = cvdEngine.buf[symbol];
+  const sec = Math.floor(Date.now() / 1000);
+  let cell = buf[buf.length - 1];
+  if (!cell || cell.t !== sec) {
+    cell = { t: sec, delta: 0, vol: 0 };
+    buf.push(cell);
+    if (buf.length > 300) buf.shift(); // 5 dk pencere
+  }
+  cell.delta += isTakerSell ? -notionalUsd : notionalUsd;
+  cell.vol += notionalUsd;
+}
+
+// Son N saniyenin akış özeti: delta (USD), toplam hacim ve normalize oran (-1..+1)
+function getCvdStats(coin, winSec = 60) {
+  const cfg = COIN_CONFIG[coin];
+  if (!cfg) return null;
+  const buf = cvdEngine.buf[cfg.symbol];
+  if (!buf || !buf.length) return null;
+  const cutoff = Math.floor(Date.now() / 1000) - winSec;
+  let delta = 0, vol = 0;
+  for (let i = buf.length - 1; i >= 0 && buf[i].t >= cutoff; i--) { delta += buf[i].delta; vol += buf[i].vol; }
+  if (vol < 500) return null; // anlamlı istatistik için min hacim (500$/dk)
+  return { delta, vol, ratio: delta / vol };
+}
+
+// Abonelik uzlaştırıcı: çalışan coinlerin aggTrade akışına abone ol, durmuşlardan çık.
+// Böylece BTC gibi saniyede onlarca mesaj üreten akışlar sadece gerektiğinde açık kalır.
+function cvdReconcileSubscriptions() {
+  if (!wsLive.conn || wsLive.conn.readyState !== WebSocket.OPEN) return;
+  const desired = new Set();
+  Object.keys(coinStates || {}).forEach(coin => {
+    if (coinStates[coin]?.botRunning && COIN_CONFIG[coin]) desired.add(COIN_CONFIG[coin].symbol.toLowerCase() + '@aggTrade');
+  });
+  const toSub = [...desired].filter(x => !cvdEngine.subscribed.has(x));
+  const toUnsub = [...cvdEngine.subscribed].filter(x => !desired.has(x));
+  try {
+    if (toSub.length)   { wsLive.conn.send(JSON.stringify({ method: 'SUBSCRIBE',   params: toSub,   id: ++cvdEngine.subId })); toSub.forEach(x => cvdEngine.subscribed.add(x)); }
+    if (toUnsub.length) { wsLive.conn.send(JSON.stringify({ method: 'UNSUBSCRIBE', params: toUnsub, id: ++cvdEngine.subId })); toUnsub.forEach(x => cvdEngine.subscribed.delete(x)); }
+  } catch(e) {}
+}
+setInterval(cvdReconcileSubscriptions, 10000);
+
+// Giriş filtresi: sinyal yönü ile gerçek para akışı çelişiyorsa girme.
+// LONG sinyali + belirgin negatif akış (oran < -0.15) = yükseliş boş, engelle. Tersi SHORT için.
+function cvdEntryBlocked(coin, dir) {
+  if (!document.getElementById('cvdFilterToggle')?.checked) return false;
+  const st = getCvdStats(coin, 60);
+  if (!st) return false; // veri yoksa engelleme — filtre ancak kanıtla çalışır
+  const TH = 0.15;
+  if (dir === 'long' && st.ratio < -TH) {
+    log(`🌊 [CVD Akış] ${coin} — LONG sinyali var ama son 60 sn'de gerçek para NET SATIYOR (akış oranı ${(st.ratio*100).toFixed(0)}%, ${(st.delta/1000).toFixed(1)}K$ satış baskın). Boş yükseliş — giriş engellendi.`, 'warn', coin);
+    return true;
+  }
+  return false;
+}
+
+// ───────── v45.0: Pozisyonlanma Verisi — "Kalabalık nerede duruyor?" ─────────
+// Binance Futures'un halka açık verileri: Open Interest (açık sözleşme) değişimi ve
+// global Long/Short hesap oranı. 5 dk cache, sadece çalışan coinler için çekilir.
+// Erişilemezse (CORS/ağ) sessizce boş kalır — filtre yalnızca veri varken çalışır.
+const posDataCache = {};
+async function fetchPositioning(coin) {
+  const cfg = COIN_CONFIG[coin];
+  if (!cfg) return;
+  const now = Date.now();
+  const c = posDataCache[coin];
+  if (c && now - c.t < 5 * 60 * 1000) return;
+  posDataCache[coin] = posDataCache[coin] || {};
+  posDataCache[coin].t = now; // başarısız olsa da 5 dk denemez — spam koruması
+  try {
+    const r = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${cfg.symbol}&period=5m&limit=1`);
+    const d = await r.json();
+    if (Array.isArray(d) && d[0]) posDataCache[coin].lsRatio = parseFloat(d[0].longShortRatio);
+  } catch(e) {}
+  try {
+    const r = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${cfg.symbol}&period=15m&limit=2`);
+    const d = await r.json();
+    if (Array.isArray(d) && d.length >= 2) {
+      const prev = parseFloat(d[0].sumOpenInterestValue), cur = parseFloat(d[1].sumOpenInterestValue);
+      posDataCache[coin].oiChangePct = prev > 0 ? (cur - prev) / prev * 100 : null;
+      posDataCache[coin].oiValue = cur;
+    }
+  } catch(e) {}
+  try { renderCoinDetail(coin); } catch(e) {}
+}
+
+// Kalabalık filtresi: L/S oranı aşırı uçtaysa kalabalıkla AYNI yöne girme.
+// Oran ≥ 3 → herkes long (long squeeze riski, LONG engellenir); ≤ 0.33 → tersi.
+function crowdEntryBlocked(coin, dir) {
+  if (!document.getElementById('crowdFilterToggle')?.checked) return false;
+  const ls = posDataCache[coin]?.lsRatio;
+  if (ls === undefined || ls === null || isNaN(ls)) return false;
+  if (dir === 'long' && ls >= 3.0) {
+    log(`🐑 [Kalabalık] ${coin} — Long/Short oranı ${ls.toFixed(2)}: piyasanın ezici çoğunluğu zaten LONG'ta. Kalabalığın en yoğun olduğu yer, squeeze'in başladığı yerdir — LONG girişi engellendi.`, 'warn', coin);
+    return true;
+  }
+  if (dir === 'short' && ls <= 0.33) {
+    log(`🐑 [Kalabalık] ${coin} — Long/Short oranı ${ls.toFixed(2)}: herkes SHORT'ta. Short squeeze riski — SHORT girişi engellendi.`, 'warn', coin);
+    return true;
+  }
+  return false;
+}
 
 // Küçük durum rozeti (sağ alt): ⚡ CANLI / 🔌 REST YEDEK
 function updateWsBadge() {
@@ -5627,15 +5821,35 @@ function playTradeFeedback(kind) {
   } catch (e) {}
 }
 
-function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals, autopilot) {
+// ── v45.0: Giriş Anı Fotoğrafı — Otopsi motorunun ham verisi ──
+// Pozisyon açıldığı anda tüm gösterge değerleri + bağlam (saat, gün, rejim, oynaklık)
+// dondurulup pozisyona iliştirilir; kapanışta işlem kaydına geçer. Otopsi motoru bu
+// fotoğrafları madenleyerek "hangi koşullarda kazanıyorum/kaybediyorum" desenlerini bulur.
+function buildEntrySnapshot(rawValues, regimeInfo, atr, price) {
+  const d = new Date();
+  return {
+    vals: { ...rawValues },
+    regime: regimeInfo?.regime || null,
+    atrPct: (price > 0 && atr) ? +(atr / price * 100).toFixed(3) : null,
+    hour: d.getHours(),
+    dow: d.getDay() // 0=Pazar
+  };
+}
+
+function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals, autopilot, extra) {
   globalTradeCount++;
   globalTotalPnl += pnl;
   const now = new Date();
   const nowStr = now.toLocaleString('tr-TR');
   const label = pnl >= 0 ? 'KAZANÇ' : 'KAYIP';
 
-  globalTradeHistory.push({ time: nowStr, coin, type: label, price: exitPrice, entryPrice, amount, pnl, confirms, direction: direction || 'long', leverage: leverage || 1, ts: now.getTime(), holdMs: holdMs || null, reasonCategory: reasonCategory || null, entryRegime: entryRegime || null, entrySignals: entrySignals || null, autopilot: !!autopilot });
+  globalTradeHistory.push({ time: nowStr, coin, type: label, price: exitPrice, entryPrice, amount, pnl, confirms, direction: direction || 'long', leverage: leverage || 1, ts: now.getTime(), holdMs: holdMs || null, reasonCategory: reasonCategory || null, entryRegime: entryRegime || null, entrySignals: entrySignals || null, autopilot: !!autopilot, ...(extra || {}) });
   if (globalTradeHistory.length > 300) globalTradeHistory.shift();
+
+  // v45.0: Strateji Arenası — GERÇEK botun karnesi de arenaya işlenir
+  try { if (typeof arenaRecordReal === 'function') arenaRecordReal(pnl); } catch(e) {}
+  // v45.0: Kazançlı kapanışta konfeti şovu 🎉
+  try { if (pnl > 0.5 && typeof fireConfetti === 'function') fireConfetti(); } catch(e) {}
 
   // ── v36.7: Dinamik Boyutlandırma sayacı ──
   if (document.getElementById('dynSizingToggle')?.checked) {
@@ -5697,7 +5911,9 @@ function renderTradeTable() {
     return;
   }
   const recent = globalTradeHistory.slice(-40).reverse();
-  body.innerHTML = recent.map(t => {
+  const baseIdx = globalTradeHistory.length - 1; // v45.0: sinema için gerçek dizi indeksi
+  body.innerHTML = recent.map((t, i) => {
+    const realIdx = baseIdx - i;
     const c = COIN_CONFIG[t.coin] || { color: '#888' };
     const pnlColor = t.pnl >= 0 ? 'green' : 'red';
     const pnlSign = t.pnl >= 0 ? '+' : '';
@@ -5715,7 +5931,7 @@ function renderTradeTable() {
         <td>${t.entryPrice ? formatPrice(t.entryPrice) + ' → ' : ''}${formatPrice(t.price)}</td>
         <td>${t.amount} USDT</td>
         <td style="font-size:10.5px;white-space:nowrap;">${reasonTxt}</td>
-        <td style="color:var(--${pnlColor})">${pnlSign}${t.pnl.toFixed(2)} USDT</td>
+        <td style="color:var(--${pnlColor})">${pnlSign}${t.pnl.toFixed(2)} USDT<br><button onclick="openCinema(${realIdx})" title="Bu işlemi film gibi geri oynat" style="background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:10px;padding:1px 6px;margin-top:2px;">🎬</button></td>
       </tr>`;
   }).join('');
 }
@@ -5994,6 +6210,335 @@ function renderTimeAnalysis() {
 // Kripto gürültüsü için endüstri pratiği "yarım Kelly" veya çeyrek Kelly'dir — biz
 // yarım Kelly gösterip her zaman muhafazakâr yorumluyoruz. Bu bir ÖNERİ panelidir,
 // işlem miktarına otomatik müdahale ETMEZ.
+// ───────── v45.0: 🧠 OTOPSİ MOTORU — Desen Madenciliği ─────────
+// Her işlemin giriş fotoğrafı (gösterge değerleri, saat, gün, rejim, oynaklık) kayıtlı.
+// Bu motor, kapanmış işlemleri koşullara göre kovalara ayırır ve genel kazanma oranından
+// belirgin sapan kovaları bulur: "ADX<20'de %78 kayıp" gibi. Bot kendi zaaflarını görür.
+function runAutopsy() {
+  const el = document.getElementById('autopsyResult');
+  if (!el) return;
+  const trades = globalTradeHistory.filter(t => typeof t.pnl === 'number');
+  if (trades.length < 12) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--yellow);padding:10px;border:1px solid rgba(255,165,0,0.3);border-radius:10px;background:rgba(255,165,0,0.08);">⚠️ Desen madenciliği için en az 12 işlem gerekli — şu an ${trades.length} var. Yeni işlemler v45 ile birlikte artık tam gösterge fotoğrafıyla kaydediliyor; veri biriktikçe analiz keskinleşecek.</div>`;
+    return;
+  }
+  const overallWr = trades.filter(t => t.pnl >= 0).length / trades.length * 100;
+  const overallAvg = trades.reduce((a, t) => a + t.pnl, 0) / trades.length;
+
+  const buckets = {}; // key → {n, wins, pnl, label}
+  const put = (key, label, t) => {
+    if (!buckets[key]) buckets[key] = { n: 0, wins: 0, pnl: 0, label };
+    buckets[key].n++; if (t.pnl >= 0) buckets[key].wins++; buckets[key].pnl += t.pnl;
+  };
+  const DOW = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  trades.forEach(t => {
+    put('coin:' + t.coin, `${t.coin} işlemleri`, t);
+    if (t.reasonCategory) put('reason:' + t.reasonCategory, `"${(REASON_LABELS_SHORT?.[t.reasonCategory] || t.reasonCategory)}" ile kapananlar`, t);
+    put('dir:' + (t.direction || 'long'), (t.direction === 'short' ? 'SHORT' : 'LONG') + ' işlemler', t);
+    if ((t.leverage || 1) > 2) put('lev:high', '3x+ kaldıraçlı işlemler', t);
+    if (t.entryRegime) put('regime:' + t.entryRegime, `"${t.entryRegime}" rejiminde açılanlar`, t);
+    put('auto:' + (t.autopilot ? 'y' : 'n'), t.autopilot ? 'Otopilot işlemleri' : 'Manuel/coin-botu işlemleri', t);
+    const d = new Date(t.ts);
+    const h = t.snapshot?.hour ?? d.getHours();
+    const band = h < 6 ? 'gece (00-06)' : h < 12 ? 'sabah (06-12)' : h < 18 ? 'öğlen (12-18)' : 'akşam (18-24)';
+    put('hour:' + band, band + ' saatlerinde açılanlar', t);
+    put('dow:' + (t.snapshot?.dow ?? d.getDay()), DOW[t.snapshot?.dow ?? d.getDay()] + ' günü açılanlar', t);
+    // Gösterge değeri kovaları (fotoğraf varsa)
+    const v = t.snapshot?.vals || {};
+    const adx = parseFloat(v.adx); if (!isNaN(adx)) put('adx:' + (adx < 20 ? 'low' : adx < 30 ? 'mid' : 'high'), adx < 20 ? 'ADX < 20 (trendsiz) girişler' : adx < 30 ? 'ADX 20-30 girişler' : 'ADX > 30 (güçlü trend) girişler', t);
+    const rsi = parseFloat(v.rsi); if (!isNaN(rsi)) put('rsi:' + (rsi < 35 ? 'low' : rsi > 65 ? 'high' : 'mid'), rsi < 35 ? 'RSI < 35 iken girişler' : rsi > 65 ? 'RSI > 65 iken girişler' : 'RSI 35-65 girişler', t);
+    if (t.snapshot?.atrPct !== undefined && t.snapshot.atrPct !== null) put('vol:' + (t.snapshot.atrPct > 0.8 ? 'wild' : 'calm'), t.snapshot.atrPct > 0.8 ? 'Yüksek oynaklıkta (ATR>%0.8) girişler' : 'Sakin piyasada girişler', t);
+  });
+
+  // Anlamlı sapmalar: n>=6 ve kazanma oranı gene karşı >= 15 puan sapma; etki = |sapma| × √n
+  const insights = Object.values(buckets)
+    .filter(b => b.n >= 6)
+    .map(b => ({ ...b, wr: b.wins / b.n * 100, avg: b.pnl / b.n }))
+    .map(b => ({ ...b, dev: b.wr - overallWr, impact: Math.abs(b.wr - overallWr) * Math.sqrt(b.n) }))
+    .filter(b => Math.abs(b.dev) >= 15)
+    .sort((a, b) => b.impact - a.impact)
+    .slice(0, 8);
+
+  const head = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <div style="flex:1;min-width:110px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);">GENEL KAZANMA</div><div style="font-size:16px;font-weight:800;">%${overallWr.toFixed(1)}</div>
+      </div>
+      <div style="flex:1;min-width:110px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);">ORT. İŞLEM K/Z</div><div style="font-size:16px;font-weight:800;color:${overallAvg>=0?'var(--green)':'var(--red)'};">${overallAvg>=0?'+':''}${overallAvg.toFixed(2)}$</div>
+      </div>
+      <div style="flex:1;min-width:110px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:9px;color:var(--muted);">İNCELENEN</div><div style="font-size:16px;font-weight:800;">${trades.length} işlem</div>
+      </div>
+    </div>`;
+
+  if (!insights.length) {
+    el.innerHTML = head + `<div style="font-size:12px;color:var(--muted);padding:10px;">🔍 Belirgin bir desen bulunamadı — performans koşullar arasında dengeli dağılıyor. Bu aslında iyi haber: bot belirli bir koşulda sistematik kanama yapmıyor. Veri arttıkça daha ince desenler görünür olabilir.</div>`;
+    return;
+  }
+
+  el.innerHTML = head + insights.map(b => {
+    const bad = b.dev < 0;
+    const col = bad ? 'var(--red)' : 'var(--green)';
+    const bg  = bad ? 'rgba(196,58,47,0.07)' : 'rgba(14,124,74,0.07)';
+    const bor = bad ? 'rgba(196,58,47,0.3)' : 'rgba(14,124,74,0.3)';
+    const advice = bad
+      ? `💡 Öneri: bu koşulda pozisyon boyutunu düşürmeyi ya da ilgili filtreyi sıkılaştırmayı düşün.`
+      : `💡 Öneri: en güçlü olduğun bölge — Kelly Boyutlandırma açıksa bot burada zaten otomatik büyüyor.`;
+    return `
+      <div style="padding:10px 12px;border-radius:10px;background:${bg};border:1px solid ${bor};margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="font-size:12px;font-weight:700;">${bad ? '🩸' : '💪'} ${b.label}</div>
+          <div style="font-size:13px;font-weight:800;color:${col};white-space:nowrap;">%${b.wr.toFixed(0)} <span style="font-size:9px;color:var(--muted);">(${b.n} işlem)</span></div>
+        </div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">Genelden sapma: <b style="color:${col}">${b.dev>=0?'+':''}${b.dev.toFixed(0)} puan</b> · Ort. K/Z: <b style="color:${b.avg>=0?'var(--green)':'var(--red)'}">${b.avg>=0?'+':''}${b.avg.toFixed(2)}$</b><br>${advice}</div>
+      </div>`;
+  }).join('');
+  log(`🧠 [Otopsi] ${trades.length} işlem madenlendi — ${insights.length} belirgin desen bulundu. En güçlüsü: "${insights[0].label}" (%${insights[0].wr.toFixed(0)} kazanma).`, 'system');
+}
+
+// ───────── v45.0: ⚔️ STRATEJİ ARENASI — Gölge Varyantlar ─────────
+// Gerçek bot her pozisyon açtığında, iki "gölge" aynı girişi sanal olarak kopyalar ama
+// ÇIKIŞI kendi kurallarıyla yönetir. Kasaya asla dokunmazlar. Haftalar içinde hangi çıkış
+// felsefesinin daha iyi olduğu tahmin değil, KANIT olarak görünür.
+const SK_ARENA = 'tq_arena_v1';
+let arena = { stats: { REAL: {n:0,wins:0,pnl:0}, B: {n:0,wins:0,pnl:0}, C: {n:0,wins:0,pnl:0} }, open: [] };
+try { const a = JSON.parse(localStorage.getItem(SK_ARENA)); if (a && a.stats) arena = a; } catch(e) {}
+const ARENA_VARIANTS = {
+  B: { name: '🅱️ Sabırlı Avcı', desc: 'Trailing eşiği ve mesafesi %60 daha geniş — küçük geri çekilmelere tahammül eder, büyük hareketi kovalar.', actMult: 1.6, distMult: 1.6, tpMult: 1.0 },
+  C: { name: '🅲 Hızlı Tahsildar', desc: 'TP hedefi %35 daha yakın, trailing yok — kârı erken cebe atar, uzatmaz.', actMult: 0, distMult: 0, tpMult: 0.65 }
+};
+function arenaSave() { try { localStorage.setItem(SK_ARENA, JSON.stringify(arena)); } catch(e) {} }
+function arenaRecordReal(pnl) {
+  if (!document.getElementById('arenaToggle')?.checked) return;
+  arena.stats.REAL.n++; if (pnl >= 0) arena.stats.REAL.wins++; arena.stats.REAL.pnl += pnl;
+  arenaSave();
+}
+function arenaShadowOpen(coin, pos) {
+  if (!document.getElementById('arenaToggle')?.checked) return;
+  ['B', 'C'].forEach(v => {
+    const cfgV = ARENA_VARIANTS[v];
+    arena.open.push({
+      v, coin, dir: pos.direction, entry: pos.entryPrice, amount: pos.amount, lev: pos.leverage || 1,
+      sl: pos.stopLossPct, tp: (pos.takeProfitPct || 0.03) * cfgV.tpMult,
+      trailAct: cfgV.actMult > 0 ? 0.012 * cfgV.actMult : null,
+      trailDist: cfgV.distMult > 0 ? 0.015 * cfgV.distMult : null,
+      best: null, armed: false, t: Date.now()
+    });
+  });
+  if (arena.open.length > 60) arena.open.splice(0, arena.open.length - 60);
+  arenaSave();
+}
+function arenaTick() {
+  if (!arena.open.length) return;
+  const still = [];
+  arena.open.forEach(sp => {
+    const cfg = COIN_CONFIG[sp.coin];
+    const w = cfg ? wsLive.prices[cfg.symbol] : null;
+    if (!w || Date.now() - w.t > 5000) { still.push(sp); return; }
+    const raw = (w.p - sp.entry) / sp.entry;
+    const ch = sp.dir === 'long' ? raw : -raw;
+    const lc = ch * sp.lev;
+    let close = null;
+    if (lc <= -sp.sl) close = 'SL';
+    else if (lc >= sp.tp) close = 'TP';
+    else if (sp.trailAct !== null) {
+      if (!sp.armed && lc >= sp.trailAct * sp.lev) { sp.armed = true; sp.best = w.p; }
+      if (sp.armed) {
+        if (sp.dir === 'long' && w.p > sp.best) sp.best = w.p;
+        if (sp.dir === 'short' && w.p < sp.best) sp.best = w.p;
+        const tch = (sp.dir === 'long' ? (w.p - sp.best) / sp.best : -(w.p - sp.best) / sp.best) * sp.lev;
+        if (tch <= -sp.trailDist * sp.lev) close = 'TRAIL';
+      }
+    }
+    // 24 saatlik sanal zaman aşımı — gölge pozisyonlar sonsuza dek yaşamasın
+    if (!close && Date.now() - sp.t > 24 * 3600 * 1000) close = 'TIMEOUT';
+    if (close) {
+      const pnl = sp.amount * lc;
+      arena.stats[sp.v].n++; if (pnl >= 0) arena.stats[sp.v].wins++; arena.stats[sp.v].pnl += pnl;
+    } else still.push(sp);
+  });
+  if (still.length !== arena.open.length) { arena.open = still; arenaSave(); try { renderArena(); } catch(e) {} }
+}
+setInterval(arenaTick, 2000);
+function renderArena() {
+  const el = document.getElementById('arenaResult');
+  if (!el) return;
+  const rows = [['REAL', '👑 GERÇEK BOT', 'Senin mevcut ayarların — kasa buna bağlı.'], ['B', ARENA_VARIANTS.B.name, ARENA_VARIANTS.B.desc], ['C', ARENA_VARIANTS.C.name, ARENA_VARIANTS.C.desc]];
+  const best = Math.max(arena.stats.REAL.pnl, arena.stats.B.pnl, arena.stats.C.pnl);
+  el.innerHTML = rows.map(([k, name, desc]) => {
+    const st = arena.stats[k];
+    const wr = st.n ? (st.wins / st.n * 100).toFixed(0) : '—';
+    const lead = st.pnl === best && st.n > 0 ? ' 🏆' : '';
+    return `
+      <div style="padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid ${st.pnl===best&&st.n>0?'rgba(255,165,0,0.45)':'var(--border)'};margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:700;">${name}${lead}</div>
+          <div style="font-size:14px;font-weight:800;color:${st.pnl>=0?'var(--green)':'var(--red)'};">${st.pnl>=0?'+':''}${st.pnl.toFixed(2)}$</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">${desc}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">${st.n} kapanış · Kazanma: %${wr} · Açık gölge: ${arena.open.filter(o=>o.v===k).length || (k==='REAL'?'—':'0')}</div>
+      </div>`;
+  }).join('') + `<button class="btn" style="width:100%;font-size:11px;" onclick="if(confirm('Arena istatistikleri sıfırlansın mı?')){arena={stats:{REAL:{n:0,wins:0,pnl:0},B:{n:0,wins:0,pnl:0},C:{n:0,wins:0,pnl:0}},open:[]};arenaSave();renderArena();}">🔄 Arenayı Sıfırla</button>`;
+}
+
+// ───────── v45.0: 🎬 İŞLEM SİNEMASI — Kapanmış işlemi film gibi geri oynat ─────────
+// İşlem geçmişindeki 🎬 butonuna basınca: o işlemin zaman penceresi Binance'ten çekilir,
+// mumlar tek tek "oynatılır"; giriş, trailing'in devreye girdiği an ve çıkış işaretlenir.
+// Kayıpları izlemek, yüz satır istatistikten daha çok şey öğretir.
+let cinemaState = null;
+async function openCinema(idx) {
+  const t = globalTradeHistory[idx];
+  if (!t) return;
+  const iv = t.interval || document.getElementById('interval')?.value || '5m';
+  const IV_MS = { '1m': 60000, '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000 };
+  const ivMs = IV_MS[iv] || 300000;
+  const openedAt = t.ts - (t.holdMs || ivMs * 10);
+  const startTime = openedAt - 25 * ivMs, endTime = t.ts + 8 * ivMs;
+  const cfg = COIN_CONFIG[t.coin];
+  if (!cfg) return;
+
+  let overlay = document.getElementById('cinemaOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cinemaOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.82);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:12px;';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:680px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;">🎬 İşlem Sineması — ${t.coin} ${(t.direction||'long').toUpperCase()} ${(t.leverage||1)}x <span style="color:${t.pnl>=0?'var(--green)':'var(--red)'};">${t.pnl>=0?'+':''}${t.pnl.toFixed(2)}$</span></div>
+        <button onclick="closeCinema()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:12px;">✕</button>
+      </div>
+      <canvas id="cinemaCanvas" style="width:100%;height:300px;display:block;border-radius:10px;background:rgba(0,0,0,0.25);"></canvas>
+      <div id="cinemaCaption" style="font-size:11px;color:var(--muted);margin-top:8px;min-height:16px;">Mum verisi yükleniyor...</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn" style="flex:1;font-size:12px;" onclick="cinemaPlayPause()" id="cinemaPlayBtn">⏸️ Duraklat</button>
+        <button class="btn" style="flex:1;font-size:12px;" onclick="cinemaSpeed()" id="cinemaSpeedBtn">🐢 1x</button>
+        <button class="btn" style="flex:1;font-size:12px;" onclick="cinemaRestart()">⏮️ Baştan</button>
+      </div>
+    </div>`;
+  overlay.onclick = (e) => { if (e.target === overlay) closeCinema(); };
+
+  let candles = [];
+  try {
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${cfg.symbol}&interval=${iv}&startTime=${startTime}&endTime=${endTime}&limit=200`);
+    const d = await r.json();
+    if (Array.isArray(d)) candles = d.map(k => ({ t: +k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4] }));
+  } catch(e) {}
+  if (candles.length < 5) {
+    const cap = document.getElementById('cinemaCaption');
+    if (cap) cap.textContent = '⚠️ Bu işlem için mum verisi çekilemedi (çok eski olabilir).';
+    return;
+  }
+  cinemaState = { trade: t, candles, shown: 8, playing: true, speed: 1, timer: null, openedAt, ivMs };
+  cinemaLoop();
+}
+function cinemaLoop() {
+  if (!cinemaState) return;
+  drawCinemaFrame();
+  if (cinemaState.playing && cinemaState.shown < cinemaState.candles.length) {
+    cinemaState.shown++;
+    cinemaState.timer = setTimeout(cinemaLoop, 420 / cinemaState.speed);
+  } else if (cinemaState.shown >= cinemaState.candles.length) {
+    const cap = document.getElementById('cinemaCaption');
+    if (cap) cap.innerHTML = `🎞️ Film bitti — net sonuç: <b style="color:${cinemaState.trade.pnl>=0?'var(--green)':'var(--red)'}">${cinemaState.trade.pnl>=0?'+':''}${cinemaState.trade.pnl.toFixed(2)}$</b> (${REASON_LABELS_SHORT?.[cinemaState.trade.reasonCategory] || 'kapanış'})`;
+  }
+}
+function drawCinemaFrame() {
+  const cv = document.getElementById('cinemaCanvas');
+  if (!cv || !cinemaState) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = 300;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const { trade: t, candles, shown, openedAt } = cinemaState;
+  const vis = candles.slice(0, shown);
+  let lo = Math.min(...vis.map(c => c.l)), hi = Math.max(...vis.map(c => c.h));
+  if (t.entryPrice) { lo = Math.min(lo, t.entryPrice); hi = Math.max(hi, t.entryPrice); }
+  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const y = v => H - 24 - ((v - lo) / (hi - lo)) * (H - 40);
+  const cw = Math.max((W - 20) / candles.length, 2);
+  // Giriş/çıkış fiyat çizgileri
+  ctx.setLineDash([4, 3]);
+  if (t.entryPrice) { ctx.strokeStyle = 'rgba(255,165,0,0.6)'; ctx.beginPath(); ctx.moveTo(0, y(t.entryPrice)); ctx.lineTo(W, y(t.entryPrice)); ctx.stroke(); ctx.fillStyle = 'orange'; ctx.font = '9px monospace'; ctx.fillText('GİRİŞ ' + formatPrice(t.entryPrice), 4, y(t.entryPrice) - 3); }
+  ctx.setLineDash([]);
+  vis.forEach((c, i) => {
+    const x = 10 + i * cw;
+    const up = c.c >= c.o;
+    ctx.strokeStyle = ctx.fillStyle = up ? '#0e7c4a' : '#c43a2f';
+    ctx.beginPath(); ctx.moveTo(x + cw/2, y(c.h)); ctx.lineTo(x + cw/2, y(c.l)); ctx.stroke();
+    const bh = Math.max(Math.abs(y(c.o) - y(c.c)), 1);
+    ctx.fillRect(x + 0.5, Math.min(y(c.o), y(c.c)), Math.max(cw - 1.5, 1), bh);
+    // Olay işaretleri
+    if (openedAt >= c.t && openedAt < c.t + cinemaState.ivMs) { ctx.font = '13px sans-serif'; ctx.fillText('🚀', x - 3, y(c.l) + 16); }
+    if (t.trailingArmedAt && t.trailingArmedAt >= c.t && t.trailingArmedAt < c.t + cinemaState.ivMs) { ctx.font = '12px sans-serif'; ctx.fillText('📉', x - 3, y(c.h) - 6); }
+    if (t.ts >= c.t && t.ts < c.t + cinemaState.ivMs) { ctx.font = '13px sans-serif'; ctx.fillText(t.pnl >= 0 ? '🏁' : '💥', x - 3, y(c.h) - 6); }
+  });
+  const cap = document.getElementById('cinemaCaption');
+  if (cap && cinemaState.playing) {
+    const cur = vis[vis.length - 1];
+    let phase = cur.t < openedAt ? '⏳ Giriş öncesi — piyasa hazırlanıyor' : (cur.t < t.ts ? '📈 Pozisyon açık — fiyat yolculuğu' : '🏁 Kapanış sonrası');
+    if (t.trailingArmedAt && cur.t >= t.trailingArmedAt && cur.t < t.ts) phase = '📉 Trailing armed — bot en iyi fiyatı kovalıyor';
+    cap.textContent = phase + ` · mum ${vis.length}/${candles.length}`;
+  }
+}
+function cinemaPlayPause() {
+  if (!cinemaState) return;
+  cinemaState.playing = !cinemaState.playing;
+  const b = document.getElementById('cinemaPlayBtn');
+  if (b) b.textContent = cinemaState.playing ? '⏸️ Duraklat' : '▶️ Oynat';
+  if (cinemaState.playing) cinemaLoop();
+}
+function cinemaSpeed() {
+  if (!cinemaState) return;
+  cinemaState.speed = cinemaState.speed === 1 ? 3 : cinemaState.speed === 3 ? 6 : 1;
+  const b = document.getElementById('cinemaSpeedBtn');
+  if (b) b.textContent = cinemaState.speed === 1 ? '🐢 1x' : cinemaState.speed === 3 ? '🐇 3x' : '⚡ 6x';
+}
+function cinemaRestart() { if (cinemaState) { cinemaState.shown = 8; cinemaState.playing = true; cinemaLoop(); } }
+function closeCinema() {
+  if (cinemaState?.timer) clearTimeout(cinemaState.timer);
+  cinemaState = null;
+  document.getElementById('cinemaOverlay')?.remove();
+}
+
+// ───────── v45.0: 🎉 Konfeti — kazançlı kapanış şovu ─────────
+function fireConfetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let cv = document.getElementById('confettiCanvas');
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.id = 'confettiCanvas';
+    cv.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;';
+    document.body.appendChild(cv);
+  }
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const COLORS = ['#0e7c4a', '#f0b90b', '#e6c85a', '#5b3fa8', '#c9a227'];
+  const parts = Array.from({ length: 90 }, () => ({
+    x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.35,
+    vx: (Math.random() - 0.5) * 9, vy: -Math.random() * 10 - 3,
+    r: Math.random() * 4 + 2, c: COLORS[(Math.random() * COLORS.length) | 0],
+    rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3, life: 1
+  }));
+  const t0 = performance.now();
+  (function anim(now) {
+    const dt = Math.min((now - t0) / 1600, 1);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.28; p.rot += p.vr; p.life = 1 - dt;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(p.life, 0);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+      ctx.restore();
+    });
+    if (dt < 1) requestAnimationFrame(anim); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(t0);
+}
+
 // ───────── v44.0: Monte Carlo Simülasyonu ─────────
 // Geçmiş işlem PnL'lerinden 1000 bootstrap dizilimi üretir; her dizilim için nihai
 // K/Z ve maksimum drawdown hesaplanır. Sonuç: p5/p50/p95 yüzdelik dilimleri +
@@ -6543,7 +7088,7 @@ async function manualSell(coin) {
     const grossPnl = pos.amount * change * leverage;
     const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
 
-    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
+    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
     log(`👆 MANUEL KAPAT (${dir === 'long' ? 'LONG' : 'SHORT'}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
     flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
     state.openPosition = null;
@@ -7766,12 +8311,32 @@ function renderCoinDetail(coin) {
     pressureHtml = `<span class="cd-item">${leanEmoji} Baskı: <b class="${lean}">Alış %${buyPct.toFixed(0)} / Satış %${sellPct.toFixed(0)}</b></span>`;
   }
 
+  // v45.0: Akıllı veri çipleri — CVD akışı (canlı), OI değişimi ve Long/Short oranı
+  let smartHtml = '';
+  try {
+    const cvd = (typeof getCvdStats === 'function') ? getCvdStats(coin, 60) : null;
+    if (cvd) {
+      const cvCol = cvd.ratio > 0.05 ? 'cd-buy' : cvd.ratio < -0.05 ? 'cd-sell' : '';
+      const cvIco = cvd.ratio > 0.05 ? '🌊🟢' : cvd.ratio < -0.05 ? '🌊🔴' : '🌊';
+      smartHtml += `<span class="cd-item">${cvIco} Akış(60s): <b class="${cvCol}">${cvd.ratio>=0?'+':''}${(cvd.ratio*100).toFixed(0)}%</b></span>`;
+    }
+    const pd = posDataCache[coin];
+    if (pd?.oiChangePct !== undefined && pd.oiChangePct !== null) {
+      smartHtml += `<span class="cd-item">📜 OI(15dk): <b style="color:${pd.oiChangePct>=0?'var(--green)':'var(--red)'}">${pd.oiChangePct>=0?'+':''}${pd.oiChangePct.toFixed(2)}%</b></span>`;
+    }
+    if (pd?.lsRatio !== undefined && !isNaN(pd.lsRatio)) {
+      const crowd = pd.lsRatio >= 3 ? ' 🐑!' : pd.lsRatio <= 0.33 ? ' 🐑!' : '';
+      smartHtml += `<span class="cd-item">⚔️ L/S: <b>${pd.lsRatio.toFixed(2)}${crowd}</b></span>`;
+    }
+  } catch(e) {}
+
   el.innerHTML = `
     <span class="cd-item">💵 Hacim(24s): <b>$${fmtVol(d.volume)}</b></span>
     <span class="cd-item">📊 Değişim: <b style="color:${changeColor}">${changeSign}${d.changePct !== undefined ? d.changePct.toFixed(2) : '—'}%</b></span>
     <span class="cd-item">🔼 Y: <b>${d.high !== undefined ? d.high.toLocaleString('en-US') : '—'}</b> 🔽 D: <b>${d.low !== undefined ? d.low.toLocaleString('en-US') : '—'}</b></span>
     <span class="cd-item">🔢 İşlem(24s): <b>${d.count !== undefined ? d.count.toLocaleString('en-US') : '—'}</b></span>
     ${pressureHtml}
+    ${smartHtml}
   `;
   el.title = 'Kaynak: Binance · 3 dk\'da bir güncellenir · Alış/Satış baskısı order book anlık kesitidir, kesin sinyal değildir.';
 
@@ -8122,6 +8687,7 @@ async function coinTick(coin) {
   if (document.getElementById('fundingFilterToggle')?.checked) fetchFunding(cfg.symbol);
   // v41.5: Coin Detay Şeridi — kendi 3dk cache'i var, her tick'te çağırmak spam yaratmaz
   fetchCoinDetail(coin);
+  fetchPositioning(coin); // v45.0: OI + Long/Short oranı (5 dk cache)
 
   const priceEl = document.getElementById('price-' + coin);
   if (priceEl) {
@@ -8157,12 +8723,14 @@ async function coinTick(coin) {
   }
 
   const rawSignals = {};
+  const rawValues = {}; // v45.0: Otopsi için gösterge DEĞERLERİ de fotoğraflanır (sadece yön değil)
   activeList.forEach(id => {
     const def = INDICATOR_DEFS[id];
     let result;
     try { result = def.compute(ctx); } catch(e) { result = { value: '—', signal: 'hold', label: 'BEKLE' }; }
     setIndicator(coin, id, result.value, result.signal, result.label);
     rawSignals[id] = result.signal;
+    rawValues[id] = result.value;
   });
 
   // ─── Manuel Soğuma ve ADX Filtresi ───
@@ -8303,8 +8871,11 @@ async function coinTick(coin) {
     } else if (buyCount >= weightedMinConfirm) {
       // LONG (uzun) pozisyon — ağırlıklı skor yeterli VE trend gate onaylı
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
+      if (cvdEntryBlocked(coin, 'long')) return;   // v45.0: emir akışı sinyali onaylamıyor
+      if (crowdEntryBlocked(coin, 'long')) return; // v45.0: kalabalık aşırı uçta
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
-      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals } };
+      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
+      try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const lvTxt = leverage > 1 ? ` ${leverage}x` : '';
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
@@ -8323,8 +8894,11 @@ async function coinTick(coin) {
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
       // SHORT (kısa) pozisyon — sadece futures simülasyon modunda, trend gate onaylı
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
+      if (cvdEntryBlocked(coin, 'short')) return;   // v45.0: emir akışı sinyali onaylamıyor
+      if (crowdEntryBlocked(coin, 'short')) return; // v45.0: kalabalık aşırı uçta
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
-      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals } };
+      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
+      try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
       const atrTxt = slTp.atrBased ? ` | SL/TP (ATR): -%${(slTp.stopLoss*100).toFixed(2)} / +%${(slTp.takeProfit*100).toFixed(2)}` : '';
@@ -8390,6 +8964,7 @@ async function coinTick(coin) {
     if (trailingOn) {
       if (!pos.trailingArmed && leveragedChange >= trailActivationPct) {
         pos.trailingArmed = true;
+        pos.trailingArmedAt = Date.now(); // v45.0: İşlem Sineması'nda "trailing devreye girdi" anı işaretlenir
         pos.bestPrice = price; // izleme, aktivasyon anındaki fiyattan başlar — gürültüden değil
         const scaleTxt = atrScaleOn && Math.abs(trailScaleMult - 1) > 0.05 ? ` (ATR ölçek ×${trailScaleMult.toFixed(2)})` : '';
         log(`📉 [İz Süren Stop] ${coin} — %${(leveragedChange*100).toFixed(2)} kâra ulaştı, takip aktive edildi (en iyi: ${formatPrice(price)})${scaleTxt}.`, 'system', coin);
@@ -8604,7 +9179,7 @@ async function coinTick(coin) {
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
       const lvTxt = (pos.leverage || 1) > 1 ? ` ${pos.leverage}x` : '';
-      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
+      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
       log(`${pnl >= 0 ? '✅' : '🔴'} ${dirLabel}${lvTxt} KAPANDI (${reason}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
@@ -8794,6 +9369,8 @@ const RISK_CHIP_DEFS = [
   { id: 'timeStopToggle',        icon: '⌛', name: 'Zaman Stopu' },      // v44
   { id: 'atrTrailingScaleToggle',icon: '📐', name: 'ATR Trailing' },     // v44.1
   { id: 'trailingConfirmToggle', icon: '✅', name: 'Trailing Teyit' },   // v44.1
+  { id: 'cvdFilterToggle',       icon: '🌊', name: 'CVD Akış' },         // v45
+  { id: 'crowdFilterToggle',     icon: '🐑', name: 'Kalabalık' },        // v45
 ];
 
 function renderRiskChips() {
@@ -9752,6 +10329,7 @@ function startTicker() {
   // v44.0: WebSocket canlı fiyat akışını başlat — tüm fetchPrice çağrıları otomatik hızlanır.
   wsConnect();
   updateWsBadge();
+  try { renderArena(); } catch(e) {} // v45.0: arena karnesi açılışta görünür
 }
 
 // ───────── Init ─────────
@@ -10464,7 +11042,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
   const change = dir === 'long' ? raw : -raw;
   const grossPnl = pos.amount * change * leverage;
   const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
-  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot);
+  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
   if (setCooldown) { setManualCooldown(coin); try { updateCooldownUI(coin); } catch(e){} }
