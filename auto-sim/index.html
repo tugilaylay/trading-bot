@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.2 TARAMADA AKIŞ + OI + L/S</title>
+<title>TUGAY × QUANT · v45.3 AKIŞ HESABI DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.2 🔍</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.3 🎯</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5234,11 +5234,11 @@ async function enrichScannerPositioning(symbols) {
     if (!document.getElementById('scanPos-' + symbol)) continue; // tablo yeniden çizilmiş olabilir
     let html = '';
     if (e.oiChangePct !== undefined && e.oiChangePct !== null && !isNaN(e.oiChangePct)) {
-      html += `<span style="white-space:nowrap;">📜 <b style="color:${e.oiChangePct>=0?'var(--green)':'var(--red)'}">${e.oiChangePct>=0?'+':''}${e.oiChangePct.toFixed(2)}%</b></span> `;
+      html += `<span style="white-space:nowrap;">📜 OI <b style="color:${e.oiChangePct>=0?'var(--green)':'var(--red)'}">${e.oiChangePct>=0?'+':''}${e.oiChangePct.toFixed(2)}%</b></span> `;
     }
     if (e.lsRatio !== undefined && !isNaN(e.lsRatio)) {
       const crowd = e.lsRatio >= 3 || e.lsRatio <= 0.33 ? ' 🐑!' : '';
-      html += `<span style="white-space:nowrap;">⚔️ <b>${e.lsRatio.toFixed(2)}${crowd}</b></span>`;
+      html += `<span style="white-space:nowrap;">⚔️ L/S <b>${e.lsRatio.toFixed(2)}${crowd}</b></span>`;
     }
     el.innerHTML = html || '<span style="opacity:0.55;">📜 Vadeli yok</span>';
     await new Promise(res => setTimeout(res, 150)); // istekler arası nefes
@@ -9890,13 +9890,17 @@ async function runScanner() {
       // "taker alım hacmi"ni (k[9]) ve toplam hacmini (k[7]) içeriyor. Son 3 KAPANMIŞ mumun
       // agresif alım oranı: +%100 = tüm hacim agresif alıcıdan, -%100 = tümü satıcıdan.
       // WS aboneliği gerektirmez — coin aktif edilmeden, tarama anında görünür.
+      // v45.3 FIX: Binance kline dizisinde 9. sütun taker alımın COİN ADEDİ, 10. sütun ise
+      // DOLAR (quote) karşılığıdır. Yanlışlıkla 9'u okuyup 7'deki dolar hacmiyle oranlamıştım —
+      // elma ile armut. Ucuz coinlerde (ARB 0.09$) adet >> dolar olduğu için oran +%960 gibi
+      // imkânsız değerlere şişiyor, pahalılarda (BTC) −%100'e yapışıyordu. Doğrusu: 10 / 7.
       let flowRatio = null;
       try {
         let tb = 0, tv = 0;
         for (let i = klines.length - 4; i < klines.length - 1; i++) {
-          tb += parseFloat(klines[i][9]); tv += parseFloat(klines[i][7]);
+          tb += parseFloat(klines[i][10]); tv += parseFloat(klines[i][7]);
         }
-        if (tv > 1000) flowRatio = (2 * tb - tv) / tv; // min 1000$ hacim şartı
+        if (tv > 1000) flowRatio = Math.max(-1, Math.min(1, (2 * tb - tv) / tv)); // güvenlik kelepçesi
       } catch(e) {}
 
       let buyScore = 0, sellScore = 0;
@@ -9947,7 +9951,7 @@ async function runScanner() {
     if (flowRatio !== null) {
       const fCol = flowRatio > 0.05 ? 'var(--green)' : flowRatio < -0.05 ? 'var(--red)' : 'var(--muted)';
       const fIco = flowRatio > 0.05 ? '🌊🟢' : flowRatio < -0.05 ? '🌊🔴' : '🌊';
-      flowChip = `<span style="white-space:nowrap;">${fIco} <b style="color:${fCol}">${flowRatio>=0?'+':''}${(flowRatio*100).toFixed(0)}%</b></span>`;
+      flowChip = `<span style="white-space:nowrap;">${fIco} Akış <b style="color:${fCol}">${flowRatio>=0?'+':''}${(flowRatio*100).toFixed(0)}%</b></span>`;
     }
     const smartLine = `<div style="font-size:9.5px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;">${flowChip}<span id="scanPos-${coinDef.symbol}"></span></div>`;
     // v43.10: satıra dokununca o coin'in seçili mum aralığındaki grafiği aşağıda açılır
