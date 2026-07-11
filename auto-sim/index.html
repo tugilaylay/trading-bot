@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.1 SİNEMA COIN KİMLİĞİ DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v45.2 TARAMADA AKIŞ + OI + L/S</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.1 🎬</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.2 🔍</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5158,6 +5158,16 @@ function cvdReconcileSubscriptions() {
 }
 setInterval(cvdReconcileSubscriptions, 10000);
 
+// v45.2: Akış çipi 3 dk'lık şerit önbelleğine takılıp bayatlamasın — çalışan coinlerin
+// detay şeridi 15 sn'de bir yeniden çizilir (sadece DOM, ağ isteği yok).
+setInterval(() => {
+  try {
+    Object.keys(coinStates || {}).forEach(coin => {
+      if (coinStates[coin]?.botRunning) renderCoinDetail(coin);
+    });
+  } catch(e) {}
+}, 15000);
+
 // Giriş filtresi: sinyal yönü ile gerçek para akışı çelişiyorsa girme.
 // LONG sinyali + belirgin negatif akış (oran < -0.15) = yükseliş boş, engelle. Tersi SHORT için.
 function cvdEntryBlocked(coin, dir) {
@@ -5177,29 +5187,62 @@ function cvdEntryBlocked(coin, dir) {
 // global Long/Short hesap oranı. 5 dk cache, sadece çalışan coinler için çekilir.
 // Erişilemezse (CORS/ağ) sessizce boş kalır — filtre yalnızca veri varken çalışır.
 const posDataCache = {};
+// v45.2: Sembol bazlı çekirdek — hem aktif coin panelleri hem TARAMA aynı önbelleği paylaşır.
+const posSymbolCache = {};
+async function fetchPositioningSymbol(symbol) {
+  const now = Date.now();
+  const c = posSymbolCache[symbol];
+  if (c && now - c.t < 5 * 60 * 1000) return c;
+  const entry = posSymbolCache[symbol] = posSymbolCache[symbol] || {};
+  entry.t = now; // başarısız olsa da 5 dk denemez — spam koruması
+  try {
+    const r = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=5m&limit=1`);
+    const d = await r.json();
+    if (Array.isArray(d) && d[0]) entry.lsRatio = parseFloat(d[0].longShortRatio);
+  } catch(e) {}
+  try {
+    const r = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${symbol}&period=15m&limit=2`);
+    const d = await r.json();
+    if (Array.isArray(d) && d.length >= 2) {
+      const prev = parseFloat(d[0].sumOpenInterestValue), cur = parseFloat(d[1].sumOpenInterestValue);
+      entry.oiChangePct = prev > 0 ? (cur - prev) / prev * 100 : null;
+      entry.oiValue = cur;
+    }
+  } catch(e) {}
+  return entry;
+}
 async function fetchPositioning(coin) {
   const cfg = COIN_CONFIG[coin];
   if (!cfg) return;
   const now = Date.now();
   const c = posDataCache[coin];
   if (c && now - c.t < 5 * 60 * 1000) return;
-  posDataCache[coin] = posDataCache[coin] || {};
-  posDataCache[coin].t = now; // başarısız olsa da 5 dk denemez — spam koruması
-  try {
-    const r = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${cfg.symbol}&period=5m&limit=1`);
-    const d = await r.json();
-    if (Array.isArray(d) && d[0]) posDataCache[coin].lsRatio = parseFloat(d[0].longShortRatio);
-  } catch(e) {}
-  try {
-    const r = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${cfg.symbol}&period=15m&limit=2`);
-    const d = await r.json();
-    if (Array.isArray(d) && d.length >= 2) {
-      const prev = parseFloat(d[0].sumOpenInterestValue), cur = parseFloat(d[1].sumOpenInterestValue);
-      posDataCache[coin].oiChangePct = prev > 0 ? (cur - prev) / prev * 100 : null;
-      posDataCache[coin].oiValue = cur;
-    }
-  } catch(e) {}
+  const e = await fetchPositioningSymbol(cfg.symbol);
+  posDataCache[coin] = { t: now, lsRatio: e.lsRatio, oiChangePct: e.oiChangePct, oiValue: e.oiValue };
   try { renderCoinDetail(coin); } catch(e) {}
+}
+
+// v45.2: Tarama sonuçlarını OI + L/S ile zenginleştir — "Bu Sinyali Uygula"ya basmadan ÖNCE
+// coinin pozisyonlanmasını gör. Rate-limit dostu: sadece verilen semboller, 150ms arayla,
+// 5 dk önbellekli. Vadeli piyasası olmayan coinlerde dürüstçe "Vadeli yok" yazar.
+async function enrichScannerPositioning(symbols) {
+  for (const symbol of symbols) {
+    const el = document.getElementById('scanPos-' + symbol);
+    if (!el) continue;
+    el.textContent = '⏳';
+    const e = await fetchPositioningSymbol(symbol);
+    if (!document.getElementById('scanPos-' + symbol)) continue; // tablo yeniden çizilmiş olabilir
+    let html = '';
+    if (e.oiChangePct !== undefined && e.oiChangePct !== null && !isNaN(e.oiChangePct)) {
+      html += `<span style="white-space:nowrap;">📜 <b style="color:${e.oiChangePct>=0?'var(--green)':'var(--red)'}">${e.oiChangePct>=0?'+':''}${e.oiChangePct.toFixed(2)}%</b></span> `;
+    }
+    if (e.lsRatio !== undefined && !isNaN(e.lsRatio)) {
+      const crowd = e.lsRatio >= 3 || e.lsRatio <= 0.33 ? ' 🐑!' : '';
+      html += `<span style="white-space:nowrap;">⚔️ <b>${e.lsRatio.toFixed(2)}${crowd}</b></span>`;
+    }
+    el.innerHTML = html || '<span style="opacity:0.55;">📜 Vadeli yok</span>';
+    await new Promise(res => setTimeout(res, 150)); // istekler arası nefes
+  }
 }
 
 // Kalabalık filtresi: L/S oranı aşırı uçtaysa kalabalıkla AYNI yöne girme.
@@ -9842,6 +9885,20 @@ async function runScanner() {
       });
 
       const regimeInfo = detectMarketRegime(ctx);
+
+      // v45.2: Akış (CVD vekili) — SIFIR ek istekle. Binance kline verisi zaten her mumun
+      // "taker alım hacmi"ni (k[9]) ve toplam hacmini (k[7]) içeriyor. Son 3 KAPANMIŞ mumun
+      // agresif alım oranı: +%100 = tüm hacim agresif alıcıdan, -%100 = tümü satıcıdan.
+      // WS aboneliği gerektirmez — coin aktif edilmeden, tarama anında görünür.
+      let flowRatio = null;
+      try {
+        let tb = 0, tv = 0;
+        for (let i = klines.length - 4; i < klines.length - 1; i++) {
+          tb += parseFloat(klines[i][9]); tv += parseFloat(klines[i][7]);
+        }
+        if (tv > 1000) flowRatio = (2 * tb - tv) / tv; // min 1000$ hacim şartı
+      } catch(e) {}
+
       let buyScore = 0, sellScore = 0;
       if (regimeFilterOn) {
         const weighted = applyRegimeWeighting(rawSignals, regimeInfo.regime);
@@ -9856,7 +9913,7 @@ async function runScanner() {
       }
 
       return {
-        coinDef, price, buyScore, sellScore, regimeInfo,
+        coinDef, price, buyScore, sellScore, regimeInfo, flowRatio,
         netScore: buyScore - sellScore,
         dominantSignal: buyScore > sellScore ? 'buy' : sellScore > buyScore ? 'sell' : 'hold'
       };
@@ -9878,20 +9935,28 @@ async function runScanner() {
   }
 
   const rows = results.map(res => {
-    const { coinDef, price, buyScore, sellScore, dominantSignal, regimeInfo } = res;
+    const { coinDef, price, buyScore, sellScore, dominantSignal, regimeInfo, flowRatio } = res;
     const rowCls = dominantSignal === 'buy' && buyScore >= minConfirm ? 'scan-buy' : dominantSignal === 'sell' && sellScore >= minConfirm ? 'scan-sell' : '';
     const sigLabel = dominantSignal === 'buy' ? `🟢 AL ${buyScore.toFixed(1)}/${activeList.length}` : dominantSignal === 'sell' ? `🔴 SAT ${sellScore.toFixed(1)}/${activeList.length}` : '— Nötr';
     const strongEnough = (dominantSignal === 'buy' && buyScore >= minConfirm) || (dominantSignal === 'sell' && sellScore >= minConfirm);
     const applyBtn = strongEnough
       ? `<button class="btn-apply-signal" onclick="event.stopPropagation(); applyScannerSignal('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">Bu Sinyali Uygula</button>`
       : `<span style="color:var(--muted);font-size:10.5px">Yetersiz onay</span>`;
+    // v45.2: Akıllı veri çipleri — Akış hemen (kline'dan bedava), OI/LS güçlü sinyallilere async gelir
+    let flowChip = '';
+    if (flowRatio !== null) {
+      const fCol = flowRatio > 0.05 ? 'var(--green)' : flowRatio < -0.05 ? 'var(--red)' : 'var(--muted)';
+      const fIco = flowRatio > 0.05 ? '🌊🟢' : flowRatio < -0.05 ? '🌊🔴' : '🌊';
+      flowChip = `<span style="white-space:nowrap;">${fIco} <b style="color:${fCol}">${flowRatio>=0?'+':''}${(flowRatio*100).toFixed(0)}%</b></span>`;
+    }
+    const smartLine = `<div style="font-size:9.5px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;">${flowChip}<span id="scanPos-${coinDef.symbol}"></span></div>`;
     // v43.10: satıra dokununca o coin'in seçili mum aralığındaki grafiği aşağıda açılır
     return `
       <tr class="${rowCls} scan-row-clickable" data-symbol="${coinDef.symbol}" onclick="toggleScanCoinDetail('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">
         <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:18px;height:18px;border-radius:50%;background:${coinDef.color};display:inline-block;"></span>${coinDef.short}<span class="scan-row-chevron">▾</span></span></td>
         <td>${price.toLocaleString('tr-TR',{maximumFractionDigits:4})}</td>
         <td><span class="regime-badge ${regimeInfo.regime}" style="margin-left:0">${regimeInfo.label}</span></td>
-        <td style="font-weight:700">${sigLabel}</td>
+        <td style="font-weight:700">${sigLabel}${smartLine}</td>
         <td>${applyBtn}</td>
       </tr>
       <tr class="scan-detail-row" id="scanDetailRow-${coinDef.symbol}" style="display:none" data-loaded="0">
@@ -9904,8 +9969,14 @@ async function runScanner() {
       <thead><tr><th>Coin</th><th>Fiyat</th><th>Piyasa Rejimi</th><th>Sinyal Gücü</th><th>İşlem</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="backtest-note">📌 Gerçek Binance ana ağ verisiyle (${iv} mum) hesaplandı. "Bu Sinyali Uygula" sadece o coini aktif coin listesine ekler ve manuel AL yapmanı önerir — bot kendi başına işlem açmaz, kontrol sende kalır.</div>
+    <div class="backtest-note">📌 Gerçek Binance ana ağ verisiyle (${iv} mum) hesaplandı. "Bu Sinyali Uygula" sadece o coini aktif coin listesine ekler ve manuel AL yapmanı önerir — bot kendi başına işlem açmaz, kontrol sende kalır.<br>🌊 Akış = son 3 mumun agresif alım oranı (kline'dan, anında) · 📜 OI(15dk) ve ⚔️ L/S ilk 15 sonuca sırayla yüklenir (5 dk önbellek).</div>
   `;
+
+  // v45.2: OI + L/S zenginleştirmesi — önce güçlü sinyalliler, sonra sıradakiler; toplam ilk 15.
+  try {
+    const enrichList = [...results.filter(r => (r.dominantSignal === 'buy' && r.buyScore >= minConfirm) || (r.dominantSignal === 'sell' && r.sellScore >= minConfirm)), ...results].map(r => r.coinDef.symbol);
+    enrichScannerPositioning([...new Set(enrichList)].slice(0, 15));
+  } catch(e) {}
 
   const top = results[0];
   log(`✅ Tarama tamamlandı. En güçlü: ${top.coinDef.short} (${top.dominantSignal === 'buy' ? 'AL' : top.dominantSignal === 'sell' ? 'SAT' : 'Nötr'})`, 'system');
