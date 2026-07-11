@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.3 AKIŞ HESABI DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v45.4 EKONOMİ MODU — SOĞUK TELEFON</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.3 🎯</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.4 🍃</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -4260,6 +4260,15 @@ function log(msg, type = 'info', coin = null) {
   }
   const body = document.getElementById('logBody');
   const now = new Date().toLocaleTimeString('tr-TR');
+  // v45.4 Ekonomi Modu: Arka plandayken her log satırı için DOM oluşturmak saatler içinde
+  // ciddi CPU/RAM ısısı üretir. Gizliyken satırlar hafif bir tampona yazılır (son 80 tanesi),
+  // ekrana dönünce tek seferde basılır — hiçbir kayıt kaybolmaz, telefon ısınmaz.
+  if (document.hidden) {
+    window.__ecoLogBuf = window.__ecoLogBuf || [];
+    window.__ecoLogBuf.push({ now, msg, type, coin });
+    if (window.__ecoLogBuf.length > 80) window.__ecoLogBuf.shift();
+    return;
+  }
   const line = document.createElement('div');
   line.className = 'log-line';
   let tag = '';
@@ -5146,9 +5155,15 @@ function getCvdStats(coin, winSec = 60) {
 function cvdReconcileSubscriptions() {
   if (!wsLive.conn || wsLive.conn.readyState !== WebSocket.OPEN) return;
   const desired = new Set();
-  Object.keys(coinStates || {}).forEach(coin => {
-    if (coinStates[coin]?.botRunning && COIN_CONFIG[coin]) desired.add(COIN_CONFIG[coin].symbol.toLowerCase() + '@aggTrade');
-  });
+  // v45.4 Ekonomi Modu: aggTrade akışı (BTC'de saniyede onlarca mesaj) arka planda telefonun
+  // en büyük ısı kaynağıdır. Ekran kapalıyken TÜM aggTrade abonelikleri bırakılır — CVD
+  // filtresi verisiz kalınca kendini güvenle devre dışı bırakır (kanıt yoksa engel yok
+  // prensibi zaten vardı). Ekrana dönüşte abonelikler saniyeler içinde geri kurulur.
+  if (!document.hidden) {
+    Object.keys(coinStates || {}).forEach(coin => {
+      if (coinStates[coin]?.botRunning && COIN_CONFIG[coin]) desired.add(COIN_CONFIG[coin].symbol.toLowerCase() + '@aggTrade');
+    });
+  }
   const toSub = [...desired].filter(x => !cvdEngine.subscribed.has(x));
   const toUnsub = [...cvdEngine.subscribed].filter(x => !desired.has(x));
   try {
@@ -5161,6 +5176,7 @@ setInterval(cvdReconcileSubscriptions, 10000);
 // v45.2: Akış çipi 3 dk'lık şerit önbelleğine takılıp bayatlamasın — çalışan coinlerin
 // detay şeridi 15 sn'de bir yeniden çizilir (sadece DOM, ağ isteği yok).
 setInterval(() => {
+  if (document.hidden) return; // v45.4 Ekonomi Modu
   try {
     Object.keys(coinStates || {}).forEach(coin => {
       if (coinStates[coin]?.botRunning) renderCoinDetail(coin);
@@ -5323,8 +5339,10 @@ function fastLiveTick() {
     const w = wsLive.prices[cfg.symbol];
     if (!w || (Date.now() - w.t) > 3000) return; // taze WS verisi yoksa dokunma, normal döngü devam eder
 
+    const eco = document.hidden; // v45.4 Ekonomi Modu: arka plandayken görsel iş SIFIR, risk bekçisi TAM
+
     // ── Görsel: fiyat rozeti anlık tazelenir (ağ isteği yok) ──
-    const priceEl = document.getElementById('price-' + coin);
+    const priceEl = eco ? null : document.getElementById('price-' + coin);
     if (priceEl) {
       const prevPrice = state.lastTickPrice;
       priceEl.textContent = formatPrice(w.p);
@@ -5356,7 +5374,7 @@ function fastLiveTick() {
     if (!pos.pnlHist) pos.pnlHist = [];
     pos.pnlHist.push(+(leveragedChange * 100).toFixed(3));
     if (pos.pnlHist.length > 240) pos.pnlHist.shift();
-    renderPositionCard(coin, state, w.p);
+    if (!eco) renderPositionCard(coin, state, w.p);
 
     // ── Acil Risk Bekçisi: likidasyon/acil-çıkış/SL eşiğine YAKLAŞTIYSA coinTick'i erken tetikle ──
     // Normal koşullarda bu blok hiç çalışmaz (eşiklerin çok altında kalınır) — REST maliyeti
@@ -5411,6 +5429,7 @@ function updateScoreBar(coin, buyCount, sellCount, minConfirm, totalIndicators) 
 }
 
 function renderPositionCard(coin, state, currentPrice) {
+  if (document.hidden) return; // v45.4 Ekonomi Modu: arka planda görsel render yok — mantık etkilenmez
   saveOpenPositions();
   updateHeroBadges(); // v37.0: pozisyon açılır/kapanırken Açık Risk rozeti anında güncellensin
   const el = document.getElementById('position-' + coin);
@@ -5580,6 +5599,7 @@ function renderPositionCard(coin, state, currentPrice) {
 // Pozisyon açıldığından beri kaldıraçlı K/Z yolculuğunu çizer: sıfır çizgisi (kesikli),
 // SL/TP referans bantları ve mevcut noktaya göre yeşil/kırmızı dolgu. HiDPI destekli.
 function drawPosSparkline(coin, pos, stopLoss, takeProfit) {
+  if (document.hidden) return; // v45.4 Ekonomi Modu
   const cv = document.getElementById('posSpark-' + coin);
   if (!cv || !pos || !pos.pnlHist || pos.pnlHist.length < 2) return;
   const dpr = window.devicePixelRatio || 1;
@@ -5997,6 +6017,7 @@ function resetHistory() {
 
 // ───────── Chart drawing (canvas, no deps) ─────────
 function drawChart() {
+  if (document.hidden) return; // v45.4 Ekonomi Modu: arka planda görsel render yok — mantık etkilenmez
   const canvas = document.getElementById('pnlChart');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -6978,6 +6999,7 @@ function drawCoinSparkline(coin, data) {
 // Her tick'te gelen gerçek Binance mumlarıyla çizilir. Pozisyon açıksa Giriş/SL/TP
 // çizgileri gösterilir, son fiyat noktası nabız gibi parlar. Kline yoksa çizgi grafiğe düşer.
 function drawCoinLiveChart(coin, klines, livePrice, state) {
+  if (document.hidden) return; // v45.4 Ekonomi Modu: arka planda görsel render yok — mantık etkilenmez
   const canvas = document.getElementById('spark-' + coin);
   if (!canvas) return;
   if (!klines || klines.length < 5) {
@@ -9385,9 +9407,33 @@ document.addEventListener('visibilitychange', async () => {
   if (document.hidden) {
     const running = Object.values(coinStates).some(s => s?.botRunning);
     if (running) {
-      log('⚠️ [Arka Plan] Sekme/ekran arka plana geçti. Tarayıcı JS\'yi yavaşlatabilir — fiyat takibi gecikmeli olabilir. Bot çalışırken uygulamayı açık tutun!', 'warn');
+      log('🍃 [Ekonomi Modu] Ekran arka plana geçti — görsel çizimler, log DOM yazımı ve CVD akış dinlemesi durduruldu; SL/TP/trailing/risk bekçisi TAM hızda çalışmaya devam ediyor. Telefon ısınması ciddi azalır. Not: tarayıcı yine de uzun süre sonra JS\'yi yavaşlatabilir.', 'system');
+      try { cvdReconcileSubscriptions(); } catch(e) {} // aggTrade aboneliklerini hemen bırak
     }
   } else {
+    // v45.4: Ekrana dönüş — arka planda biriken loglar tek seferde basılır
+    try {
+      const buf = window.__ecoLogBuf || [];
+      if (buf.length) {
+        const body = document.getElementById('logBody');
+        buf.forEach(e => {
+          const line = document.createElement('div');
+          line.className = 'log-line';
+          let tag = '';
+          if (e.coin && COIN_CONFIG[e.coin]) {
+            const c = COIN_CONFIG[e.coin];
+            tag = `<span class="log-tag" style="background:${c.color}33;color:${c.color}">${e.coin}</span>`;
+          }
+          line.innerHTML = `<span class="log-time">${e.now}</span><span class="log-msg ${e.type}">${tag}${e.msg}</span>`;
+          body.appendChild(line);
+        });
+        body.scrollTop = body.scrollHeight;
+        window.__ecoLogBuf = [];
+        log(`🍃 [Ekonomi Modu] Ekrana dönüldü — arka planda biriken ${buf.length} log satırı yukarıya basıldı, görseller ve CVD akışı yeniden başlıyor.`, 'system');
+      }
+    } catch(e) {}
+    try { cvdReconcileSubscriptions(); } catch(e) {} // aggTrade aboneliklerini hemen geri kur
+    try { Object.keys(coinStates || {}).forEach(c => { if (coinStates[c]?.botRunning) renderCoinDetail(c); }); } catch(e) {}
     // Ekrana geri döndü — Wake Lock kaybedilmişse yeniden al
     const running = Object.values(coinStates).some(s => s?.botRunning);
     if (running && !wakeLock) {
