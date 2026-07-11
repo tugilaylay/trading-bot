@@ -458,10 +458,9 @@
   }
 
   /* ───────── Indicator selector grid ───────── */
-  .indicator-selector-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 8px;
-  }
-  @media (max-width: 760px) { .indicator-selector-grid { grid-template-columns: repeat(2, 1fr); } }
+  /* v45.2 FIX: Konteyner artık aile bölümlerini alt alta dizer (eski 5 sütunlu grid
+     aile kutularını yan yana koyup sayfayı sağa taşırıyordu). Kart grid'i .ind-grid'de. */
+  .indicator-selector-grid { display: block; }
   .ind-select-item {
     display: flex; align-items: center; gap: 8px;
     background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
@@ -482,6 +481,8 @@
   .ind-fam-count.over { color: var(--yellow); font-weight: 700; }
   .ind-fam-desc { font-size: 10px; color: var(--muted); flex-basis: 100%; line-height: 1.5; }
   .ind-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .ind-grid > * { min-width: 0; }
+  .ind-select-item .ind-select-label { overflow-wrap: anywhere; }
   @media (max-width: 760px) { .ind-grid { grid-template-columns: 1fr 1fr; } }
   .ind-tier-badge {
     font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 1px 6px;
