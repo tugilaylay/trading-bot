@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.4 EKONOMİ MODU — SOĞUK TELEFON</title>
+<title>TUGAY × QUANT · v45.5 IRK KOŞULU (RACE) DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,7 +1174,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.4 🍃</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.5 🔒</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -8679,6 +8679,24 @@ async function coinTick(coin) {
   const state = coinStates[coin];
   if (!state || !state.botRunning) return;
 
+  // ── v45.5 FIX: Aynı coin için üst üste binen coinTick çağrıları — ırk koşulu (race) ──
+  // coinTick, ağdan veri çekerken (await fetchKlines/fetchPrice) bir süre bekliyor. Normal
+  // zamanlanmış tik ile v44.3'teki Acil Risk Bekçisi'nin erken tetiklediği tik AYNI ANDA
+  // çakışabiliyordu: biri pozisyonu kapatıp yenisini açarken, öteki hâlâ eski (artık geçersiz)
+  // pozisyon referansıyla devam edebiliyordu — "işlem geçmişinde kapanış var ama kart hâlâ
+  // eski pozisyonla açık duruyor" tuhaflığının kaynağı tam olarak buydu. Artık her coin için
+  // aynı anda sadece TEK bir coinTick çalışabilir; çakışan ikinci çağrı sessizce atlanır
+  // (veri kaybı yok — bir sonraki tik zaten birkaç saniye içinde gelecek).
+  if (state.tickBusy) return;
+  state.tickBusy = true;
+  try {
+    await coinTickInner(coin, state);
+  } finally {
+    state.tickBusy = false;
+  }
+}
+
+async function coinTickInner(coin, state) {
   const cfg = COIN_CONFIG[coin];
   const tradeAmount = getEffectiveSetting(coin, 'tradeAmount', false);
   const takeProfit = getEffectiveSetting(coin, 'takeProfit', true);
