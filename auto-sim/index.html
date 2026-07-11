@@ -474,6 +474,42 @@
   .ind-count-note { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; }
   .ind-count-note b { color: var(--accent); }
 
+  /* ── v45.2: Aile bazlı gruplu gösterge seçici ── */
+  .ind-fam-section { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; background: rgba(23,23,15,0.03); }
+  .ind-fam-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .ind-fam-title { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; }
+  .ind-fam-count { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .ind-fam-count.over { color: var(--yellow); font-weight: 700; }
+  .ind-fam-desc { font-size: 10px; color: var(--muted); flex-basis: 100%; line-height: 1.5; }
+  .ind-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  @media (max-width: 760px) { .ind-grid { grid-template-columns: 1fr 1fr; } }
+  .ind-tier-badge {
+    font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 1px 6px;
+    border-radius: 999px; margin-left: 6px; vertical-align: middle; white-space: nowrap;
+  }
+  .ind-tier-badge.t1 { background: rgba(184,134,11,0.16); color: var(--accent); border: 1px solid rgba(184,134,11,0.4); }
+  .ind-tier-badge.t2 { background: rgba(14,124,74,0.12); color: var(--green); border: 1px solid rgba(14,124,74,0.35); }
+  .ind-tier-badge.t3 { background: rgba(120,120,120,0.12); color: var(--muted); border: 1px solid var(--border); }
+  .ind-stars { font-size: 9px; letter-spacing: 1px; margin-left: 5px; vertical-align: middle; }
+  .ind-select-item.redundant { border-color: rgba(196,150,47,0.65); box-shadow: 0 0 12px rgba(196,150,47,0.18); }
+  .ind-redu-tag { font-size: 8.5px; color: var(--yellow); display: block; margin-top: 2px; }
+
+  /* Set Sağlığı paneli */
+  .set-health {
+    margin-top: 12px; border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px 15px; background: linear-gradient(90deg, rgba(184,134,11,0.05), rgba(91,63,168,0.05));
+    font-size: 11px; line-height: 1.7; text-align: left;
+  }
+  .set-health .sh-title { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .set-health .sh-verdict { font-family: var(--mono); font-size: 10.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+  .sh-verdict.good { background: rgba(14,124,74,0.14); color: var(--green); border: 1px solid rgba(14,124,74,0.4); }
+  .sh-verdict.mid  { background: rgba(196,150,47,0.14); color: var(--yellow); border: 1px solid rgba(196,150,47,0.4); }
+  .sh-verdict.bad  { background: rgba(196,58,47,0.14); color: var(--red); border: 1px solid rgba(196,58,47,0.4); }
+  .set-health .sh-row { color: var(--muted); }
+  .set-health .sh-row b { color: var(--text); }
+  .set-health .sh-warn { color: var(--yellow); }
+  .set-health .sh-err { color: var(--red); }
+
   /* Regime filter toggle switch */
   .regime-toggle-switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
   .regime-toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -1726,13 +1762,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <button class="ind-preset-btn" style="border-color:rgba(255,165,0,0.5);" onclick="applyIndicatorPreset('harmanlanmis')">🎯 Harmanlanmış <small style="color:orange;">v41.9 YENİ</small><small>Trend + Güç + Momentum + Kurumsal + Divergence — hiç tekrar yok</small></button>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
-        💡 <b>Aile renkleri:</b>
-        <span class="ind-fam-dot" style="background:#B8860B;"></span>Trend ·
-        <span class="ind-fam-dot" style="background:#C98A04;"></span>Momentum ·
-        <span class="ind-fam-dot" style="background:#0E7C4A;"></span>Hacim ·
-        <span class="ind-fam-dot" style="background:#5B3FA8;"></span>Volatilite ·
-        <span class="ind-fam-dot" style="background:#ff6b9d;"></span>Divergence
-        — Aynı aileden 3+ gösterge seçmek aynı sinyali çoğaltır (sahte güç). En verimli set: <b>her aileden 1-2 tane</b>.
+        💡 <b>Nasıl okunur (v45.2):</b> Göstergeler artık <b>6 aile</b> halinde gruplu. Her kartta:
+        <b>oy ağırlığı rozeti</b> (2.0x trend yönü · 1.0x onay · 0.5x osilatör),
+        <b>yıldız puanı</b> (★★★ çekirdek — ★ ikizinin kopyası) ve seçince beliren <b>⚠ çakışma uyarısı</b> var.
+        <br>📏 <b>Altın kural:</b> Çok gösterge ≠ daha iyi. İdeal set <b>5-7 gösterge</b>, minimum <b>3</b>.
+        Trend ailesinden en az 1 şart, aynı aileden en fazla 2. Aşağıdaki <b>🩺 Set Sağlığı</b> paneli seçimini anlık puanlar.
       </div>
 
       <div class="indicator-selector-grid" id="indicatorSelectorGrid"></div>
@@ -4027,6 +4061,55 @@ const INDICATOR_FAMILY = {
 const FAMILY_COLORS = { trend: '#B8860B', strength: '#A67C00', momentum: '#C98A04', volume: '#0E7C4A', volatility: '#5B3FA8', divergence: '#ff6b9d' };
 const FAMILY_NAMES  = { trend: 'Trend', strength: 'Güç', momentum: 'Momentum', volume: 'Hacim', volatility: 'Volatilite', divergence: 'Divergence' };
 
+// ── v45.2: Gösterge sınıflandırma metadatası ──
+// rating: bu bot mimarisinde (trend-takipçi, tier ağırlıklı oylama) gerçek katma değeri.
+//   3⭐ = çekirdek, mutlaka değerlendir · 2⭐ = duruma göre iyi tamamlayıcı · 1⭐ = başka bir göstergenin kopyası / zayıf
+// redundantWith: birlikte seçilince "sahte teyit" üreten yakın ikizler.
+const FAMILY_ORDER = ['trend','strength','momentum','volume','volatility','divergence'];
+const FAMILY_DESC = {
+  trend: 'Yön tayfası — botun omurgası. Buradan EN AZ 1 gösterge şart (2.0x oy ağırlığı). 2 taneden fazlası gereksiz tekrar.',
+  strength: 'Trend var mı yok mu? Yön vermez, filtre görevi görür. ADX zaten arka planda da çalışır ama seçili olması oylamaya güç katar.',
+  momentum: 'Aşırı alım/satım ve hız. Tek başına yanıltır (0.5x ağırlıkla oynar), trend göstergesinin yanında iyi zamanlayıcıdır. 1-2 tane yeter.',
+  volume: 'Para gerçekten giriyor mu? Mum verisinden bağımsız teyit sağlar — en az 1 tane önerilir.',
+  volatility: 'Bant/kanal kırılımları. Kırılım stratejisi oynamıyorsan opsiyonel; Bollinger ile Keltner aynı işi yapar, ikisini birden seçme.',
+  divergence: 'Fiyat-gösterge uyuşmazlığı: dönüş erken uyarısı. Bonus katman, 1 tane yeterli.'
+};
+const IND_META = {
+  supertrend: { rating: 3, redundantWith: ['psar'],       note: 'En net trend yönü sinyali — çekirdek' },
+  ematrend:   { rating: 3, redundantWith: ['macross'],    note: 'Büyük resim (EMA50/200) — Trend Gate filtresi buna bağlı' },
+  macd:       { rating: 3, redundantWith: [],             note: 'Trend + momentum köprüsü, evrensel' },
+  ichimoku:   { rating: 2, redundantWith: ['supertrend'], note: 'Yavaş ama isabetli; 4H+ grafiklerde parlar' },
+  psar:       { rating: 2, redundantWith: ['supertrend'], note: 'Supertrend ile neredeyse aynı mantık — birini seç' },
+  macross:    { rating: 2, redundantWith: ['ematrend'],   note: 'EMA9/21 kesişimi — EMA Trend\'in hızlı ikizi' },
+  adx:        { rating: 3, redundantWith: [],             note: 'Trend gücü filtresi — yatay piyasada seni korur' },
+  rsi:        { rating: 2, redundantWith: ['stochrsi','mfi','williamsr'], note: 'Klasik zamanlayıcı; osilatör ailesinden 1 tane yeter' },
+  stochrsi:   { rating: 1, redundantWith: ['rsi','williamsr'], note: 'RSI\'ın daha gürültülü türevi — RSI varsa gereksiz' },
+  cci:        { rating: 1, redundantWith: ['rsi','williamsr'], note: 'RSI ile yüksek korelasyon, ek bilgi az' },
+  williamsr:  { rating: 1, redundantWith: ['stochrsi','rsi'], note: 'StochRSI ile neredeyse birebir aynı sinyal' },
+  vol:        { rating: 1, redundantWith: ['obv','cmf'],  note: 'Ham hacim oranı — CMF/OBV daha akıllı versiyonları' },
+  obv:        { rating: 2, redundantWith: ['cmf','vol'],  note: 'Hacim akış trendi — CMF ile birini seç' },
+  cmf:        { rating: 3, redundantWith: ['obv','vol'],  note: 'Para akışının en rafine hali — hacim ailesinin yıldızı' },
+  vwap:       { rating: 3, redundantWith: [],             note: 'Kurumsal referans fiyat — bağımsız bilgi kanalı' },
+  mfi:        { rating: 2, redundantWith: ['rsi'],        note: 'Hacimli RSI — RSI yerine geçebilir, yanına değil' },
+  boll:       { rating: 2, redundantWith: ['keltner'],    note: 'Bant klasiği — Keltner ile birini seç' },
+  keltner:    { rating: 2, redundantWith: ['boll'],       note: 'ATR bazlı bant — Bollinger\'dan daha az sahte kırılım' },
+  donchian:   { rating: 2, redundantWith: [],             note: 'Turtle kırılımı — kanal stratejisinde çekirdek' },
+  DIV_RSI:    { rating: 3, redundantWith: ['DIV_MACD'],   note: 'Erken dönüş uyarısı — divergence\'tan birini seç' },
+  DIV_MACD:   { rating: 2, redundantWith: ['DIV_RSI'],    note: 'RSI divergence ile aynı görev — birini seç' }
+};
+function getRedundancyIssues() {
+  const active = getActiveIndicatorList();
+  const seen = new Set(); const issues = [];
+  active.forEach(a => (IND_META[a]?.redundantWith || []).forEach(b => {
+    if (!active.includes(b)) return;
+    const key = [a, b].sort().join('|');
+    if (seen.has(key)) return;
+    seen.add(key);
+    issues.push([a, b]);
+  }));
+  return issues;
+}
+
 const INDICATOR_PRESETS = {
   // ⭐ Bot Önerisi: her aileden en güvenilir temsilci. Supertrend (trend yönü) + EMA Trend (yapı) +
   // MACD & RSI (momentum çifti — biri hız, biri aşırılık) + CMF (para akışı, klasik hacimden akıllı) +
@@ -4071,29 +4154,55 @@ function applyIndicatorPreset(key) {
 
 function renderIndicatorSelector() {
   const grid = document.getElementById('indicatorSelectorGrid');
-  grid.innerHTML = INDICATOR_ORDER.map(id => {
-    const def = INDICATOR_DEFS[id];
-    const checked = activeIndicators[id] ? 'checked' : '';
-    const activeCls = activeIndicators[id] ? 'active' : '';
-    const fam = INDICATOR_FAMILY[id];
-    const famDot = fam ? `<span class="ind-fam-dot" style="background:${FAMILY_COLORS[fam]};" title="${FAMILY_NAMES[fam]} ailesi"></span>` : '';
+  const redundantIds = new Set();
+  getRedundancyIssues().forEach(([a, b]) => { redundantIds.add(a); redundantIds.add(b); });
+
+  grid.innerHTML = FAMILY_ORDER.map(fam => {
+    const ids = INDICATOR_ORDER.filter(id => INDICATOR_FAMILY[id] === fam);
+    if (!ids.length) return '';
+    const selCount = ids.filter(id => activeIndicators[id]).length;
+    const overCls = selCount >= 3 ? 'over' : '';
+    const items = ids.map(id => {
+      const def = INDICATOR_DEFS[id];
+      const meta = IND_META[id] || { rating: 2, redundantWith: [], note: def.sub };
+      const checked = activeIndicators[id] ? 'checked' : '';
+      const isRedu = activeIndicators[id] && redundantIds.has(id);
+      const cls = (activeIndicators[id] ? 'active' : '') + (isRedu ? ' redundant' : '');
+      const w = getIndicatorWeight(id);
+      const tierCls = w >= 2 ? 't1' : (w >= 1 ? 't2' : 't3');
+      const tierTxt = w >= 2 ? '2.0x oy' : (w >= 1 ? '1.0x oy' : '0.5x oy');
+      const stars = '★'.repeat(meta.rating) + '<span style="opacity:0.25;">' + '★'.repeat(3 - meta.rating) + '</span>';
+      const reduTag = isRedu
+        ? `<span class="ind-redu-tag">⚠ ${meta.redundantWith.filter(r => activeIndicators[r]).map(r => INDICATOR_DEFS[r].name).join(', ')} ile çakışıyor</span>` : '';
+      return `
+        <label class="ind-select-item ${cls}" id="indSelItem-${id}" title="${meta.note}">
+          <input type="checkbox" ${checked} onchange="toggleIndicator('${id}', this.checked)">
+          <span>
+            <span class="ind-select-label">${def.name}<span class="ind-tier-badge ${tierCls}">${tierTxt}</span><span class="ind-stars" style="color:${FAMILY_COLORS[fam]};">${stars}</span></span>
+            <span class="ind-select-sub">${meta.note}</span>
+            ${reduTag}
+          </span>
+        </label>`;
+    }).join('');
     return `
-      <label class="ind-select-item ${activeCls}" id="indSelItem-${id}">
-        <input type="checkbox" ${checked} onchange="toggleIndicator('${id}', this.checked)">
-        <span>
-          <span class="ind-select-label">${famDot}${def.name}</span>
-          <span class="ind-select-sub">${def.sub}</span>
-        </span>
-      </label>`;
+      <div class="ind-fam-section">
+        <div class="ind-fam-header">
+          <span class="ind-fam-dot" style="background:${FAMILY_COLORS[fam]};width:9px;height:9px;"></span>
+          <span class="ind-fam-title" style="color:${FAMILY_COLORS[fam]};">${FAMILY_NAMES[fam].toUpperCase()}</span>
+          <span class="ind-fam-count ${overCls}">${selCount}/${ids.length} seçili${selCount >= 3 ? ' ⚠️' : ''}</span>
+          <span class="ind-fam-desc">${FAMILY_DESC[fam] || ''}</span>
+        </div>
+        <div class="ind-grid">${items}</div>
+      </div>`;
   }).join('');
   updateIndicatorCountNote();
 }
 
 function toggleIndicator(id, checked) {
   activeIndicators[id] = checked;
-  document.getElementById('indSelItem-' + id).classList.toggle('active', checked);
   saveIndicatorPrefs();
-  updateIndicatorCountNote();
+  // Çakışma vurguları komşu kartları da etkilediği için tam yeniden çizim gerekir
+  renderIndicatorSelector();
   renderCoinPanels();
 }
 
@@ -4106,21 +4215,45 @@ function toggleAllIndicators() {
 }
 
 function updateIndicatorCountNote() {
-  const n = getActiveIndicatorList().length;
+  const active = getActiveIndicatorList();
+  const n = active.length;
   const minC = getMinConfirmCount();
-  // v38.0: Aile dağılımı — hangi aileden kaç gösterge seçili, aşırı yığılma uyarısıyla
+  const el = document.getElementById('indicatorCountNote');
+
   const famCount = {};
-  getActiveIndicatorList().forEach(id => {
+  active.forEach(id => {
     const f = INDICATOR_FAMILY[id];
     if (f) famCount[f] = (famCount[f] || 0) + 1;
   });
-  const famHtml = Object.entries(famCount).map(([f, c]) => {
-    const warn = c >= 3 ? ' ⚠️' : '';
-    return `<span style="color:${FAMILY_COLORS[f]};">${FAMILY_NAMES[f]}: ${c}${warn}</span>`;
-  }).join(' · ');
-  const warnTxt = Object.values(famCount).some(c => c >= 3)
-    ? '<br><span style="color:var(--yellow);">⚠️ Bir aileden 3+ gösterge seçili — bunlar birbirine benzer sinyal verir, gerçek teyit gücü göründüğünden azdır.</span>' : '';
-  document.getElementById('indicatorCountNote').innerHTML = `Seçili: <b>${n}</b> gösterge · Min onay: <b>${minC}</b> / ${n}${famHtml ? ' &nbsp;|&nbsp; ' + famHtml : ''}${warnTxt}`;
+  const issues = getRedundancyIssues();
+  const hasTrend = (famCount.trend || 0) > 0;
+  const hasFlow = (famCount.volume || 0) > 0;
+  const famSpread = Object.keys(famCount).length;
+
+  // ── Puanlama: 0-100 set sağlığı ──
+  let score = 100; const problems = []; const tips = [];
+  if (n === 0) { el.innerHTML = '<div class="set-health"><span class="sh-err">Hiç gösterge seçilmedi — bot sinyal üretemez. En az 3 gösterge seç (ideal: 5-7).</span></div>'; return; }
+  if (!hasTrend) { score -= 40; problems.push('❌ <b>Trend ailesinden hiç gösterge yok.</b> Bot yön pusulasız kalır, Trend Gate filtresi de devre dışı düşer. Supertrend veya EMA Trend ekle.'); }
+  if (n < 3)  { score -= 25; problems.push(`❌ Sadece <b>${n}</b> gösterge — tek göstergenin gürültüsü direkt işleme dönüşür. <b>Minimum 3</b>, ideali <b>5-7</b>.`); }
+  if (n > 8)  { score -= 15; problems.push(`⚠️ <b>${n}</b> gösterge fazla — çok gösterge daha iyi teyit demek DEĞİL: karşıt oylar birbirini kilitleyip botu sürekli BEKLE\'de tutar, kalanlar da çoğunlukla birbirinin kopyasıdır. 5-7\'ye indir.`); }
+  issues.forEach(([a, b]) => { score -= 10; problems.push(`⚠️ <b>${INDICATOR_DEFS[a].name} + ${INDICATOR_DEFS[b].name}</b> neredeyse aynı sinyali verir — biri yeter (sahte çift teyit).`); });
+  Object.entries(famCount).forEach(([f, c]) => { if (c >= 3) { score -= 10; problems.push(`⚠️ <b>${FAMILY_NAMES[f]}</b> ailesinden ${c} gösterge — aynı bilginin ${c} kez sayılması. En fazla 2 tut.`); } });
+  if (!hasFlow && n >= 3) tips.push('💡 Hacim ailesinden (CMF veya VWAP) bir gösterge eklersen mum verisinden bağımsız bir teyit kanalın olur.');
+  if (n >= 3 && n <= 7 && hasTrend && famSpread >= 3 && issues.length === 0) tips.push('💡 Set dengeli görünüyor — her oy gerçekten bağımsız bir bilgi kaynağından geliyor.');
+  score = Math.max(0, score);
+
+  const verdict = score >= 80 ? ['good', '🟢 SAĞLIKLI SET'] : score >= 55 ? ['mid', '🟡 DÜZELTİLEBİLİR'] : ['bad', '🔴 SORUNLU SET'];
+  const famHtml = FAMILY_ORDER.filter(f => famCount[f]).map(f =>
+    `<span style="color:${FAMILY_COLORS[f]};">${FAMILY_NAMES[f]}: ${famCount[f]}${famCount[f] >= 3 ? ' ⚠️' : ''}</span>`).join(' · ');
+
+  el.innerHTML = `
+    <div class="set-health">
+      <div class="sh-title">🩺 Set Sağlığı <span class="sh-verdict ${verdict[0]}">${verdict[1]} · ${score}/100</span></div>
+      <div class="sh-row">Seçili: <b>${n}</b> gösterge (ideal aralık: <b>5-7</b>, minimum: <b>3</b>) · Min onay: <b>${minC}/${n}</b> · Aile çeşitliliği: <b>${famSpread}/6</b></div>
+      <div class="sh-row">${famHtml}</div>
+      ${problems.map(p => `<div class="sh-warn">${p}</div>`).join('')}
+      ${tips.map(t => `<div class="sh-row">${t}</div>`).join('')}
+    </div>`;
 }
 
 function initCoinState(coin) {
