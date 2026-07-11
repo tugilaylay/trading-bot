@@ -1753,7 +1753,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <!-- ⭐ v38.0: Tek Tık Gösterge Presetleri -->
       <div class="ind-preset-row">
-        <button class="ind-preset-btn star" onclick="applyIndicatorPreset('botOnerisi')">⭐ Bot Önerisi (Dengeli)<small>Her aileden en güçlü 1-2 gösterge — çakışma yok, teyit tam</small></button>
+        <button class="ind-preset-btn star" onclick="applyIndicatorPreset('botOnerisi')">⭐ Bot Önerisi (Akıllı)<small>Seçili mum süresine göre otomatik uyarlanır — 5m'de hızlı, 4h'de sabırlı set</small></button>
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('trend')">🚀 Trend Takipçisi<small>Güçlü trendlerde uzun süre pozisyonda kalır</small></button>
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('momentum')">⚡ Momentum / Hızlı<small>Kısa vadeli salınımları yakalar, sık işlem</small></button>
         <button class="ind-preset-btn" onclick="applyIndicatorPreset('guvenli')">🛡️ Güvenli (Az &amp; Öz)<small>Sadece en yüksek teyitli sinyaller — az işlem, yüksek isabet</small></button>
@@ -1771,6 +1771,43 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="indicator-selector-grid" id="indicatorSelectorGrid"></div>
       <div class="ind-count-note" id="indicatorCountNote">Seçili: <b>4</b> gösterge · Min onay: <b>2</b></div>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v45.2: 🧬 Evrim Motoru — kendi kendini revize eden bot ── -->
+      <div class="card-title">
+        <span>🧬 Evrim Motoru (Otomasyon)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v45.2 YENİ</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+          <label class="regime-toggle-switch" style="flex-shrink:0;">
+            <input type="checkbox" id="evoIndicatorsToggle" checked>
+            <span class="regime-toggle-slider"></span>
+          </label>
+          <span style="font-size:12px;"><b>Gösterge Evrimi:</b> Zarar ettiren göstergeyi otomatik kızağa al, yerine aynı aileden en iyi adayı getir</span>
+        </div>
+        <div class="form-group">
+          <label>Min. İşlem (karne için)</label>
+          <input type="number" id="evoMinTrades" value="10" min="5" max="50" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Kazanma Oranı Tabanı (%)</label>
+          <input type="number" id="evoWinFloor" value="35" min="20" max="50" step="5" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+          <label class="regime-toggle-switch" style="flex-shrink:0;">
+            <input type="checkbox" id="evoRiskToggle" checked>
+            <span class="regime-toggle-slider"></span>
+          </label>
+          <span style="font-size:12px;"><b>Risk Oto-Ayar:</b> Kayıp serisinde riski kıs (defans), kazanç serisinde baseline'a geri dön — asla baseline üstüne çıkmaz</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
+        <b>Gösterge Evrimi:</b> Bir gösterge, açılan pozisyonla aynı yönde oy kullandığında o işlemin karnesine yazılır. En az <b>Min. İşlem</b> kadar veri biriken bir göstergenin kazanma oranı <b>tabanın altına</b> düşer ve net PnL katkısı negatifse, gösterge <b>24 saat kızağa</b> alınır ve yerine aynı aileden, aktif setle <b>çakışmayan en yüksek yıldızlı</b> aday geçer. Tur başına en fazla 1 değişiklik yapılır (istikrar için).<br>
+        <b>Risk Oto-Ayar:</b> <b>3 ardışık kayıpta</b> → işlem miktarı %25 kısılır, kaldıraç 1 kademe düşer, min onay 1 kademe sıkılaşır. <b>3 ardışık kazançta</b> → değerler kademeli olarak senin baseline ayarlarına geri döner. Devre Kesici'nin yumuşak kardeşi: botu durdurmaz, küçültür.
+      </div>
+      <div id="evoStatusBox" style="margin-top:12px;"></div>
 
       <div class="acc-divider"></div>
 
@@ -3417,7 +3454,9 @@ const SETTINGS_FIELD_IDS = [
   'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles',
   'atrTrailingScaleToggle', 'atrTrailingRefPct', 'trailingConfirmToggle', 'trailingConfirmTicks',
   // v45.0: akıllı filtreler + arena
-  'cvdFilterToggle', 'crowdFilterToggle', 'arenaToggle'
+  'cvdFilterToggle', 'crowdFilterToggle', 'arenaToggle',
+  // v45.2: 🧬 Evrim Motoru
+  'evoIndicatorsToggle', 'evoMinTrades', 'evoWinFloor', 'evoRiskToggle'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -3589,6 +3628,16 @@ function attachSettingsAutoSave() {
     el.addEventListener('input', saveSettings);
   });
   // TP/Kaldıraç/Komisyon/Kayma/İşlem Modu değiştiğinde kırılma noktası ipuçları da tazelensin
+  // v45.2: Kullanıcı NORMAL moddayken risk alanlarını elle değiştirirse yeni değerler
+  // baseline kabul edilir (defans modundayken değil — o değişiklikler motorun kendi işi).
+  ['tradeAmount', 'leverage', 'minConfirmPct', 'stopLoss'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      try { if (evoState.riskMode !== 'defans') captureRiskBaseline(); } catch(e) {}
+    });
+  });
+  try { renderEvoStatus(); } catch(e) {}
   ['takeProfit', 'leverage', 'commissionPct', 'slippagePct', 'tradeMode'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -4111,9 +4160,11 @@ function getRedundancyIssues() {
 }
 
 const INDICATOR_PRESETS = {
-  // ⭐ Bot Önerisi: her aileden en güvenilir temsilci. Supertrend (trend yönü) + EMA Trend (yapı) +
-  // MACD & RSI (momentum çifti — biri hız, biri aşırılık) + CMF (para akışı, klasik hacimden akıllı) +
-  // ADX (trend gücü filtresi). 6 bağımsız bilgi kaynağı = gerçek teyit.
+  // ⭐ Bot Önerisi artık ZAMAN DİLİMİNE DUYARLI (v45.2) — applyIndicatorPreset içinde
+  // seçili mum süresine göre aşağıdaki üç setten biri uygulanır:
+  //   1m/5m  → hızlı tepki: yavaş göstergeler (Ichimoku, EMA50/200) gecikir, hızlılar öne çıkar
+  //   15m    → dengeli klasik set
+  //   1h/4h  → sabırlı set: gürültüye dayanıklı, yavaş ama isabetli göstergeler
   botOnerisi: { list: ['supertrend','ematrend','macd','rsi','cmf','adx'], minPct: 60,
     msg: '⭐ Bot Önerisi uygulandı: Supertrend + EMA Trend + MACD + RSI + CMF + ADX (6 gösterge, her aileden dengeli) · Min onay %60' },
   trend: { list: ['supertrend','psar','macd','vwap','adx'],
@@ -4136,21 +4187,261 @@ const INDICATOR_PRESETS = {
     msg: '🎯 Harmanlanmış Set uygulandı: Supertrend(Trend) + ADX(Güç) + RSI+MACD(Momentum) + VWAP+CMF(Kurumsal) + RSI Divergence · Aile dengeli, tekrarsız 7 gösterge' }
 };
 
+// ── v45.2: Bot Önerisi'nin zaman dilimi haritası ──
+const BOT_ONERISI_BY_TF = {
+  '1m':  { list: ['supertrend','macross','rsi','vwap','adx'],           minPct: '0.5',
+    msg: '⭐ Bot Önerisi (1m — Çok Hızlı): Supertrend + MA Cross + RSI + VWAP + ADX · Hızlı tepkili set, min onay 1/2' },
+  '5m':  { list: ['supertrend','macross','rsi','vwap','adx'],           minPct: '0.5',
+    msg: '⭐ Bot Önerisi (5m — Hızlı): Supertrend + MA Cross + RSI + VWAP + ADX · EMA50/200 ve Ichimoku bu hızda gecikir, dışarıda' },
+  '15m': { list: ['supertrend','ematrend','macd','rsi','cmf','adx'],    minPct: '0.6',
+    msg: '⭐ Bot Önerisi (15m — Dengeli): Supertrend + EMA Trend + MACD + RSI + CMF + ADX · Klasik dengeli set, min onay %60' },
+  '1h':  { list: ['ematrend','macd','adx','cmf','vwap','DIV_RSI'],      minPct: '0.6',
+    msg: '⭐ Bot Önerisi (1h — Güvenli): EMA Trend + MACD + ADX + CMF + VWAP + RSI Divergence · Gürültüye dayanıklı sabırlı set' },
+  '4h':  { list: ['ichimoku','macd','adx','cmf','vwap','DIV_RSI'],      minPct: '0.75',
+    msg: '⭐ Bot Önerisi (4h — Uzun Vade): Ichimoku + MACD + ADX + CMF + VWAP + RSI Divergence · Ichimoku bu vadede parlar, min onay %75' }
+};
+
 function applyIndicatorPreset(key) {
-  const preset = INDICATOR_PRESETS[key];
+  let preset = INDICATOR_PRESETS[key];
+  // v45.2: Bot Önerisi zaman dilimine göre otomatik uyarlanır
+  if (key === 'botOnerisi') {
+    const iv = document.getElementById('interval')?.value || '15m';
+    preset = BOT_ONERISI_BY_TF[iv] || BOT_ONERISI_BY_TF['15m'];
+  }
   if (!preset) return;
   INDICATOR_ORDER.forEach(id => { activeIndicators[id] = preset.list.includes(id); });
-  // v38.1 FIX: eski kod minEl.value = 60 yazıyordu — select'te "60" diye option yok,
-  // bu yüzden seçim BOŞALIYORDU. Artık her preset standart %60'a sabitler (geçerli option),
-  // kullanıcı sonrasında istediği gibi değiştirebilir.
   const minEl = document.getElementById('minConfirmPct');
-  if (minEl) { minEl.value = '0.6'; }
+  if (minEl) { minEl.value = preset.minPct || '0.6'; }
   saveIndicatorPrefs();
   saveSettings();
   renderIndicatorSelector();
   renderCoinPanels();
   log(preset.msg, 'system');
 }
+
+// ═════════ v45.2: 🧬 EVRİM MOTORU ═════════
+// İki organ: (1) Gösterge Evrimi — zarar ettiren göstergeyi kızağa alıp yerine
+// aynı aileden en iyi adayı getirir. (2) Risk Oto-Ayar — kayıp serisinde riski
+// kısar, kazanç serisinde kullanıcının baseline ayarlarına kademeli geri döner.
+const SK_EVO = 'tugay_v4_evo';
+let evoState = { benched: {}, log: [], riskBaseline: null, riskMode: 'normal', lastEvoTradeCount: 0, lastRiskTradeCount: 0 };
+function loadEvoState() { try { const s = localStorage.getItem(SK_EVO); if (s) evoState = Object.assign(evoState, JSON.parse(s)); } catch(e) {} }
+function saveEvoState() { try { localStorage.setItem(SK_EVO, JSON.stringify(evoState)); } catch(e) {} }
+function evoLog(msg) {
+  evoState.log.push({ t: Date.now(), msg });
+  if (evoState.log.length > 30) evoState.log.shift();
+  saveEvoState();
+  log(msg, 'system');
+}
+
+// Gösterge karnesi: bir gösterge, pozisyon yönüyle AYNI yönde oy verdiyse o işleme
+// "katkıda bulunmuş" sayılır (Risk Analizi sekmesindeki mantığın aynısı). Son 100 işlem.
+function computeIndicatorReport(maxTrades = 100) {
+  const report = {};
+  const trades = globalTradeHistory.filter(t => t.entrySignals).slice(-maxTrades);
+  trades.forEach(t => {
+    const dirSig = (t.direction === 'short') ? 'sell' : 'buy';
+    Object.keys(t.entrySignals).forEach(id => {
+      if (t.entrySignals[id] !== dirSig) return;
+      if (!report[id]) report[id] = { n: 0, wins: 0, pnl: 0 };
+      report[id].n++;
+      if (t.pnl >= 0) report[id].wins++;
+      report[id].pnl += t.pnl;
+    });
+  });
+  Object.values(report).forEach(r => { r.winRate = r.n ? (r.wins / r.n * 100) : 0; });
+  return report;
+}
+
+// Kızaktaki gösterge 24 saat dokunulmaz (aynı göstergenin sürekli girip çıkması = churn)
+const EVO_BENCH_MS = 24 * 60 * 60 * 1000;
+
+function runIndicatorEvolution() {
+  if (!document.getElementById('evoIndicatorsToggle')?.checked) return;
+  // Her işlemde değil, 3 işlemde bir değerlendir (istikrar)
+  if (globalTradeCount - (evoState.lastEvoTradeCount || 0) < 3) return;
+
+  const minTrades = parseInt(document.getElementById('evoMinTrades')?.value) || 10;
+  const winFloor = parseFloat(document.getElementById('evoWinFloor')?.value) || 35;
+  const report = computeIndicatorReport();
+  const active = getActiveIndicatorList();
+
+  // En kötü aktif göstergeyi bul: yeterli veri + taban altı kazanma + negatif PnL katkısı
+  let worst = null;
+  active.forEach(id => {
+    const r = report[id];
+    if (!r || r.n < minTrades) return;
+    if (r.winRate >= winFloor || r.pnl >= 0) return;
+    if (!worst || r.winRate < report[worst].winRate) worst = id;
+  });
+  if (!worst) return;
+
+  const fam = INDICATOR_FAMILY[worst];
+  const remaining = active.filter(id => id !== worst);
+  // Aday havuzu: aktif olmayan, kızakta olmayan, kalan setle çakışmayan —
+  // önce aynı aile, sonra yıldıza göre sıralı
+  const now = Date.now();
+  const worstTwins = IND_META[worst]?.redundantWith || [];
+  const candidates = INDICATOR_ORDER.filter(id => {
+    if (activeIndicators[id]) return false;
+    if (id === worst) return false;
+    if (evoState.benched[id] && now - evoState.benched[id] < EVO_BENCH_MS) return false;
+    const redu = IND_META[id]?.redundantWith || [];
+    // Kalan setle çakışan VEYA kızağa alınanın ikizi olan adaylar elenir —
+    // zarar eden göstergenin kopyasını koymak aynı hatayı tekrarlamaktır
+    if (redu.some(r => remaining.includes(r))) return false;
+    if (worstTwins.includes(id) || redu.includes(worst)) return false;
+    return true;
+  }).sort((a, b) => {
+    const famA = INDICATOR_FAMILY[a] === fam ? 1 : 0, famB = INDICATOR_FAMILY[b] === fam ? 1 : 0;
+    if (famA !== famB) return famB - famA;
+    return (IND_META[b]?.rating || 2) - (IND_META[a]?.rating || 2);
+  });
+
+  const r = report[worst];
+  const worstName = INDICATOR_DEFS[worst].name;
+  evoState.benched[worst] = now;
+  activeIndicators[worst] = false;
+
+  if (candidates.length) {
+    const next = candidates[0];
+    activeIndicators[next] = true;
+    evoLog(`🧬 [Evrim] ${worstName} kızağa alındı (${r.n} işlem, kazanma %${r.winRate.toFixed(0)}, katkı ${r.pnl.toFixed(2)} USDT) → yerine ${INDICATOR_DEFS[next].name} (${FAMILY_NAMES[INDICATOR_FAMILY[next]]} ailesi, ${'★'.repeat(IND_META[next]?.rating || 2)}) geçti. 24 saat sonra tekrar aday olabilir.`);
+  } else {
+    // Aday yoksa: trend ailesi ve min 3 gösterge korunuyorsa sadece çıkar, yoksa dokunma
+    const stillHasTrend = remaining.some(id => INDICATOR_FAMILY[id] === 'trend');
+    if (remaining.length >= 3 && stillHasTrend) {
+      evoLog(`🧬 [Evrim] ${worstName} kızağa alındı (kazanma %${r.winRate.toFixed(0)}) — uygun ikame bulunamadı, set ${remaining.length} göstergeyle devam ediyor.`);
+    } else {
+      activeIndicators[worst] = true; // geri al — seti sakatlama
+      delete evoState.benched[worst];
+      return;
+    }
+  }
+  evoState.lastEvoTradeCount = globalTradeCount;
+  saveIndicatorPrefs(); saveEvoState();
+  renderIndicatorSelector(); renderCoinPanels(); renderEvoStatus();
+}
+
+// ── Risk Oto-Ayar ──
+const RISK_LEV_STEPS = ['2','3','4','5','10'];
+const RISK_CONFIRM_STEPS = ['0.34','0.5','0.6','0.75','1.0'];
+function captureRiskBaseline() {
+  evoState.riskBaseline = {
+    tradeAmount: document.getElementById('tradeAmount')?.value,
+    leverage: document.getElementById('leverage')?.value,
+    minConfirmPct: document.getElementById('minConfirmPct')?.value,
+    stopLoss: document.getElementById('stopLoss')?.value
+  };
+  saveEvoState();
+}
+function getStreak() {
+  let wins = 0, losses = 0;
+  for (let i = globalTradeHistory.length - 1; i >= 0; i--) {
+    const p = globalTradeHistory[i].pnl;
+    if (p >= 0) { if (losses) break; wins++; }
+    else { if (wins) break; losses++; }
+  }
+  return { wins, losses };
+}
+function stepSelect(el, steps, dir, limitVal) {
+  // dir: -1 aşağı kademele, +1 yukarı — limitVal geçilmez
+  const i = steps.indexOf(el.value);
+  if (i < 0) return false;
+  const li = steps.indexOf(String(limitVal));
+  let ni = Math.max(0, Math.min(steps.length - 1, i + dir));
+  if (li >= 0) ni = dir > 0 ? Math.min(ni, Math.max(li, i)) : Math.max(ni, Math.min(li, i));
+  if (ni !== i) { el.value = steps[ni]; return true; }
+  return false;
+}
+function runRiskAutoTune() {
+  if (!document.getElementById('evoRiskToggle')?.checked) return;
+  if (!evoState.riskBaseline) captureRiskBaseline();
+  if (globalTradeCount - (evoState.lastRiskTradeCount || 0) < 3) return; // 3 işlemde bir
+  const { wins, losses } = getStreak();
+  const base = evoState.riskBaseline;
+  const changes = [];
+  const amtEl = document.getElementById('tradeAmount');
+  const levEl = document.getElementById('leverage');
+  const cfmEl = document.getElementById('minConfirmPct');
+  const slEl  = document.getElementById('stopLoss');
+  if (!amtEl || !slEl) return;
+
+  if (losses >= 3) {
+    // DEFANS: kıs, sıkılaştır — işlem miktarı baseline'ın %40'ının altına inmez
+    const floor = Math.max(10, parseFloat(base.tradeAmount) * 0.4);
+    const newAmt = Math.max(floor, Math.round(parseFloat(amtEl.value) * 0.75));
+    if (newAmt < parseFloat(amtEl.value)) { changes.push(`miktar ${amtEl.value}→${newAmt}`); amtEl.value = newAmt; }
+    if (levEl && stepSelect(levEl, RISK_LEV_STEPS, -1, '2')) changes.push(`kaldıraç →${levEl.value}x`);
+    if (cfmEl && stepSelect(cfmEl, RISK_CONFIRM_STEPS, +1, '0.75')) changes.push(`min onay →%${Math.round(parseFloat(cfmEl.value)*100)}`);
+    const newSl = Math.max(1, +(parseFloat(slEl.value) * 0.85).toFixed(1));
+    if (newSl < parseFloat(slEl.value)) { changes.push(`SL %${slEl.value}→%${newSl}`); slEl.value = newSl; }
+    if (changes.length) {
+      evoState.riskMode = 'defans';
+      evoLog(`🛡️ [Risk Oto-Ayar] ${losses} ardışık kayıp → DEFANS modu: ${changes.join(' · ')}. Kazanç serisiyle baseline'a geri dönülecek.`);
+    }
+  } else if (wins >= 3 && evoState.riskMode === 'defans') {
+    // TOPARLANMA: baseline'a doğru kademeli dön — asla üstüne çıkma
+    const target = parseFloat(base.tradeAmount);
+    const cur = parseFloat(amtEl.value);
+    if (cur < target) { const newAmt = Math.min(target, Math.round(cur * 1.25)); changes.push(`miktar ${cur}→${newAmt}`); amtEl.value = newAmt; }
+    if (levEl && RISK_LEV_STEPS.indexOf(levEl.value) < RISK_LEV_STEPS.indexOf(base.leverage) && stepSelect(levEl, RISK_LEV_STEPS, +1, base.leverage)) changes.push(`kaldıraç →${levEl.value}x`);
+    if (cfmEl && RISK_CONFIRM_STEPS.indexOf(cfmEl.value) > RISK_CONFIRM_STEPS.indexOf(base.minConfirmPct) && stepSelect(cfmEl, RISK_CONFIRM_STEPS, -1, base.minConfirmPct)) changes.push(`min onay →%${Math.round(parseFloat(cfmEl.value)*100)}`);
+    const slTarget = parseFloat(base.stopLoss);
+    const slCur = parseFloat(slEl.value);
+    if (slCur < slTarget) { const newSl = Math.min(slTarget, +(slCur * 1.15).toFixed(1)); changes.push(`SL %${slCur}→%${newSl}`); slEl.value = newSl; }
+    const backToBase = parseFloat(amtEl.value) >= target && (!levEl || levEl.value === base.leverage) && (!cfmEl || cfmEl.value === base.minConfirmPct) && parseFloat(slEl.value) >= slTarget;
+    if (backToBase) evoState.riskMode = 'normal';
+    if (changes.length) evoLog(`📈 [Risk Oto-Ayar] ${wins} ardışık kazanç → toparlanma: ${changes.join(' · ')}${backToBase ? " · Baseline'a tam dönüldü ✅" : ''}`);
+  }
+  if (changes.length) {
+    evoState.lastRiskTradeCount = globalTradeCount;
+    saveEvoState(); saveSettings(); renderEvoStatus();
+  }
+}
+
+function renderEvoStatus() {
+  const box = document.getElementById('evoStatusBox');
+  if (!box) return;
+  const report = computeIndicatorReport();
+  const active = getActiveIndicatorList();
+  const rows = active
+    .map(id => ({ id, r: report[id] }))
+    .filter(x => x.r && x.r.n >= 3)
+    .sort((a, b) => a.r.winRate - b.r.winRate)
+    .slice(0, 6);
+  const now = Date.now();
+  const benched = Object.entries(evoState.benched)
+    .filter(([, t]) => now - t < EVO_BENCH_MS)
+    .map(([id, t]) => `${INDICATOR_DEFS[id]?.name || id} (${Math.ceil((EVO_BENCH_MS - (now - t)) / 3600000)} sa kaldı)`);
+  const modeChip = evoState.riskMode === 'defans'
+    ? '<span class="sh-verdict bad">🛡️ DEFANS MODU</span>'
+    : '<span class="sh-verdict good">✅ NORMAL RİSK</span>';
+  const karneHtml = rows.length
+    ? rows.map(({ id, r }) => {
+        const c = r.winRate < 40 ? 'var(--red)' : r.winRate < 55 ? 'var(--yellow)' : 'var(--green)';
+        return `<div class="sh-row">${INDICATOR_DEFS[id].name}: <b style="color:${c};">%${r.winRate.toFixed(0)}</b> kazanma · ${r.n} işlem · katkı <b style="color:${r.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">${r.pnl >= 0 ? '+' : ''}${r.pnl.toFixed(2)}</b> USDT</div>`;
+      }).join('')
+    : '<div class="sh-row">Henüz yeterli karne verisi yok — işlemler biriktikçe her göstergenin gerçek performansı burada görünecek.</div>';
+  const logHtml = evoState.log.slice(-4).reverse()
+    .map(l => `<div class="sh-row" style="font-size:10px;">${new Date(l.t).toLocaleString('tr-TR')} — ${l.msg}</div>`).join('');
+  box.innerHTML = `
+    <div class="set-health">
+      <div class="sh-title">🧬 Evrim Durumu ${modeChip}</div>
+      <div class="sh-row" style="font-weight:700;margin-top:4px;">Gösterge Karnesi (en zayıf üstte):</div>
+      ${karneHtml}
+      ${benched.length ? `<div class="sh-warn" style="margin-top:4px;">🪑 Kızakta: ${benched.join(' · ')}</div>` : ''}
+      ${logHtml ? `<div class="sh-row" style="font-weight:700;margin-top:6px;">Son Kararlar:</div>${logHtml}` : ''}
+    </div>`;
+}
+
+function runEvolutionEngine() {
+  try { runIndicatorEvolution(); } catch(e) { console.warn('evo-ind', e); }
+  try { runRiskAutoTune(); } catch(e) { console.warn('evo-risk', e); }
+  try { renderEvoStatus(); } catch(e) {}
+}
+loadEvoState();
+// ═════════ EVRİM MOTORU SONU ═════════
 
 function renderIndicatorSelector() {
   const grid = document.getElementById('indicatorSelectorGrid');
@@ -6081,6 +6372,9 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
 
   registerDailyPnl(pnl, coin);
   registerDailyStats(pnl);
+
+  // v45.2: 🧬 Evrim Motoru — her kapanışta gösterge karnesi + risk oto-ayar değerlendirilir
+  try { runEvolutionEngine(); } catch(e) {}
 
   renderTradeTable();
   updateGlobalPnlDisplay();
