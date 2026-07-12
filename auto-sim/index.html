@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.1 ŞEFFAF KOKPİT + STRATEJİ GİYME</title>
+<title>TUGAY × QUANT · v46.2 KÂR MERDİVENİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.1 🎽</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.2 🪜</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1961,6 +1961,29 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <!-- v42: "Kısmi Kâr Alma" kartı kaldırıldı — Runner Modu aynı işin daha akıllı hali
            (TP'de kısmen kapat + kalanı trailing ile koştur). İki benzer özellik yan yana
            kafa karıştırıyordu. Eski partialTpToggle mantığı kodda zararsız şekilde uykuda. -->
+
+      <!-- ── v46.2: 🪜 Kâr Merdiveni (Profit Ratchet) ── -->
+      <div class="card-title">
+        <span>🪜 Kâr Merdiveni (Basamaklı Kâr Kilidi)</span>
+        <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v46.2 — Manuel kapatmanın otomatiği</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="ratchetToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Basamak Boyu (kaldıraçlı %)</label>
+          <input type="number" id="ratchetStepPct" value="1.0" min="0.2" max="10" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>Kilitlenen Pay (basamağın %'si)</label>
+          <input type="number" id="ratchetLockRatio" value="60" min="10" max="95" step="5" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Senin "kârda elle kapatma" davranışının otomatiği. Kaldıraçlı kâr her <b>Basamak</b> katına ulaştığında (%1, %2, %3…) bir <b>kâr tabanı</b> kilitlenir: bir önceki basamak + kilitlenen pay. Örnek (varsayılan): kâr +%1'e dokunur → taban <b>+%0.6</b>. +%2'ye dokunur → taban <b>+%1.6</b>. Fiyat tabana geri düşerse pozisyon <b>O KÂRLA</b> kapanır — asla başa başa veya zarara dönmez. İz Süren Stop'tan farkı: trailing'in garantili tabanı sadece başa baştı; merdivenin tabanı <b>gerçek kâr</b>. Teyit Turu açıksa merdiven kapanışı da aynı ardışık tick teyidini kullanır (anlık iğnelere kanmaz). Trailing ile birlikte çalışır — hangisi önce tetiklenirse.</div>
+
+      <div class="acc-divider"></div>
 
       <!-- ── v41: Kademeli TP — Runner Modu ── -->
       <div class="card-title">
@@ -3488,6 +3511,7 @@ const SETTINGS_FIELD_IDS = [
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
   'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
+  'ratchetToggle', 'ratchetStepPct', 'ratchetLockRatio',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
@@ -3655,6 +3679,8 @@ function loadSettings() {
     // resetlenir. Partial TP %280 gibi girişler tüm K/Z hesabını mahveder.
     const guards = [
       { id: 'partialTpPct',   min: 10,    max: 90,   def: 50   },
+      { id: 'ratchetStepPct', min: 0.2,   max: 10,   def: 1.0  },
+      { id: 'ratchetLockRatio', min: 10,  max: 95,   def: 60   },
       { id: 'maxLevLossPct',   min: 2,     max: 30,   def: 5    },
       { id: 'commissionPct',  min: 0,     max: 0.5,  def: 0.05 },
       { id: 'slippagePct',    min: 0,     max: 0.5,  def: 0.02 },
@@ -3722,6 +3748,8 @@ const INPUT_CLAMP_RULES = {
   atrTpMultiplier:       { min: 1,    max: 6,    def: 2.5,  label: 'ATR Take-Profit çarpanı' },
   breakevenThreshold:    { min: 0.5,  max: 8,    def: 1.5,  label: 'Breakeven Aktivasyon Eşiği' },
   partialTpPct:          { min: 10,   max: 90,   def: 50,   label: 'Kısmi TP Kapatma Oranı' },
+  ratchetStepPct:        { min: 0.2,  max: 10,   def: 1.0,  label: 'Merdiven Basamak Boyu' },
+  ratchetLockRatio:      { min: 10,   max: 95,   def: 60,   label: 'Merdiven Kilit Oranı' },
   tp2Pct:                { min: 30,   max: 90,   def: 60,   label: 'Runner TP Kapatma Oranı' },
   fgThreshold:           { min: 5,    max: 50,   def: 25,   label: 'Fear & Greed Eşiği' },
   fundingThreshold:      { min: 0.01, max: 0.3,  def: 0.05, label: 'Funding Rate Eşiği' },
@@ -6454,7 +6482,7 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
 const REASON_LABELS_SHORT = {
   sl: '🔴 SL', tp: '🎯 TP', trailing: '📉 İz Süren',
   breakeven: '🛡️ Breakeven', liquidation: '💥 Likidasyon',
-  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman'
+  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman', ratchet: '🪜 Kâr Kilidi'
 };
 function renderTradeTable() {
   const body = document.getElementById('tradeBody');
@@ -6586,7 +6614,7 @@ function formatDuration(ms) {
 const REASON_LABELS = {
   sl: '🔴 Stop-Loss', tp: '🎯 Take-Profit', trailing: '📉 İz Süren Stop',
   liquidation: '💥 Likidasyon', signal: '🔁 Gösterge Sinyali',
-  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman Stopu'
+  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman Stopu', ratchet: '🪜 Kâr Merdiveni'
 };
 const REGIME_LABELS = {
   sideways: '◆ Yatay/Kararsız', uptrend: '▲ Yükseliş Trendi',
@@ -9698,6 +9726,35 @@ async function coinTickInner(coin, state) {
     const hitBreakevenSL = !!(breakevenOn && pos.breakevenActivated
       && (dir === 'long' ? price <= pos.entryPrice * 1.0001 : price >= pos.entryPrice * 0.9999));
 
+    // ───────── v46.2: 🪜 Kâr Merdiveni (Profit Ratchet) ─────────
+    // Sorunun kökü: trailing'in garantili tabanı sadece BAŞA BAŞ idi (v43.5) ve breakeven
+    // stop da yalnızca sıfırı koruyordu — hiçbir mekanizma GERÇEKLEŞMİŞ KÂRI kilitlemiyordu.
+    // Kullanıcı bu yüzden kârda elle kapatıyordu (Otopsi: Manuel %93 / İz Süren %10 / SL %0).
+    // Merdiven: kaldıraçlı kârın gördüğü en yüksek nokta izlenir; her tam basamakta taban
+    // yükselir ve ASLA geri inmez. Fiyat tabana dönerse pozisyon o kârla kapanır.
+    const ratchetOn = document.getElementById('ratchetToggle')?.checked;
+    let hitRatchet = false;
+    if (ratchetOn && !liquidated) {
+      const rStep = Math.max((parseFloat(document.getElementById('ratchetStepPct')?.value) || 1.0) / 100, 0.002);
+      const rLock = Math.min(Math.max((parseFloat(document.getElementById('ratchetLockRatio')?.value) || 60) / 100, 0.1), 0.95);
+      if (pos.peakLc === undefined || leveragedChange > pos.peakLc) pos.peakLc = leveragedChange;
+      const rK = Math.floor((pos.peakLc + 1e-9) / rStep);
+      if (rK >= 1) {
+        const newFloor = (rK - 1 + rLock) * rStep;
+        if (pos.ratchetFloor === undefined || newFloor > pos.ratchetFloor + 1e-9) {
+          const first = pos.ratchetFloor === undefined;
+          pos.ratchetFloor = newFloor;
+          log(`🪜 [Merdiven] ${coin} — ${first ? 'ilk basamak tırmanıldı' : 'yeni basamak'}: zirve %${(pos.peakLc*100).toFixed(2)} → kâr tabanı <b>+%${(newFloor*100).toFixed(2)}</b> kilitlendi. Bu pozisyon artık bundan azıyla kapanamaz.`, 'system', coin);
+        }
+      }
+      if (pos.ratchetFloor !== undefined) {
+        const rawHitRatchet = leveragedChange <= pos.ratchetFloor;
+        if (rawHitRatchet) { pos.ratchetStreak = (pos.ratchetStreak || 0) + 1; } else { pos.ratchetStreak = 0; }
+        const rReq = (document.getElementById('trailingConfirmToggle')?.checked) ? (parseInt(document.getElementById('trailingConfirmTicks')?.value) || 2) : 1;
+        hitRatchet = rawHitRatchet && pos.ratchetStreak >= rReq;
+      }
+    }
+
     // KRİTİK DÜZELTME: SL/TP eşikleri önceden HAM fiyat değişimine (change) göre kontrol
     // ediliyordu, ama panelde gösterilen büyük yüzde (+3.80% gibi) ve $ kâr/zarar KALDIRAÇLI
     // değişime (leveragedChange) göre hesaplanıyordu. Bu da "TP %2 ayarladım ama ekranda
@@ -9821,7 +9878,7 @@ async function coinTickInner(coin, state) {
       }
     }
 
-    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit || hitTimeStop;
+    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit || hitTimeStop || hitRatchet;
 
     if (shouldClose) {
       // 🛡️ Guard: pos.amount negatife düşmüşse (partial TP %100+ bug artığı) 0'a sabitle.
@@ -9835,6 +9892,7 @@ async function coinTickInner(coin, state) {
       const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, pos.leverage || 1, coin);
       let reason, reasonCategory;
       if (liquidated)        { reason = '💥 LİKİDASYON'; reasonCategory = 'liquidation'; }
+      else if (hitRatchet)   { reason = `🪜 Kâr Merdiveni (kilitli taban: +%${(pos.ratchetFloor*100).toFixed(2)}, zirve: +%${((pos.peakLc||0)*100).toFixed(2)})`; reasonCategory = 'ratchet'; }
       else if (hitTrailingFloor && !hitTrailingStopByDistance) { reason = `📉 İz Süren Stop — Başa Baş Tabanı (en iyi: ${pos.bestPrice.toFixed(2)}, taban: %${(breakevenFloorPct*100).toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitTrailingStop) { reason = `İz Süren Stop (en iyi: ${pos.bestPrice.toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitBreakevenSL)  { reason = '🛡️ Breakeven Stop (giriş fiyatı koruması)'; reasonCategory = 'breakeven'; }
