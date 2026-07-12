@@ -11824,6 +11824,11 @@ async function apCycle(){
 
     // Kalan filtreler SADECE teyit turlarını geçmiş adaylara uygulanır (funding/MTF API'leri
     // her coin için değil, sadece gerçek adaylar için çağrılır — evrenin tamamı için değil).
+    // v45.6: Her red artık {coin, tag, reason} olarak apBlockLog'a da yazılıyor — hem tek tek
+    // brain() satırı hem de tur sonunda "hangi coin hangi filtreden kaldı" özeti için.
+    // Ayrıca CVD Akış ve Kalabalık filtreleri artık burada da uygulanıyor — önceden sadece
+    // tekli coin botunda çalışıyorlardı, Avcı Modu bunları hiç görmüyordu.
+    const apBlockLog = [];
     const candidateChecks = await Promise.all(confirmedShorts.map(async short => {
       const c = ap.candidates[short];
       const r = results.find(x => x.short === short);
@@ -11831,19 +11836,60 @@ async function apCycle(){
       if (coinStates[short] && coinStates[short].openPosition) return null;
       if (typeof isAutopilotCoinBlocked === 'function' && isAutopilotCoinBlocked(short)) {
         const st = autopilotCoinStats(short);
-        brain('🧠 [Hafıza] ' + short + ' teyitli ama son ' + st.trades + ' otopilot işleminde kazanma %' + st.winRate.toFixed(0) + ' (eşik %' + (apMemorySettings().minWinRate) + ') — devre dışı.');
+        const reason = 'kazanma %' + st.winRate.toFixed(0) + ' (eşik %' + (apMemorySettings().minWinRate) + ')';
+        brain('🧠 [Hafıza] ' + short + ' teyitli ama son ' + st.trades + ' otopilot işleminde ' + reason + ' — devre dışı.');
+        apBlockLog.push({ coin: short, tag: 'Hafıza', reason });
         return null;
       }
-      if (c.direction === 'short' && tradeMode !== 'futures_sim') return null;
-      if (typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)) return null;
-      if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(short)) return null;
-      if (typeof isManualCooldownActive === 'function' && isManualCooldownActive(short)) return null;
+      if (c.direction === 'short' && tradeMode !== 'futures_sim') {
+        const reason = 'işlem modu Futures-Sim değil';
+        brain('🎯 [Yön] ' + short + ' SHORT sinyali verdi ama ' + reason + ' — bu modda SHORT açılamaz, engellendi.');
+        apBlockLog.push({ coin: short, tag: 'Yön', reason });
+        return null;
+      }
+      if (typeof isSidewaysEntryBlocked === 'function' && isSidewaysEntryBlocked(r.regime)) {
+        const reason = 'yatay/kararsız piyasa';
+        brain('📐 [Rejim] ' + short + ' teyitli ama ' + reason + ' — "Yatay Piyasada Yeni Pozisyon Açma" engeli nedeniyle giriş yapılmadı.');
+        apBlockLog.push({ coin: short, tag: 'Rejim', reason });
+        return null;
+      }
+      if (typeof isLossCooldownActive === 'function' && isLossCooldownActive(short)) {
+        const remainMin = Math.max(0, Math.ceil(((lossCooldownUntil[short] || 0) - Date.now()) / 60000));
+        const reason = remainMin + 'dk kaldı';
+        brain('🧊 [Soğuma-Kayıp] ' + short + ' teyitli ama son kayıptan sonra soğumada — ' + reason + '.');
+        apBlockLog.push({ coin: short, tag: 'Soğuma-Kayıp', reason });
+        return null;
+      }
+      if (typeof isManualCooldownActive === 'function' && isManualCooldownActive(short)) {
+        const reason = 'elle işaretlenmiş soğuma';
+        brain('🧊 [Soğuma-Manuel] ' + short + ' teyitli ama ' + reason + ' — devre dışı.');
+        apBlockLog.push({ coin: short, tag: 'Soğuma-Manuel', reason });
+        return null;
+      }
       if (fgOn && c.direction === 'long' && fearGreedData.value <= fgThresh && fearGreedData.lastFetch > 0) {
+        const reason = 'F&G ' + fearGreedData.value + ' (Aşırı Korku)';
         brain('😱 [F&G] ' + short + ' teyitli ama Aşırı Korku (' + fearGreedData.value + ') — LONG engellendi.');
+        apBlockLog.push({ coin: short, tag: 'F&G', reason });
         return null;
       }
       if (btcCorrOn && short !== 'BTC' && c.direction === 'long' && btcCorrCache.change <= -btcCorrThresh) {
+        const reason = 'BTC %' + btcCorrCache.change.toFixed(2);
         brain('🔗 [BTC Korelasyon] ' + short + ' teyitli ama BTC %' + btcCorrCache.change.toFixed(2) + ' düşüyor — LONG engellendi.');
+        apBlockLog.push({ coin: short, tag: 'BTC Korelasyon', reason });
+        return null;
+      }
+      if (typeof cvdEntryBlocked === 'function' && cvdEntryBlocked(short, c.direction)) {
+        const st = (typeof getCvdStats === 'function') ? getCvdStats(short, 60) : null;
+        const reason = st ? 'akış oranı %' + (st.ratio * 100).toFixed(0) : 'gerçek para yönü sinyale ters';
+        brain('🌊 [Akış] ' + short + ' teyitli ama son 60sn gerçek para akışı sinyale ters (' + reason + ') — engellendi.');
+        apBlockLog.push({ coin: short, tag: 'Akış', reason });
+        return null;
+      }
+      if (typeof crowdEntryBlocked === 'function' && crowdEntryBlocked(short, c.direction)) {
+        const ls = posDataCache[short]?.lsRatio;
+        const reason = (ls != null) ? 'L/S ' + ls.toFixed(2) : 'kalabalık aşırı uçta';
+        brain('🐑 [Kalabalık] ' + short + ' teyitli ama ' + reason + ' — squeeze riski, engellendi.');
+        apBlockLog.push({ coin: short, tag: 'Kalabalık', reason });
         return null;
       }
       if (fundingOn) {
@@ -11852,8 +11898,18 @@ async function apCycle(){
           const rate = getFundingRate(r.symbol);
           const thresh = parseFloat(document.getElementById('fundingThreshold')?.value) || 0.05;
           if (rate !== null) {
-            if (c.direction === 'long' && rate >= thresh) { brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — LONG engellendi (sıkışma riski).'); return null; }
-            if (c.direction === 'short' && rate <= -thresh) { brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — SHORT engellendi (sıkışma riski).'); return null; }
+            if (c.direction === 'long' && rate >= thresh) {
+              const reason = 'fonlama %' + rate.toFixed(3);
+              brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — LONG engellendi (sıkışma riski).');
+              apBlockLog.push({ coin: short, tag: 'Funding', reason });
+              return null;
+            }
+            if (c.direction === 'short' && rate <= -thresh) {
+              const reason = 'fonlama %' + rate.toFixed(3);
+              brain('💰 [Funding] ' + short + ' fonlama %' + rate.toFixed(3) + ' — SHORT engellendi (sıkışma riski).');
+              apBlockLog.push({ coin: short, tag: 'Funding', reason });
+              return null;
+            }
           }
         } catch(e){}
       }
@@ -11866,8 +11922,18 @@ async function apCycle(){
           const trend3 = kl3 ? getMTFTrend(kl3) : 'unknown';
           const longOk  = (trend2 === 'bull' || trend2 === 'unknown') && (trend3 === 'bull' || trend3 === 'unknown');
           const shortOk = (trend2 === 'bear' || trend2 === 'unknown') && (trend3 === 'bear' || trend3 === 'unknown');
-          if (c.direction === 'long' && !longOk) { brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri boğayı onaylamıyor — engellendi.'); return null; }
-          if (c.direction === 'short' && !shortOk) { brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri ayıyı onaylamıyor — engellendi.'); return null; }
+          if (c.direction === 'long' && !longOk) {
+            const reason = tf2 + '/' + tf3 + ' boğayı onaylamıyor';
+            brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri boğayı onaylamıyor — engellendi.');
+            apBlockLog.push({ coin: short, tag: 'MTF', reason });
+            return null;
+          }
+          if (c.direction === 'short' && !shortOk) {
+            const reason = tf2 + '/' + tf3 + ' ayıyı onaylamıyor';
+            brain('📊 [MTF] ' + short + ' teyitli ama üst zaman dilimleri ayıyı onaylamıyor — engellendi.');
+            apBlockLog.push({ coin: short, tag: 'MTF', reason });
+            return null;
+          }
         } catch(e){}
       }
       return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.confirmCycles };
@@ -11876,7 +11942,12 @@ async function apCycle(){
     const candidates = candidateChecks.filter(Boolean).sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
 
     if (!candidates.length) {
-      brain('🌫️ ' + confirmedShorts.length + ' aday teyit turunu geçti ama kalite filtreleri (rejim/soğuma/funding/MTF/F&G/korelasyon) hiçbirine izin vermedi.');
+      if (apBlockLog.length) {
+        const summary = apBlockLog.map(b => b.coin + '(' + b.tag + (b.reason ? ': ' + b.reason : '') + ')').join(' · ');
+        brain('🌫️ ' + confirmedShorts.length + ' aday teyit turunu geçti ama hiçbiri kalite filtresinden geçemedi — ' + summary);
+      } else {
+        brain('🌫️ ' + confirmedShorts.length + ' aday teyit turunu geçti ama kalite filtreleri (rejim/soğuma/funding/MTF/F&G/korelasyon/akış/kalabalık) hiçbirine izin vermedi.');
+      }
       return;
     }
 
