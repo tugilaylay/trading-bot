@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v45.5 IRK KOŞULU (RACE) DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v46.0 ŞEFFAF KOKPİT</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v45.5 🔒</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.0 🧭</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1234,7 +1234,31 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <span style="flex:1"></span>
       <span id="fearGreedBadge" class="qt-mast-stat" title="Korku & Açgözlülük Endeksi">F&G: —</span>
       <span id="wakeLockBadge" class="qt-mast-stat" style="color:var(--muted);" title="Ekran kilidi">🔓 SERBEST</span>
-      <button class="qt-theme-toggle" id="qtThemeToggle" title="Kâğıt / Gece görünümü" type="button">☾ GECE MODU</button>
+      <button class="qt-theme-toggle" id="v46LiveBtn" title="Canlı sunucu köprüsü (quant-server)" type="button" onclick="v46OpenLiveModal()">🔌 CANLI: <span id="v46LiveState">KAPALI</span></button>
+        <button class="qt-theme-toggle" id="qtThemeToggle" title="Kâğıt / Gece görünümü" type="button">☾ GECE MODU</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════ v46.0: 🎛️ PİLOT MODU — tek bakış kokpiti ══════════ -->
+  <div class="v46-pilot" id="v46PilotCard">
+    <div class="v46-pilot-ring-wrap">
+      <svg viewBox="0 0 84 84" class="v46-ring">
+        <circle cx="42" cy="42" r="36" class="v46-ring-bg"/>
+        <circle cx="42" cy="42" r="36" class="v46-ring-fg" id="v46RingFg"/>
+      </svg>
+      <div class="v46-ring-num" id="v46HealthNum">—</div>
+      <div class="v46-ring-lbl">SAĞLIK</div>
+    </div>
+    <div class="v46-pilot-main">
+      <div class="v46-pilot-sentence" id="v46Sentence">Sistem uyanıyor…</div>
+      <div class="v46-pilot-chips">
+        <span class="v46-chip" id="v46ChipPos">📂 0 açık poz.</span>
+        <span class="v46-chip" id="v46ChipDaily">📅 Bugün: 0 $</span>
+        <span class="v46-chip" id="v46ChipRej" title="Son 1 saatte kapıların engellediği sinyal sayısı — detay: Analiz ▸ Red Defteri">🚦 0 red / 1s</span>
+        <span class="v46-chip" id="v46ChipWs">📡 —</span>
+        <span class="v46-chip" id="v46ChipBridge">🔌 Köprü: kapalı</span>
+      </div>
     </div>
   </div>
 
@@ -1313,6 +1337,16 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <span class="sys-chip" id="sysChipInterval">⏱ <b>—</b></span>
     <span class="sys-chip" id="sysChipIndicators">🧠 <b>—</b> gösterge</span>
     <span class="sys-chip" id="sysChipProtections">🛡️ <b>—</b> koruma aktif</span>
+  </div>
+
+  <!-- ═══ v46.0: 📰 GÜNLÜK BRİFİNG — sabah gazetesi ═══ -->
+  <div class="v46-brief" id="v46BriefCard">
+    <div class="v46-brief-head">
+      <span class="v46-brief-title">📰 QUANT SABAH BRİFİNGİ</span>
+      <span class="v46-brief-date" id="v46BriefDate">—</span>
+      <button class="v46-brief-refresh" onclick="renderDailyBriefing(true)" title="Yenile">↻</button>
+    </div>
+    <div class="v46-brief-body" id="v46BriefBody">Veri toplanıyor…</div>
   </div>
 
 
@@ -2741,6 +2775,30 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       📌 Bu bir tavsiye değil, sadece bir <b>kontrol listesidir</b> — nihai karar her zaman senin. Ben ne yatırım danışmanıyım ne de finansal tavsiye verebilirim; bu sadece botun kendi geçmiş verisine dayanan objektif bir özet.
     </div>
   </div>
+  <!-- ═══ v46.0: 🚦 RED DEFTERİ — kapılar ne kazandırıyor? ═══ -->
+  <details class="setup-card acc-card" data-accid="v46rej" open>
+    <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span style="font-weight:800;">🚦 Red Defteri — Kapılar Ne Kazandırıyor?</span>
+      <span style="font-size:10px;color:var(--muted);" id="v46RejCount">0 kayıt</span>
+    </summary>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0;">Her engellenen sinyal buraya işlenir. 30 dk sonra fiyat kontrol edilir: giriş yapılsaydı ne olurdu? Böylece her filtrenin <b>gerçek değeri</b> ölçülür — kaçınılan zarar mı, kaçırılan kâr mı? Ölçemediğini optimize edemezsin.</div>
+    <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
+    <div class="ra-section-title">Son Redler</div>
+    <div id="v46RejRecent" style="font-family:var(--mono);font-size:10.5px;line-height:1.7;"></div>
+    <button class="btn-toggle-all" style="width:100%;padding:9px;margin-top:10px;font-size:11px;" onclick="if(confirm('Red Defteri tamamen silinsin mi?')){v46Rej.items=[];v46RejSave();renderRejectionLedger();}">🗑️ Defteri Temizle</button>
+  </details>
+
+  <!-- ═══ v46.0: 🗓️ SAAT×GÜN ISI HARİTASI ═══ -->
+  <details class="setup-card acc-card" data-accid="v46heat" open>
+    <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span style="font-weight:800;">🗓️ Saat × Gün K/Z Isı Haritası</span>
+      <span style="font-size:10px;color:var(--muted);">7 gün × 24 saat</span>
+    </summary>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0;">Botun haftalık kâr coğrafyası: her hücre o gün+saatte kapanan işlemlerin toplam K/Z'si. Koyu kırmızı bölgeler = "İşlem Saatleri Filtresi" ile kapatılacak adaylar.</div>
+    <div id="v46HeatWrap" style="overflow-x:auto;"><div id="v46HeatGrid"></div></div>
+    <div class="ra-note">📌 Hücreye dokun: detay. Yeşil yoğunluğu kârla, kırmızı zararla orantılı. En az 15-20 işlem birikince desenler anlamlı olur.</div>
+  </details>
+
   <!-- Log -->
   </div>
   <!-- ═══ /ANALİZ ═══ -->
@@ -5618,6 +5676,7 @@ function cvdEntryBlocked(coin, dir) {
   const TH = 0.15;
   if (dir === 'long' && st.ratio < -TH) {
     log(`🌊 [CVD Akış] ${coin} — LONG sinyali var ama son 60 sn'de gerçek para NET SATIYOR (akış oranı ${(st.ratio*100).toFixed(0)}%, ${(st.delta/1000).toFixed(1)}K$ satış baskın). Boş yükseliş — giriş engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'long','CVD Akış');}catch(e){}
     return true;
   }
   return false;
@@ -5694,10 +5753,12 @@ function crowdEntryBlocked(coin, dir) {
   if (ls === undefined || ls === null || isNaN(ls)) return false;
   if (dir === 'long' && ls >= 3.0) {
     log(`🐑 [Kalabalık] ${coin} — Long/Short oranı ${ls.toFixed(2)}: piyasanın ezici çoğunluğu zaten LONG'ta. Kalabalığın en yoğun olduğu yer, squeeze'in başladığı yerdir — LONG girişi engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'long','Kalabalık');}catch(e){}
     return true;
   }
   if (dir === 'short' && ls <= 0.33) {
     log(`🐑 [Kalabalık] ${coin} — Long/Short oranı ${ls.toFixed(2)}: herkes SHORT'ta. Short squeeze riski — SHORT girişi engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'short','Kalabalık');}catch(e){}
     return true;
   }
   return false;
@@ -9271,6 +9332,7 @@ async function coinTickInner(coin, state) {
         // Log sadece pozisyon kapalıyken — aksi hâlde her 5 sn'de spam olur
         if (!state.openPosition) {
           log('⛔ [ADX Filtresi] ' + coin + ' ADX=' + adxResult.adx.toFixed(1) + ' < ' + adxMin + ' — Trendsiz piyasa, yeni pozisyon açılmadı.', 'info', coin);
+    try{recordRejection(coin,'both','ADX Filtresi');}catch(e){}
         }
       }
     } catch(e) { /* ADX hesaplanamazsa devam et */ }
@@ -9344,10 +9406,12 @@ async function coinTickInner(coin, state) {
       const thresh = parseFloat(document.getElementById('fundingThreshold')?.value) || 0.05;
       if (buyCount >= weightedMinConfirm && rate >= thresh) {
         log(`💰 [Funding] ${coin} — Funding %${rate.toFixed(4)} ≥ +%${thresh} (kalabalık LONG'da, squeeze riski). Yeni LONG engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'long','Funding');}catch(e){}
         return true;
       }
       if (sellCount >= weightedMinConfirm && rate <= -thresh) {
         log(`💰 [Funding] ${coin} — Funding %${rate.toFixed(4)} ≤ -%${thresh} (kalabalık SHORT'ta, squeeze riski). Yeni SHORT engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'short','Funding');}catch(e){}
         return true;
       }
       return false;
@@ -9360,12 +9424,14 @@ async function coinTickInner(coin, state) {
     } else if (adxBlocked) {
       // ADX log zaten yukarıda yazıldı
     } else if (isMaxPositionsReached()) {      log(`⛔ Maks. eşzamanlı pozisyon limitine ulaşıldı (${getOpenPositionCount()}/${document.getElementById('maxPositionsCount').value}). Yeni pozisyon açılmadı.`, 'warn', coin);
+    try{recordRejection(coin,(buyCount>=weightedMinConfirm?'long':'short'),'Poz. Limiti');}catch(e){}
     } else if ((() => {
       // ── v36.7: BTC Korelasyon Filtresi ──
       const btcOn = document.getElementById('btcCorrToggle')?.checked;
       const btcThresh = parseFloat(document.getElementById('btcCorrThreshold')?.value) || 3;
       if (btcOn && coin !== 'BTC' && btcCorrCache.change <= -btcThresh) {
         log(`🔗 [BTC Korelasyon] ${coin} — BTC son 4s'te %${btcCorrCache.change.toFixed(2)} düştü (eşik: -%${btcThresh}). LONG engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'long','BTC Korelasyon');}catch(e){}
         return true;
       }
       return false;
@@ -9376,18 +9442,22 @@ async function coinTickInner(coin, state) {
       const fgThresh = parseFloat(document.getElementById('fgThreshold')?.value) || 25;
       if (fgOn && fearGreedData.value <= fgThresh && fearGreedData.lastFetch > 0) {
         log(`😱 [Fear & Greed] ${coin} — F&G endeksi ${fearGreedData.value} (Aşırı Korku eşiği: ${fgThresh}). LONG engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'long','Fear&Greed');}catch(e){}
         return true;
       }
       return false;
     })()) { /* F&G bloğu yukarıda loglandı */ }
     else if (isSidewaysEntryBlocked(regimeInfo.regime)) {
       log(`🚫 ${coin} yatay/kararsız piyasada — "Yatay Piyasada Yeni Pozisyon Açma" engeli nedeniyle yeni pozisyon açılmadı.`, 'warn', coin);
+    try{recordRejection(coin,(buyCount>=weightedMinConfirm?'long':'short'),'Yatay Piyasa');}catch(e){}
     } else if (buyCount >= weightedMinConfirm && isTrendGateBlocked('long', rawSignals)) {
       log(`🚫 [Trend Gate] ${coin} LONG sinyali var (skor:${buyCount.toFixed(1)}) ama EMA Trend AYI → trende karşı LONG engellendi. SHORT fırsatını bekle.`, 'warn', coin);
+    try{recordRejection(coin,'long','Trend Gate');}catch(e){}
     } else if (mtfOn && !mtfLongOk && buyCount >= weightedMinConfirm) {
       const tf2v = document.getElementById('mtfTf2')?.value || '1h';
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} LONG engellendi — Üst TF'ler boğa yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
+    try{recordRejection(coin,'long','MTF Onayı');}catch(e){}
     } else if (buyCount >= weightedMinConfirm) {
       // LONG (uzun) pozisyon — ağırlıklı skor yeterli VE trend gate onaylı
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
@@ -9407,10 +9477,12 @@ async function coinTickInner(coin, state) {
       sendTelegramMessage(`🟢 <b>${coin} LONG${lvTxt}</b>\nFiyat: ${formatPrice(price)}\nSkor: ${buyCount.toFixed(1)}/${totalMaxWeight.toFixed(1)}\nMiktar: ${effectiveTradeAmount.toFixed(0)} USDT`);
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && isTrendGateBlocked('short', rawSignals)) {
       log(`🚫 [Trend Gate] ${coin} SHORT sinyali var (skor:${sellCount.toFixed(1)}) ama EMA Trend BOĞA → trende karşı SHORT engellendi. LONG fırsatını bekle.`, 'warn', coin);
+    try{recordRejection(coin,'short','Trend Gate');}catch(e){}
     } else if (mtfOn && !mtfShortOk && tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
       const tf2v = document.getElementById('mtfTf2')?.value || '1h';
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} SHORT engellendi — Üst TF'ler ayı yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
+    try{recordRejection(coin,'short','MTF Onayı');}catch(e){}
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
       // SHORT (kısa) pozisyon — sadece futures simülasyon modunda, trend gate onaylı
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
@@ -12151,6 +12223,381 @@ if (wasOn && !lsGet(SK_PANIC) && vaultActive()) {
 } else {
   apRenderState();
 }
+})();
+</script>
+
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   v46.0 ŞEFFAF KOKPİT — Red Defteri · Pilot Modu · Brifing ·
+   Saat×Gün Isı Haritası · Canlı Köprü (quant-server)
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/* ── CSS enjeksiyonu — kâğıt/gece temasına saygılı ── */
+const css = document.createElement('style');
+css.textContent = `
+  .v46-pilot { display:flex; gap:16px; align-items:center; margin:14px 0;
+    padding:14px 16px; background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+  .v46-pilot-ring-wrap { position:relative; width:84px; height:84px; flex:0 0 84px; }
+  .v46-ring { width:84px; height:84px; transform:rotate(-90deg); }
+  .v46-ring-bg { fill:none; stroke:var(--surface3); stroke-width:7; }
+  .v46-ring-fg { fill:none; stroke:var(--green); stroke-width:7; stroke-linecap:round;
+    stroke-dasharray:226; stroke-dashoffset:226; transition:stroke-dashoffset 0.9s ease, stroke 0.5s ease; }
+  .v46-ring-num { position:absolute; top:26px; left:0; right:0; text-align:center;
+    font-family:var(--display); font-weight:800; font-size:22px; color:var(--text); }
+  .v46-ring-lbl { position:absolute; top:50px; left:0; right:0; text-align:center;
+    font-size:8px; letter-spacing:1.5px; color:var(--muted); font-weight:700; }
+  .v46-pilot-main { flex:1; min-width:0; }
+  .v46-pilot-sentence { font-family:var(--display); font-weight:700; font-size:14px;
+    line-height:1.45; color:var(--text); margin-bottom:8px; }
+  .v46-pilot-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .v46-chip { font-family:var(--mono); font-size:10px; padding:4px 9px; border-radius:20px;
+    background:var(--surface2); border:1px solid var(--border); color:var(--text); white-space:nowrap; }
+  .v46-chip.good { border-color:var(--green); color:var(--green); }
+  .v46-chip.bad  { border-color:var(--red); color:var(--red); }
+  .v46-brief { margin:0 0 16px; background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; overflow:hidden; }
+  .v46-brief-head { display:flex; align-items:center; gap:10px; padding:10px 14px;
+    border-bottom:2px solid var(--text); }
+  .v46-brief-title { font-family:var(--display); font-weight:800; font-size:13px;
+    letter-spacing:0.6px; color:var(--text); flex:1; }
+  .v46-brief-date { font-family:var(--mono); font-size:10px; color:var(--muted); }
+  .v46-brief-refresh { background:none; border:1px solid var(--border); border-radius:6px;
+    color:var(--muted); cursor:pointer; font-size:12px; padding:2px 8px; }
+  .v46-brief-body { padding:12px 14px; font-size:11.5px; line-height:1.75; color:var(--text);
+    column-gap:22px; }
+  @media (min-width:640px){ .v46-brief-body { columns:2; } }
+  .v46-brief-body b.head { font-family:var(--display); display:block; font-size:10px;
+    letter-spacing:1px; color:var(--accent); margin:6px 0 2px; text-transform:uppercase; }
+  #v46HeatGrid { display:grid; grid-template-columns:34px repeat(24,minmax(13px,1fr));
+    gap:2px; min-width:420px; margin-top:8px; }
+  .v46-heat-cell { aspect-ratio:1; border-radius:3px; background:var(--surface3);
+    cursor:default; transition:transform .12s; }
+  .v46-heat-cell:active { transform:scale(1.5); }
+  .v46-heat-lbl { font-family:var(--mono); font-size:8.5px; color:var(--muted);
+    display:flex; align-items:center; }
+  .v46-heat-hlbl { font-family:var(--mono); font-size:7.5px; color:var(--muted); text-align:center; }
+  .v46-rej-table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:10px; }
+  .v46-rej-table th { text-align:left; padding:5px 6px; color:var(--muted); font-size:8.5px;
+    letter-spacing:0.5px; border-bottom:1px solid var(--border); }
+  .v46-rej-table td { padding:5px 6px; border-bottom:1px solid var(--surface3); }
+  #v46LiveModal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999;
+    display:none; align-items:center; justify-content:center; padding:20px; }
+  #v46LiveModal .box { background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:20px; max-width:420px; width:100%; }
+  #v46LiveModal input { width:100%; padding:10px; margin:6px 0; border-radius:8px;
+    border:1px solid var(--border); background:var(--input-bg); color:var(--text);
+    font-family:var(--mono); font-size:12px; box-sizing:border-box; }
+`;
+document.head.appendChild(css);
+
+/* ═══ 1) RED DEFTERİ MOTORU ═══ */
+const SK_REJ = 'tugay_v46_rejections';
+const REJ_HORIZON = 30 * 60 * 1000; // 30 dk sonra hüküm verilir
+window.v46Rej = { items: [] };
+try { v46Rej.items = JSON.parse(localStorage.getItem(SK_REJ) || '[]'); } catch(e){}
+window.v46RejSave = function(){ try { localStorage.setItem(SK_REJ, JSON.stringify(v46Rej.items.slice(-300))); } catch(e){} };
+
+function v46Price(coin){
+  try {
+    const cfg = COIN_CONFIG[coin]; if (!cfg) return null;
+    const w = wsLive.prices[cfg.symbol];
+    if (w && Date.now() - w.t < 60000) return w.p;
+  } catch(e){}
+  return null;
+}
+
+window.recordRejection = function(coin, dir, gate){
+  // Aynı coin+kapı için 5 dk içinde mükerrer kayıt alma (döngü spam koruması)
+  const now = Date.now();
+  const dup = v46Rej.items.find(r => r.coin === coin && r.gate === gate && now - r.ts < 5*60*1000);
+  if (dup) return;
+  v46Rej.items.push({ ts: now, coin, dir, gate, price: v46Price(coin), pct: null, evalAt: null });
+  if (v46Rej.items.length > 300) v46Rej.items = v46Rej.items.slice(-300);
+  v46RejSave();
+};
+
+/* Değerlendirici: 30 dk dolan kayıtların akıbetine bakar */
+function v46RejEvaluate(){
+  const now = Date.now(); let changed = false;
+  v46Rej.items.forEach(r => {
+    if (r.pct !== null || !r.price) return;
+    if (now - r.ts < REJ_HORIZON) return;
+    const p = v46Price(r.coin);
+    if (p === null) return; // fiyat gelince değerlendirilir
+    const move = (p - r.price) / r.price * 100;
+    r.pct = r.dir === 'short' ? -move : move; // "girseydik" perspektifi (both → long varsayımı, tabloda ayrı işaretlenir)
+    r.evalAt = now; changed = true;
+  });
+  if (changed) { v46RejSave(); renderRejectionLedger(); }
+}
+
+window.renderRejectionLedger = function(){
+  const tEl = document.getElementById('v46RejGateTable');
+  const rEl = document.getElementById('v46RejRecent');
+  const cEl = document.getElementById('v46RejCount');
+  if (!tEl) return;
+  const items = v46Rej.items;
+  if (cEl) cEl.textContent = items.length + ' kayıt';
+  if (!items.length) {
+    tEl.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px;">Henüz engellenen sinyal yok — bot çalıştıkça defter dolacak.</div>';
+    if (rEl) rEl.innerHTML = ''; return;
+  }
+  // Kapı bazında toplama
+  const gates = {};
+  items.forEach(r => {
+    const g = gates[r.gate] = gates[r.gate] || { n:0, evald:0, saved:0, missed:0, net:0 };
+    g.n++;
+    if (r.pct !== null && r.dir !== 'both') {
+      g.evald++;
+      if (r.pct < 0) g.saved += -r.pct; else g.missed += r.pct;
+      g.net += -r.pct; // engel değeri = kaçınılan hareketin tersi
+    }
+  });
+  let html = '<table class="v46-rej-table"><tr><th>KAPI</th><th>RED</th><th>KAÇINILAN</th><th>KAÇIRILAN</th><th>NET DEĞER</th><th></th></tr>';
+  Object.entries(gates).sort((a,b)=>b[1].net-a[1].net).forEach(([g,s])=>{
+    const verdict = s.evald < 3 ? '⏳' : (s.net > 1 ? '🛡️ koruyor' : (s.net < -1 ? '⚠️ fırsat yiyor' : '➖ nötr'));
+    const netC = s.net > 0.5 ? 'var(--green)' : (s.net < -0.5 ? 'var(--red)' : 'var(--muted)');
+    html += `<tr><td><b>${g}</b></td><td>${s.n}</td><td style="color:var(--green)">${s.saved.toFixed(1)}%</td><td style="color:var(--red)">${s.missed.toFixed(1)}%</td><td style="color:${netC};font-weight:700">${s.net>=0?'+':''}${s.net.toFixed(1)}%</td><td>${verdict}</td></tr>`;
+  });
+  html += '</table><div class="ra-note" style="margin-top:6px;">📌 KAÇINILAN = engel olmasaydı yaşanacak zarar. KAÇIRILAN = engellenen kâr. NET pozitifse kapı para kazandırıyor. Yönü belirsiz (both) redler tabloya adet olarak girer, K/Z hesabına girmez. Hüküm için kapı başına ≥3 değerlendirme gerekir.</div>';
+  tEl.innerHTML = html;
+  if (rEl) {
+    rEl.innerHTML = items.slice(-12).reverse().map(r => {
+      const t = new Date(r.ts); const hh = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+      const res = r.pct === null ? '<span style="color:var(--muted)">⏳ bekliyor</span>'
+        : (r.dir === 'both' ? '<span style="color:var(--muted)">yön belirsiz</span>'
+        : (r.pct < 0 ? `<span style="color:var(--green)">✓ ${(-r.pct).toFixed(2)}% zarardan kaçınıldı</span>`
+                     : `<span style="color:var(--red)">✗ ${r.pct.toFixed(2)}% kâr kaçtı</span>`));
+      return `${hh} · <b>${r.coin}</b> ${r.dir==='both'?'—':r.dir.toUpperCase()} · ${r.gate} → ${res}`;
+    }).join('<br>');
+  }
+};
+
+/* ═══ 2) PİLOT MODU ═══ */
+function v46OpenPositions(){
+  let n = 0;
+  try { Object.values(coinStates).forEach(s => { if (s && s.openPosition) n++; }); } catch(e){}
+  return n;
+}
+function v46BotRunning(){
+  try { return Object.values(coinStates).some(s => s && s.botRunning); } catch(e){ return false; }
+}
+function v46DailyPnl(){
+  try { return (dailyPnlTracker && typeof dailyPnlTracker.pnl === 'number') ? dailyPnlTracker.pnl : 0; } catch(e){ return 0; }
+}
+function computePilotHealth(){
+  let score = 0;
+  try { if (wsLive.status === 'live') score += 15; } catch(e){}
+  try { if (wsLive.status === 'live' && Date.now() - wsLive.lastMsg < 60000) score += 10; } catch(e){}
+  try { const cb = document.getElementById('circuitBreakerBanner'); if (!cb || cb.style.display === 'none' || !cb.style.display) score += 20; } catch(e){}
+  const dp = v46DailyPnl(); if (dp >= 0) score += 20; else if (dp > -50) score += 8;
+  try {
+    const last = globalTradeHistory.filter(t => typeof t.pnl === 'number').slice(-20);
+    if (last.length >= 5) {
+      const wr = last.filter(t => t.pnl >= 0).length / last.length;
+      if (wr >= 0.55) score += 20; else if (wr >= 0.45) score += 12; else if (wr >= 0.35) score += 5;
+    } else score += 10; // veri az: nötr kredi
+  } catch(e){}
+  if (v46BotRunning()) score += 15; else score += 5;
+  return Math.max(0, Math.min(100, score));
+}
+function v46Sentence(){
+  const parts = [];
+  parts.push(v46BotRunning() ? 'Bot görevde' : 'Bot beklemede');
+  const op = v46OpenPositions();
+  if (op > 0) parts.push(op + ' pozisyon açık');
+  const rej1h = v46Rej.items.filter(r => Date.now() - r.ts < 3600000).length;
+  if (rej1h > 0) parts.push(rej1h + ' sinyal kapılarda durduruldu');
+  const dp = v46DailyPnl();
+  if (Math.abs(dp) > 0.5) parts.push('bugün ' + (dp>=0?'+':'') + dp.toFixed(1) + ' $');
+  try { if (wsLive.status !== 'live') parts.push('⚠️ canlı veri akışı kopuk'); } catch(e){}
+  return parts.join(' · ') + '.';
+}
+function renderPilotCard(){
+  const num = document.getElementById('v46HealthNum'); if (!num) return;
+  const h = computePilotHealth();
+  num.textContent = h;
+  const ring = document.getElementById('v46RingFg');
+  if (ring) {
+    ring.style.strokeDashoffset = String(226 - 226 * h / 100);
+    ring.style.stroke = h >= 70 ? 'var(--green)' : (h >= 45 ? 'var(--yellow)' : 'var(--red)');
+  }
+  const s = document.getElementById('v46Sentence'); if (s) s.textContent = v46Sentence();
+  const op = v46OpenPositions();
+  const cp = document.getElementById('v46ChipPos'); if (cp) cp.textContent = '📂 ' + op + ' açık poz.';
+  const dp = v46DailyPnl();
+  const cd = document.getElementById('v46ChipDaily');
+  if (cd) { cd.textContent = '📅 Bugün: ' + (dp>=0?'+':'') + dp.toFixed(1) + ' $'; cd.className = 'v46-chip ' + (dp>0.5?'good':(dp<-0.5?'bad':'')); }
+  const rej1h = v46Rej.items.filter(r => Date.now() - r.ts < 3600000).length;
+  const cr = document.getElementById('v46ChipRej'); if (cr) cr.textContent = '🚦 ' + rej1h + ' red / 1s';
+  const cw = document.getElementById('v46ChipWs');
+  if (cw) { try {
+    cw.textContent = '📡 ' + (wsLive.status === 'live' ? 'CANLI AKIŞ' : (wsLive.status === 'connecting' ? 'BAĞLANIYOR' : 'REST YEDEK'));
+    cw.className = 'v46-chip ' + (wsLive.status === 'live' ? 'good' : '');
+  } catch(e){} }
+  const cb = document.getElementById('v46ChipBridge');
+  if (cb) { cb.textContent = '🔌 Köprü: ' + (v46Bridge.status); cb.className = 'v46-chip ' + (v46Bridge.status === 'bağlı' ? 'good' : ''); }
+}
+
+/* ═══ 3) GÜNLÜK BRİFİNG ═══ */
+window.renderDailyBriefing = function(force){
+  const body = document.getElementById('v46BriefBody'); if (!body) return;
+  const dEl = document.getElementById('v46BriefDate');
+  const now = new Date();
+  if (dEl) dEl.textContent = now.toLocaleDateString('tr-TR', { weekday:'long', day:'numeric', month:'long' });
+  let trades = [];
+  try { trades = globalTradeHistory.filter(t => typeof t.pnl === 'number' && t.ts); } catch(e){}
+  const dayMs = 86400000;
+  const y0 = new Date(now); y0.setHours(0,0,0,0);
+  const yest = trades.filter(t => t.ts >= y0.getTime() - dayMs && t.ts < y0.getTime());
+  const today = trades.filter(t => t.ts >= y0.getTime());
+  let html = '';
+  // Dün
+  html += '<b class="head">Dünün Bilançosu</b>';
+  if (yest.length) {
+    const pnl = yest.reduce((a,t)=>a+t.pnl,0);
+    const wr = yest.filter(t=>t.pnl>=0).length / yest.length * 100;
+    const best = yest.reduce((a,t)=>t.pnl>a.pnl?t:a, yest[0]);
+    const worst = yest.reduce((a,t)=>t.pnl<a.pnl?t:a, yest[0]);
+    html += `${yest.length} işlem, net <b style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(2)} $</b>, kazanma %${wr.toFixed(0)}. `;
+    html += `En iyi karar: <b>${best.coin}</b> ${(best.direction||'long').toUpperCase()} (+${best.pnl.toFixed(2)}$). `;
+    if (worst.pnl < 0) html += `En acı ders: <b>${worst.coin}</b> (${worst.pnl.toFixed(2)}$).`;
+  } else html += 'Dün işlem kapanmadı — bot sabırlıydı ya da kapılar kapalıydı.';
+  // Bugün
+  html += '<b class="head">Bugünün Durumu</b>';
+  const dp = v46DailyPnl();
+  html += `Şu ana dek ${today.length} işlem, ${(dp>=0?'+':'')}${dp.toFixed(2)} $. ${v46OpenPositions()} pozisyon açık.`;
+  // Kapı raporu (son 24s)
+  const rej24 = v46Rej.items.filter(r => now.getTime() - r.ts < dayMs);
+  html += '<b class="head">Kapı Nöbeti (24s)</b>';
+  if (rej24.length) {
+    const byGate = {};
+    rej24.forEach(r => byGate[r.gate] = (byGate[r.gate]||0)+1);
+    const top = Object.entries(byGate).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    html += rej24.length + ' sinyal durduruldu — en aktif: ' + top.map(([g,n])=>`<b>${g}</b> (${n})`).join(', ') + '. Değer analizi: Analiz ▸ Red Defteri.';
+  } else html += 'Son 24 saatte hiçbir kapı devreye girmedi.';
+  // Tarihsel saat tüyosu
+  try {
+    const byHour = {};
+    trades.forEach(t => { const h = new Date(t.ts).getHours(); byHour[h] = (byHour[h]||0) + t.pnl; });
+    const hrs = Object.entries(byHour);
+    if (hrs.length >= 6) {
+      const bestH = hrs.reduce((a,b)=>b[1]>a[1]?b:a);
+      const worstH = hrs.reduce((a,b)=>b[1]<a[1]?b:a);
+      html += '<b class="head">Editörün Notu</b>';
+      html += `Tarihsel olarak en verimli saatin <b>${String(bestH[0]).padStart(2,'0')}:00</b> (${bestH[1]>=0?'+':''}${bestH[1].toFixed(1)}$)`;
+      if (worstH[1] < 0) html += `, en tehlikelisi <b>${String(worstH[0]).padStart(2,'0')}:00</b> (${worstH[1].toFixed(1)}$)`;
+      html += '. Detay: Isı Haritası.';
+    }
+  } catch(e){}
+  body.innerHTML = html;
+};
+
+/* ═══ 4) SAAT×GÜN ISI HARİTASI ═══ */
+window.renderPnlHeatmap = function(){
+  const grid = document.getElementById('v46HeatGrid'); if (!grid) return;
+  let trades = [];
+  try { trades = globalTradeHistory.filter(t => typeof t.pnl === 'number' && t.ts); } catch(e){}
+  const cells = Array.from({length:7}, () => Array.from({length:24}, () => ({pnl:0, n:0})));
+  trades.forEach(t => {
+    const d = new Date(t.ts);
+    const day = (d.getDay() + 6) % 7; // Pzt=0
+    const c = cells[day][d.getHours()]; c.pnl += t.pnl; c.n++;
+  });
+  const maxAbs = Math.max(0.01, ...cells.flat().map(c => Math.abs(c.pnl)));
+  const days = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  let html = '<div></div>';
+  for (let h = 0; h < 24; h++) html += `<div class="v46-heat-hlbl">${h % 3 === 0 ? String(h).padStart(2,'0') : ''}</div>`;
+  for (let d = 0; d < 7; d++) {
+    html += `<div class="v46-heat-lbl">${days[d]}</div>`;
+    for (let h = 0; h < 24; h++) {
+      const c = cells[d][h];
+      let bg = 'var(--surface3)';
+      if (c.n > 0) {
+        const inten = Math.min(1, Math.abs(c.pnl) / maxAbs);
+        bg = c.pnl >= 0 ? `rgba(12,107,64,${0.25 + 0.7*inten})` : `rgba(169,50,38,${0.25 + 0.7*inten})`;
+      }
+      const tip = c.n > 0 ? `${days[d]} ${String(h).padStart(2,'0')}:00 — ${c.n} işlem, ${c.pnl>=0?'+':''}${c.pnl.toFixed(2)}$` : `${days[d]} ${String(h).padStart(2,'0')}:00 — işlem yok`;
+      html += `<div class="v46-heat-cell" style="background:${bg}" title="${tip}"></div>`;
+    }
+  }
+  grid.innerHTML = html;
+};
+
+/* ═══ 5) CANLI KÖPRÜ (quant-server) ═══ */
+const SK_BRIDGE = 'tugay_v46_livebridge';
+window.v46Bridge = { url:'', token:'', enabled:false, status:'kapalı' };
+try { Object.assign(v46Bridge, JSON.parse(localStorage.getItem(SK_BRIDGE) || '{}')); v46Bridge.status = v46Bridge.enabled ? 'yapılandırıldı' : 'kapalı'; } catch(e){}
+
+const modal = document.createElement('div');
+modal.id = 'v46LiveModal';
+modal.innerHTML = `
+  <div class="box">
+    <div style="font-family:var(--display);font-weight:800;font-size:15px;margin-bottom:4px;">🔌 Canlı Köprü — quant-server</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">VPS'teki Express sunucuna bağlanır (github.com/tugilaylay/quant-server). Bu sürümde: bağlantı ayarı + sağlık testi. Emir yönlendirme anahtarı, sunucu canlıda doğrulandıktan sonra v47'de açılır — gerçek parayla köprü, iki ucu da test edilmeden kurulmaz.</div>
+    <input id="v46BridgeUrl" placeholder="https://sunucu-adresin:3000" autocomplete="off">
+    <input id="v46BridgeToken" placeholder="AUTH_TOKEN (.env ile aynı)" type="password" autocomplete="off">
+    <div id="v46BridgeMsg" style="font-size:11px;font-family:var(--mono);margin:8px 0;color:var(--muted);">—</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-toggle-all" style="flex:1;padding:10px;" onclick="v46BridgeTest()">🩺 Sağlık Testi</button>
+      <button class="btn-toggle-all" style="flex:1;padding:10px;" onclick="v46BridgeSaveClose()">💾 Kaydet</button>
+      <button class="btn-toggle-all" style="padding:10px 14px;" onclick="document.getElementById('v46LiveModal').style.display='none'">✕</button>
+    </div>
+  </div>`;
+document.body.appendChild(modal);
+modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+window.v46OpenLiveModal = function(){
+  document.getElementById('v46BridgeUrl').value = v46Bridge.url || '';
+  document.getElementById('v46BridgeToken').value = v46Bridge.token || '';
+  modal.style.display = 'flex';
+};
+window.v46BridgeTest = async function(){
+  const url = document.getElementById('v46BridgeUrl').value.trim().replace(/\/+$/,'');
+  const msg = document.getElementById('v46BridgeMsg');
+  if (!url) { msg.textContent = '⚠️ Önce sunucu adresi gir.'; return; }
+  msg.textContent = '⏳ Test ediliyor…';
+  try {
+    const ctrl = new AbortController(); setTimeout(()=>ctrl.abort(), 6000);
+    const r = await fetch(url + '/health', { signal: ctrl.signal });
+    if (r.ok) { msg.innerHTML = '<span style="color:var(--green)">✅ Sunucu ayakta! Köprü kurulabilir.</span>'; v46Bridge.status = 'bağlı'; }
+    else msg.innerHTML = '<span style="color:var(--red)">❌ Sunucu cevap verdi ama sağlıklı değil (HTTP ' + r.status + ')</span>';
+  } catch(e) {
+    msg.innerHTML = '<span style="color:var(--red)">❌ Ulaşılamadı — VPS çalışıyor mu, port açık mı, HTTPS/CORS ayarlı mı?</span>';
+    v46Bridge.status = 'ulaşılamıyor';
+  }
+  v46UpdateLiveBadge(); renderPilotCard();
+};
+window.v46BridgeSaveClose = function(){
+  v46Bridge.url = document.getElementById('v46BridgeUrl').value.trim().replace(/\/+$/,'');
+  v46Bridge.token = document.getElementById('v46BridgeToken').value.trim();
+  v46Bridge.enabled = !!v46Bridge.url;
+  try { localStorage.setItem(SK_BRIDGE, JSON.stringify({url:v46Bridge.url, token:v46Bridge.token, enabled:v46Bridge.enabled})); } catch(e){}
+  if (v46Bridge.status !== 'bağlı') v46Bridge.status = v46Bridge.enabled ? 'yapılandırıldı' : 'kapalı';
+  modal.style.display = 'none';
+  v46UpdateLiveBadge(); renderPilotCard();
+  try { log('🔌 [Köprü] Canlı sunucu ayarı kaydedildi: ' + (v46Bridge.url || '(boş)') + ' — emir yönlendirme v47 ile açılacak.', 'system'); } catch(e){}
+};
+function v46UpdateLiveBadge(){
+  const el = document.getElementById('v46LiveState'); if (!el) return;
+  el.textContent = v46Bridge.status === 'bağlı' ? 'BAĞLI ✅' : (v46Bridge.enabled ? 'HAZIR' : 'KAPALI');
+}
+
+/* ═══ ZAMANLAYICILAR & İLK ÇİZİM ═══ */
+setInterval(v46RejEvaluate, 60 * 1000);
+setInterval(renderPilotCard, 5 * 1000);
+setInterval(() => { renderRejectionLedger(); renderPnlHeatmap(); }, 45 * 1000);
+setInterval(() => renderDailyBriefing(false), 5 * 60 * 1000);
+setTimeout(() => {
+  v46UpdateLiveBadge(); renderPilotCard(); renderRejectionLedger();
+  renderPnlHeatmap(); renderDailyBriefing(true);
+  try { log('🧭 [v46] ŞEFFAF KOKPİT devrede — Red Defteri kapıları izliyor, Pilot Modu nabzı tutuyor, sabah brifingi hazır.', 'system'); } catch(e){}
+}, 2500);
+
 })();
 </script>
 
