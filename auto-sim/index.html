@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.0 ŞEFFAF KOKPİT</title>
+<title>TUGAY × QUANT · v46.1 ŞEFFAF KOKPİT + STRATEJİ GİYME</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.0 🧭</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.1 🎽</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6931,8 +6931,83 @@ function renderArena() {
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:3px;">${desc}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:3px;">${st.n} kapanış · Kazanma: %${wr} · Açık gölge: ${arena.open.filter(o=>o.v===k).length || (k==='REAL'?'—':'0')}</div>
+        ${arenaAdoptBtnHtml(k, st)}
       </div>`;
   }).join('') + `<button class="btn" style="width:100%;font-size:11px;" onclick="if(confirm('Arena istatistikleri sıfırlansın mı?')){arena={stats:{REAL:{n:0,wins:0,pnl:0},B:{n:0,wins:0,pnl:0},C:{n:0,wins:0,pnl:0}},open:[]};arenaSave();renderArena();}">🔄 Arenayı Sıfırla</button>`;
+}
+
+// ───────── v46.1: 🎽 STRATEJİ GİYME — kanıtlanan gölgeye tek dokunuşla geç ─────────
+// Kural 1: Geçmeden önce ORİJİNAL ayarların fotoğrafı çekilir (tek dokunuşla geri dönüş).
+// Kural 2: Çarpanlar HER ZAMAN orijinal fotoğrafa uygulanır — üst üste giyme ayarları katlamaz.
+// Kural 3: Örneklem küçükse (<10 kapanış) sistem seni uyarır; kanıtsız geçiş yok.
+const SK_ADOPT = 'tugay_v46_arena_adopt';
+let arenaAdopt = { snapshot: null, wearing: null };
+try { const a = JSON.parse(localStorage.getItem(SK_ADOPT)); if (a) arenaAdopt = a; } catch(e) {}
+function arenaAdoptSave() { try { localStorage.setItem(SK_ADOPT, JSON.stringify(arenaAdopt)); } catch(e) {} }
+
+function arenaTakeSnapshot() {
+  return {
+    trailToggle: !!document.getElementById('trailingStopToggle')?.checked,
+    trailAct: parseFloat(document.getElementById('trailingActivationPct')?.value) || 1.2,
+    trailDist: parseFloat(document.getElementById('trailingStopPct')?.value) || 1.5,
+    tp: parseFloat(document.getElementById('takeProfit')?.value) || 6
+  };
+}
+function arenaApplySettings(s) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const tgl = document.getElementById('trailingStopToggle'); if (tgl) tgl.checked = s.trailToggle;
+  set('trailingActivationPct', (+s.trailAct).toFixed(2).replace(/\.?0+$/,''));
+  set('trailingStopPct', (+s.trailDist).toFixed(2).replace(/\.?0+$/,''));
+  set('takeProfit', (+s.tp).toFixed(2).replace(/\.?0+$/,''));
+  try { saveSettings(); } catch(e) {}
+}
+
+window.arenaWear = function(v) {
+  const st = arena.stats[v]; const cfgV = ARENA_VARIANTS[v];
+  if (!st || !cfgV) return;
+  let warn = '';
+  if (st.n < 10) warn = '\n\n⚠️ DİKKAT: Sadece ' + st.n + ' kapanış var — istatistiksel olarak zayıf kanıt. En az 10-15 kapanış birikmesini beklemek daha güvenli.';
+  if (st.pnl <= arena.stats.REAL.pnl) warn += '\n\n⚠️ Bu varyant şu an GERÇEK botu geçmiyor bile.';
+  const msg = cfgV.name + ' stratejisine geçilsin mi?\n\n' +
+    '• ' + st.n + ' kapanış · Kazanma %' + (st.n ? (st.wins/st.n*100).toFixed(0) : '—') + ' · ' + (st.pnl>=0?'+':'') + st.pnl.toFixed(2) + '$\n' +
+    (v === 'B' ? '• Trailing eşiği ve mesafesi ×1.6 (geniş nefes)' : '• TP hedefi ×0.65 (erken tahsilat) + trailing KAPALI') +
+    '\n• Orijinal ayarların fotoğrafı saklanır — tek dokunuşla geri dönersin.' + warn;
+  if (!confirm(msg)) return;
+  if (!arenaAdopt.snapshot) arenaAdopt.snapshot = arenaTakeSnapshot(); // orijinal SADECE ilk giyişte çekilir
+  const s = arenaAdopt.snapshot;
+  if (v === 'B') {
+    arenaApplySettings({ trailToggle: true, trailAct: s.trailAct * 1.6, trailDist: s.trailDist * 1.6, tp: s.tp });
+  } else if (v === 'C') {
+    arenaApplySettings({ trailToggle: false, trailAct: s.trailAct, trailDist: s.trailDist, tp: s.tp * 0.65 });
+  }
+  arenaAdopt.wearing = v; arenaAdoptSave();
+  try { log('🎽 [Arena] ' + cfgV.name + ' GİYİLDİ — çıkış ayarları bu felsefeye göre güncellendi (' + st.n + ' kapanış kanıtıyla). Orijinal ayarlar cepte, "Geri Dön" ile anında dönersin. Not: Arena karşılaştırması artık yeni tabana göre birikir; temiz kıyas için Arenayı sıfırlamak mantıklı.', 'system'); } catch(e) {}
+  try { renderArena(); } catch(e) {}
+  try { if (typeof renderPilotCard === 'function') renderPilotCard(); } catch(e) {}
+};
+
+window.arenaUnwear = function() {
+  if (!arenaAdopt.snapshot) return;
+  if (!confirm('Orijinal ayarlara geri dönülsün mü?\n\nTrailing: ' + (arenaAdopt.snapshot.trailToggle?'AÇIK':'KAPALI') + ' · Eşik %' + arenaAdopt.snapshot.trailAct + ' · Mesafe %' + arenaAdopt.snapshot.trailDist + ' · TP çarpanı ' + arenaAdopt.snapshot.tp)) return;
+  arenaApplySettings(arenaAdopt.snapshot);
+  const worn = arenaAdopt.wearing;
+  arenaAdopt = { snapshot: null, wearing: null }; arenaAdoptSave();
+  try { log('↩️ [Arena] Orijinal ayarlara dönüldü' + (worn ? ' (' + ARENA_VARIANTS[worn].name + ' çıkarıldı)' : '') + '.', 'system'); } catch(e) {}
+  try { renderArena(); } catch(e) {}
+};
+
+function arenaAdoptBtnHtml(k, st) {
+  if (k === 'REAL') {
+    if (arenaAdopt.wearing) {
+      return '<div style="font-size:10px;color:var(--yellow);margin-top:6px;">🎽 Şu an giyili: <b>' + ARENA_VARIANTS[arenaAdopt.wearing].name + '</b></div>' +
+        '<button class="btn" style="width:100%;font-size:11px;margin-top:6px;" onclick="arenaUnwear()">↩️ Orijinal Ayarlara Dön</button>';
+    }
+    return '';
+  }
+  const wearing = arenaAdopt.wearing === k;
+  if (wearing) return '<div style="font-size:10px;color:var(--green);margin-top:6px;font-weight:700;">✅ GİYİLİ — gerçek bot şu an bu felsefeyle çıkıyor</div>';
+  const weak = st.n < 10 ? ' style="width:100%;font-size:11px;margin-top:6px;opacity:0.75;"' : ' style="width:100%;font-size:11px;margin-top:6px;"';
+  return '<button class="btn"' + weak + ' onclick="arenaWear(\'' + k + '\')">🎽 Bu Stratejiyi Giy' + (st.n < 10 ? ' (kanıt az: ' + st.n + ')' : '') + '</button>';
 }
 
 // ───────── v45.0: 🎬 İŞLEM SİNEMASI — Kapanmış işlemi film gibi geri oynat ─────────
