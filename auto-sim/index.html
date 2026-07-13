@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.9 GÖÇ DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v47.1 RİSK DENETİMİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.9 🔒</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.1 🔍</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1257,6 +1257,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
         <span class="v46-chip" id="v46ChipDaily">📅 Bugün: 0 $</span>
         <span class="v46-chip" id="v46ChipRej" title="Son 1 saatte kapıların engellediği sinyal sayısı — detay: Analiz ▸ Red Defteri">🚦 0 red / 1s</span>
         <span class="v46-chip" id="v46ChipWs">📡 —</span>
+        <span class="v46-chip" id="v46ChipCost" title="Toplam komisyon+kayma vs brüt K/Z — asıl düşmanı gör">💸 —</span>
         <span class="v46-chip" id="v46ChipBridge">🔌 Köprü: kapalı</span>
       </div>
     </div>
@@ -1923,6 +1924,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <span class="card-title" style="margin:0;flex:1;">
         <span class="step-badge">4</span>
         <span>🛡️ Risk Yönetimi</span>
+        <span class="optional-badge" style="background:rgba(12,107,64,0.15);color:var(--green);border-color:rgba(12,107,64,0.4);" title="v47.1 denetiminde 3 mükerrer ayar kaldırıldı: Breakeven Stop (Kâr Merdiveni domine ediyor), Yatay Piyasa Engeli (ADX+Rejim zaten yapıyor), Dinamik Poz. Büyüklüğü (Equity Freni ile çarpışıyordu)">🔍 v47.1 — denetlendi, 3 mükerrer kaldırıldı</span>
       </span>
       <span class="acc-chevron">▶</span>
     </summary>
@@ -2004,6 +2006,29 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <!-- v42: "Kısmi Kâr Alma" kartı kaldırıldı — Runner Modu aynı işin daha akıllı hali
            (TP'de kısmen kapat + kalanı trailing ile koştur). İki benzer özellik yan yana
            kafa karıştırıyordu. Eski partialTpToggle mantığı kodda zararsız şekilde uykuda. -->
+
+      <!-- ── v47.0: 🧮 Matematik Kapısı ── -->
+      <div class="card-title">
+        <span>🧮 Matematik Kapısı (Maliyet + Ödül/Risk)</span>
+        <span class="optional-badge" style="background:rgba(169,50,38,0.15);color:var(--red);border-color:rgba(169,50,38,0.4);">v47 — REFORM</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="mathGateToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>TP ≥ Maliyet × (kat)</label>
+          <input type="number" id="mathGateCostMult" value="4" min="1" max="10" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label>Min. Ödül/Risk Oranı</label>
+          <input type="number" id="mathGateMinRR" value="1.5" min="0.5" max="5" step="0.1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Her giriş öncesi iki soru sorar: <b>1)</b> TP hedefi, komisyon+kayma maliyetinin en az bu katı mı? Değilse işlem kazansa bile borsaya çalışır. <b>2)</b> Ödül/Risk yeterli mi? 1.5 oranında %40 kazanma bile kârlıdır; altında matematik kaybeder. Sığ coinlerde kayma otomatik yüksek hesaplanır — kapı onları doğal olarak eler.</div>
+
+      <div class="acc-divider"></div>
 
       <!-- ── v46.2: 🪜 Kâr Merdiveni (Profit Ratchet) ── -->
       <div class="card-title">
@@ -2183,24 +2208,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
-      <!-- ── Breakeven Stop ── -->
-      <div class="card-title">
-        <span>🛡️ Breakeven Stop (Başabaş Koruma)</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
-        <label class="regime-toggle-switch">
-          <input type="checkbox" id="breakevenToggle" checked>
-          <span class="regime-toggle-slider"></span>
-        </label>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Aktivasyon Eşiği (kaldıraçlı %)</label>
-          <input type="number" id="breakevenThreshold" value="1.5" step="0.5" min="0.5" max="8" />
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon belirttiğin % kâra ulaşınca Stop-Loss otomatik olarak giriş fiyatına çekilir. Böylece kâra dönen işlem geri zarar edemez — en kötü ihtimalle komisyon kadar küçük bir kayıpla kapanır.</div>
-
-      <div class="acc-divider"></div>
+      <!-- v47.1 DENETİM: "Breakeven Stop" kaldırıldı. Gerekçe: Kâr Merdiveni tarafından tamamen
+           domine ediliyordu — merdiven +%0.6'dan itibaren GERÇEK kâr tabanı kilitliyor, breakeven ise
+           sadece sıfırı koruyordu; komisyon dahil "başabaş" kapanış aslında NET ZARARDI. Ayrıca
+           SL'yi aynı anda 3 mekanizmanın (trailing+breakeven+merdiven) yönetmesi öngörülemez
+           etkileşim yaratıyordu. JS mantığı ?.checked ile güvenli — eleman yok = kapalı. -->
 
       <!-- ── BTC Korelasyon Filtresi ── -->
       <div class="card-title">
@@ -2221,21 +2233,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
-      <!-- ── Dinamik Pozisyon Büyüklüğü ── -->
-      <div class="card-title">
-        <span>📉 Dinamik Pozisyon Büyüklüğü</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
-        <label class="regime-toggle-switch">
-          <input type="checkbox" id="dynSizingToggle" checked>
-          <span class="regime-toggle-slider"></span>
-        </label>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: üst üste kayıp serisinde işlem miktarı otomatik küçülür.
-        <b>2 kayıp → %85</b> · <b>3 kayıp → %75</b> · <b>5+ kayıp → %50</b>.
-        Kazanma serisine girilince normal miktara döner. Hesabı korur, panikle büyük işlem önler.
-      </div>
-
-      <div class="acc-divider"></div>
+      <!-- v47.1 DENETİM: "Dinamik Pozisyon Büyüklüğü" kaldırıldı. Gerekçe: Equity Freni (v44)
+           ile aynı amaç (soğuk dönemde pozisyon küçült) — ve ikisi ÇARPILARAK uygulanıyordu:
+           3 kayıp × equity soğuk = %75 × %50 = %37.5 boyut, üstüne Kelly de binince pozisyon
+           boyutu 3 katmanlı öngörülemez bir süzgeçten geçiyordu. Equity Freni daha akıllı sürüm
+           (kayıp SAYISI yerine kâr eğrisinin kendi ortalamasına bakar), o kaldı. -->
 
       <!-- ── Fear & Greed Filtresi ── -->
       <div class="card-title">
@@ -2410,7 +2412,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="form-grid">
         <div class="form-group">
           <label>Max Kaldıraçlı Zarar % (Acil Çıkış)</label>
-          <input type="number" id="maxLevLossPct" value="5" min="2" max="30" step="1" />
+          <input type="number" id="maxLevLossPct" value="3" min="2" max="30" step="1" />
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
@@ -2477,17 +2479,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
-      <div class="card-title">
-        <span>🚫 Yatay Piyasada Yeni Pozisyon Açma</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
-        <label class="regime-toggle-switch">
-          <input type="checkbox" id="sidewaysBlockToggle">
-          <span class="regime-toggle-slider"></span>
-        </label>
-      </div>
-      <div style="font-size:11.5px;color:var(--muted);line-height:1.6;">
-        Yukarıdaki filtre sadece gösterge ağırlığını hafifletir, işlem açmayı ENGELLEMEZ. Bu açıkken, coin <b style="color:var(--text)">"◆ Yatay / Kararsız"</b> rejimindeyse otomatik bot o coin'de HİÇ yeni pozisyon açmaz (zaten açık olan pozisyonlar normal şekilde SL/TP/sinyal ile yönetilmeye devam eder). Manuel AL/SAT'ta ise seni uyarır, istersen yine de açabilirsin. Amaç: lagging göstergelerin en çok yanılttığı ortamda (yatay piyasa) hiç işlem açmamak.
-      </div>
+      <!-- v47.1 DENETİM: "Yatay Piyasada Yeni Pozisyon Açma" kaldırıldı. Gerekçe: aynı işi
+           yapan ÜÇÜNCÜ mekanizmaydı — ADX Min Filtresi (ADX<eşik = trendsiz piyasada girme) ve
+           Piyasa Rejimi Filtresi zaten yatay piyasayı tespit edip koruyor. Üç ayrı yatay-piyasa
+           dedektörü, hangisinin neyi engellediğini izlenemez kılıyordu. ADX filtresi ölçülebilir
+           (Red Defteri'nde takipte), o kaldı. -->
       </details>
       <!-- ═══ /Piyasa Koruması ═══ -->
 
@@ -3571,7 +3567,7 @@ const SETTINGS_FIELD_IDS = [
   'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
-  'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
+  'mathGateToggle', 'mathGateCostMult', 'mathGateMinRR', 'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
   'ratchetToggle', 'ratchetStepPct', 'ratchetLockRatio',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
@@ -6324,6 +6320,52 @@ async function testTelegram() {
 // alınır — kaldıraç ne kadar yüksekse, marja göre ücretin etkisi de o kadar büyür.
 // Tüm kapanış noktaları (manuel kapat, kısmi TP, otomatik SL/TP/sinyal kapanışı) bunu kullanır,
 // böylece loga yazılan ve gerçekten kaydedilen K/Z HER ZAMAN aynı (net) rakam olur.
+// ───────── v47.0: 💸 Maliyet tahmini — pozisyon AÇILMADAN önce yuvarlak-tur maliyeti ─────────
+// calculateNetPnl ile aynı mantık (likidite çarpanı dahil) ama giriş öncesi karar için.
+// Dönen değer: KALDIRAÇLI % cinsinden maliyet — leveragedChange, SL/TP ile aynı birim,
+// yani doğrudan karşılaştırılabilir. Örn. 2x + %0.07×2 taraf + sığ coin ×3 = %0.84 kaldıraçlı.
+function estimateRoundTripCostLevPct(coin, leverage) {
+  const rawCommission = parseFloat(document.getElementById('commissionPct')?.value);
+  const rawSlippage = parseFloat(document.getElementById('slippagePct')?.value);
+  const commissionPct = (!isNaN(rawCommission) && rawCommission >= 0) ? Math.min(rawCommission, 0.5) : 0.05;
+  let slippagePct = (!isNaN(rawSlippage) && rawSlippage >= 0) ? Math.min(rawSlippage, 0.5) : 0.02;
+  if (coin && coinDetailData[coin] && coinDetailData[coin].volume) {
+    const vol = coinDetailData[coin].volume;
+    const mult = vol >= 500e6 ? 1 : vol >= 100e6 ? 1.5 : vol >= 30e6 ? 3 : 5;
+    slippagePct = Math.min(slippagePct * mult, 0.5);
+  }
+  return (commissionPct + slippagePct) * 2 * (leverage || 1); // giriş+çıkış, kaldıraçlı %
+}
+
+// ───────── v47.0: 🧮 MATEMATİK KAPISI ─────────
+// Adli bulgu: 89 işlemde ~350$ komisyon/kayma ödendi — toplam zararın neredeyse TAMAMI.
+// Botun brüt kararları yaklaşık başa baştı; kasayı eriten, işlem başına ~%0.4+ maliyet çarkıydı.
+// İkinci bulgu: Kâr Kilidi +0.7$ kazanırken SL -47$ kaybediyordu (1:60 asimetri).
+// Bu kapı iki matematik kuralını girişte zorunlu kılar:
+//   1) Beklenen ödül (TP mesafesi) ≥ maliyetin N katı (varsayılan 4×) — değilse kazanç zaten yenir.
+//   2) Ödül/Risk (TP/SL) ≥ eşik (varsayılan 1.5) — değilse kazanma oranı ne olursa olsun matematik kaybeder.
+function mathGateOk(coin, dir, slTp, leverage) {
+  const on = document.getElementById('mathGateToggle')?.checked;
+  if (!on) return true;
+  try {
+    const costLev = estimateRoundTripCostLevPct(coin, leverage);
+    const minCostMult = Math.max(parseFloat(document.getElementById('mathGateCostMult')?.value) || 4, 1);
+    const minRR = Math.max(parseFloat(document.getElementById('mathGateMinRR')?.value) || 1.5, 0.5);
+    const reward = slTp.takeProfit, risk = Math.max(slTp.stopLoss, 0.01);
+    if (reward < costLev * minCostMult) {
+      log(`🧮 [Matematik Kapısı] ${coin} ${dir.toUpperCase()} — TP hedefi %${reward.toFixed(2)} < maliyet %${costLev.toFixed(2)} × ${minCostMult}. Bu işlem kazansa bile komisyona çalışır — giriş engellendi.`, 'warn', coin);
+      try { recordRejection(coin, dir, 'Matematik Kapısı'); } catch(e){}
+      return false;
+    }
+    if (reward / risk < minRR) {
+      log(`🧮 [Matematik Kapısı] ${coin} ${dir.toUpperCase()} — Ödül/Risk ${(reward/risk).toFixed(2)} < ${minRR}. Kazanma oranı %${(100/(1+reward/risk)).toFixed(0)}'in üzerinde olmadıkça bu oran matematiksel kayıptır — giriş engellendi.`, 'warn', coin);
+      try { recordRejection(coin, dir, 'Matematik Kapısı'); } catch(e){}
+      return false;
+    }
+  } catch(e) {}
+  return true;
+}
+
 function calculateNetPnl(grossPnl, amount, leverage, coin) {
   // 🛡️ Guard: Komisyon ve kayma değerleri makul aralıkta tutulur.
   // localStorage'dan bozuk değer gelirse (örn. 280 yerine 50 girilmesi gerekiyordu)
@@ -7815,7 +7857,7 @@ async function manualSell(coin) {
     const grossPnl = pos.amount * change * leverage;
     const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
 
-    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
+    addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
     log(`👆 MANUEL KAPAT (${dir === 'long' ? 'LONG' : 'SHORT'}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
     flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
     state.openPosition = null;
@@ -9647,6 +9689,8 @@ async function coinTickInner(coin, state) {
       if (cvdEntryBlocked(coin, 'long')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'long')) return; // v45.0: kalabalık aşırı uçta
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
+      // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
+      if (!mathGateOk(coin, 'long', slTp, leverage)) return;
       state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
@@ -9674,6 +9718,7 @@ async function coinTickInner(coin, state) {
       if (cvdEntryBlocked(coin, 'short')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'short')) return; // v45.0: kalabalık aşırı uçta
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
+      if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
       state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
@@ -9820,9 +9865,14 @@ async function coinTickInner(coin, state) {
       const rStep = Math.max((parseFloat(document.getElementById('ratchetStepPct')?.value) || 1.0) / 100, 0.002);
       const rLock = Math.min(Math.max((parseFloat(document.getElementById('ratchetLockRatio')?.value) || 60) / 100, 0.1), 0.95);
       if (pos.peakLc === undefined || leveragedChange > pos.peakLc) pos.peakLc = leveragedChange;
+      // v47.0: maliyet farkındalığı — taban, yuvarlak-tur maliyetinin en az 2 katı olmadan
+      // kilitlenmez. Eski davranış +%0.6 kilitleyip komisyon sonrası +0.7$ net bırakıyordu —
+      // "kazanç" görünen ama borsaya çalışan işlemler. Artık kilit ancak GERÇEK net kâr bırakır.
+      const rCostLev = (typeof estimateRoundTripCostLevPct === 'function' ? estimateRoundTripCostLevPct(coin, pos.leverage || 1) : 0.3) / 100;
+      const rMinFloor = rCostLev * 2;
       const rK = Math.floor((pos.peakLc + 1e-9) / rStep);
       if (rK >= 1) {
-        const newFloor = (rK - 1 + rLock) * rStep;
+        const newFloor = Math.max((rK - 1 + rLock) * rStep, Math.min(rMinFloor, pos.peakLc * 0.8));
         if (pos.ratchetFloor === undefined || newFloor > pos.ratchetFloor + 1e-9) {
           const first = pos.ratchetFloor === undefined;
           pos.ratchetFloor = newFloor;
@@ -10000,7 +10050,7 @@ async function coinTickInner(coin, state) {
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
       const lvTxt = (pos.leverage || 1) > 1 ? ` ${pos.leverage}x` : '';
-      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
+      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
       log(`${pnl >= 0 ? '✅' : '🔴'} ${dirLabel}${lvTxt} KAPANDI (${reason}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
@@ -11891,6 +11941,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   // 🎚️ Dinamik Kaldıraç: sakin coinde tavan kaldıraca yakın, oynak coinde otomatik düşer
   const leverage = tradeMode === 'futures_sim' ? v40DynamicLeverage(baseLeverage, atr, price) : 1;
   const slTp = computeEffectiveTpSl(getEffectiveSetting(short,'stopLoss',true), getEffectiveSetting(short,'takeProfit',true), atr, price, leverage);
+  if (!mathGateOk(short, direction, slTp, leverage)) { brain('🧮 [Matematik Kapısı] ' + short + ' — beklenen ödül, maliyet+risk matematiğini karşılamıyor, giriş atlandı.'); return false; } // v47.0
   const entryCandleCloseTime = klines ? klines[klines.length-1][6] : Date.now();
 
   state.openPosition = {
@@ -11925,7 +11976,7 @@ async function forceClose(coin, reasonTxt, setCooldown){
   const change = dir === 'long' ? raw : -raw;
   const grossPnl = pos.amount * change * leverage;
   const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
-  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
+  addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
   if (setCooldown) { setManualCooldown(coin); try { updateCooldownUI(coin); } catch(e){} }
@@ -12482,6 +12533,17 @@ const wasOn = apRestore();
 // kaydedilmiş ve Hafıza ayarları eski (4/2/35) kalmış olabilir. Dosya güncellense bile
 // localStorage'daki eski kayıt yeni HTML varsayılanlarını ezer — bu göç bunu bir kereliğine
 // düzeltir, sonrasında kullanıcının kendi tercihleri normal şekilde geçerli olur.
+// v47.0 göçü: eski kayıtlı ayarlarda Matematik Kapısı yok ve sert tavan 5'te kalmış olabilir
+const SK_MIGRATE_470 = 'tugay_v47_0_migrated';
+if (!lsGet(SK_MIGRATE_470)) {
+  try {
+    const mg = document.getElementById('mathGateToggle'); if (mg) mg.checked = true;
+    const cap = document.getElementById('maxLevLossPct'); if (cap && parseFloat(cap.value) > 3) cap.value = 3;
+    if (typeof saveSettings === 'function') saveSettings();
+    lsSet(SK_MIGRATE_470, '1');
+    log('🧮 [v47] MALİYET REFORMU devrede — Matematik Kapısı açıldı, sert zarar tavanı %3\'e çekildi (bir kereliğine).', 'system');
+  } catch(e) {}
+}
 const SK_MIGRATE_468 = 'tugay_v46_8_migrated';
 if (!lsGet(SK_MIGRATE_468)) {
   try {
@@ -12721,6 +12783,24 @@ function renderPilotCard(){
   } catch(e){} }
   const cb = document.getElementById('v46ChipBridge');
   if (cb) { cb.textContent = '🔌 Köprü: ' + (v46Bridge.status); cb.className = 'v46-chip ' + (v46Bridge.status === 'bağlı' ? 'good' : ''); }
+  // v47.0: 💸 Maliyet Muhasebesi — kayıtlı maliyet varsa onu, yoksa tutucu tahmin (%0.14 × notional)
+  try {
+    const trades = globalTradeHistory.filter(t => typeof t.pnl === 'number');
+    if (trades.length >= 3) {
+      let totalCost = 0, netSum = 0;
+      trades.forEach(t => {
+        netSum += t.pnl;
+        totalCost += (typeof t.cost === 'number') ? t.cost : (t.amount || 0) * (t.leverage || 1) * 0.0014;
+      });
+      const gross = netSum + totalCost;
+      const cc = document.getElementById('v46ChipCost');
+      if (cc) {
+        cc.textContent = '💸 Maliyet: -' + totalCost.toFixed(0) + '$ · Brüt: ' + (gross >= 0 ? '+' : '') + gross.toFixed(0) + '$';
+        cc.className = 'v46-chip ' + (totalCost > Math.abs(netSum) * 0.7 && netSum < 0 ? 'bad' : '');
+        cc.title = 'Net ' + netSum.toFixed(0) + '$ = Brüt ' + gross.toFixed(0) + '$ − Maliyet ' + totalCost.toFixed(0) + '$. Maliyet zararın büyük kısmıysa asıl düşman komisyon çarkıdır.';
+      }
+    }
+  } catch(e){}
 }
 
 /* ═══ 3) GÜNLÜK BRİFİNG ═══ */
