@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.2 KÂR MERDİVENİ</title>
+<title>TUGAY × QUANT · v46.3 HAYALET POZİSYON DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.2 🪜</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.3 🩹</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6449,7 +6449,7 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
   // kaotik harekete saniyeler içinde geri giriyordu. Artık trailing/breakeven de ZARARLA
   // kapanırsa soğumayı tetikler. TP, manuel ve sinyal kapanışları (bunlar zaten kâr/karar
   // amaçlı, kaos belirtisi değil) hâlâ soğuma başlatmaz.
-  const CHAOS_LOSS_REASONS = ['sl', 'liquidation', 'trailing', 'breakeven'];
+  const CHAOS_LOSS_REASONS = ['sl', 'liquidation', 'trailing', 'breakeven', 'ratchet', 'time']; // v46.3: Zaman Stopu ve Kâr Merdiveni zararı da artık soğutur
   if (pnl < 0 && CHAOS_LOSS_REASONS.includes(reasonCategory) && document.getElementById('lossCooldownToggle')?.checked) {
     setLossCooldown(coin);
     const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
@@ -9890,6 +9890,20 @@ async function coinTickInner(coin, state) {
       }
       const grossPnl = pos.amount * leveragedChange;
       const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, pos.leverage || 1, coin);
+
+      // ── v46.3 FIX: HAYALET POZİSYON BUGU ──
+      // state.openPosition = null eskiden bu bloğun EN SONUNDA çalışıyordu — addTrade, log,
+      // flashPanel, sendTelegramMessage gibi 4 ayrı çağrıdan SONRA. Bunlardan biri sessizce
+      // hata fırlatırsa (DOM elemanı beklenmedik null, bildirim API'si vs.) coinTick async
+      // fonksiyonu o noktada durur ve state.openPosition ASLA null olmazdı — pozisyon işlem
+      // geçmişine "kapandı" diye yazılır ama bot içeriden hâlâ açık sanırdı. Bir sonraki
+      // tick'te AYNI pozisyon (aynı giriş fiyatıyla) tekrar değerlendirilip GERÇEKTEN kapanınca
+      // aynı pozisyon için 2 kayıt oluşuyordu — ZEC'te art arda Zaman+SL kaybının kökeni buydu.
+      // Artık pozisyon referansı, herhangi bir log/bildirim çağrısından ÖNCE anında temizleniyor;
+      // aşağıdaki çağrılardan biri patlasa bile bot bir daha aynı pozisyonu göremez.
+      const closedPos = pos; // log/bildirim için referans sakla
+      state.openPosition = null;
+
       let reason, reasonCategory;
       if (liquidated)        { reason = '💥 LİKİDASYON'; reasonCategory = 'liquidation'; }
       else if (hitRatchet)   { reason = `🪜 Kâr Merdiveni (kilitli taban: +%${(pos.ratchetFloor*100).toFixed(2)}, zirve: +%${((pos.peakLc||0)*100).toFixed(2)})`; reasonCategory = 'ratchet'; }
@@ -9908,7 +9922,6 @@ async function coinTickInner(coin, state) {
       log(`${pnl >= 0 ? '✅' : '🔴'} ${dirLabel}${lvTxt} KAPANDI (${reason}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
-      state.openPosition = null;
 
       // v43.4 FIX: Otopilotun açtığı bir pozisyon OTOMATİK (SL/TP/trailing/sinyal) kapandığında
       // bu coin'in KENDİ bağımsız coinTick döngüsü online kalmaya devam ediyordu — ve bu döngü,
@@ -9917,7 +9930,7 @@ async function coinTickInner(coin, state) {
       // by-pass ediliyordu — GRAM'ın art arda short'lanmasının asıl sebebi tam olarak buydu.
       // Artık otopilotun açtığı bir pozisyon otomatik kapanınca bu coin'in bağımsız botu durur;
       // coin'e yeniden girmek isteniyorsa bu SADECE apCycle'ın teyit+hafıza zincirinden geçerek olur.
-      if (pos.autopilot) {
+      if (closedPos.autopilot) {
         log(`🧠 [Otopilot] ${coin} — bağımsız coin botu durduruldu. Yeniden giriş sadece otopilotun teyit turlarından geçerek olur.`, 'system', coin);
         stopCoinBot(coin);
       }
