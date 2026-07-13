@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v47.2 BİRİM HATASI DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v47.3 SINIR BEKÇİSİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.2 🩹</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.3 🚧</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -3747,6 +3747,9 @@ function loadSettings() {
       { id: 'trailingStopPct',min: 0.1,   max: 20,   def: 1    },
       { id: 'trailingActivationPct', min: 0.1, max: 10, def: 1.2 },
       { id: 'circuitBreakerCount', min: 2, max: 15,  def: 4    }, // v37.0
+      { id: 'trailingConfirmTicks', min: 1, max: 10, def: 2 }, // v47.3: 500 gibi anlamsız değerleri artık engeller
+      { id: 'exitConfirmTicks',     min: 2, max: 10, def: 2 },
+      { id: 'entryConfirmTicks',    min: 2, max: 10, def: 2 },
     ];
     guards.forEach(({ id, min, max, def }) => {
       const el = document.getElementById(id);
@@ -3810,6 +3813,9 @@ const INPUT_CLAMP_RULES = {
   tp2Pct:                { min: 30,   max: 90,   def: 60,   label: 'Runner TP Kapatma Oranı' },
   fgThreshold:           { min: 5,    max: 50,   def: 25,   label: 'Fear & Greed Eşiği' },
   fundingThreshold:      { min: 0.01, max: 0.3,  def: 0.05, label: 'Funding Rate Eşiği' },
+  trailingConfirmTicks:  { min: 1,    max: 10,   def: 2,    label: 'İz Süren Kapanış Teyit Tick' },
+  exitConfirmTicks:      { min: 2,    max: 10,   def: 2,    label: 'Çıkış Sinyali Teyit Tick' },
+  entryConfirmTicks:     { min: 2,    max: 10,   def: 2,    label: 'Giriş Sinyali Teyit Tick' },
   // v41.9.3: "45 Breakeven", "4 USDT Günlük Limit" gibi anlamsız değerlere karşı ek kilitler
   dailyLossLimitPct:     { min: 10,   max: 1000, def: 40,   label: 'Günlük Toplam Zarar Limiti (USDT)' },
   perCoinLossLimitPct:   { min: 5,    max: 300,  def: 20,   label: 'Coin Bazlı Zarar Limiti (USDT)' },
@@ -12538,6 +12544,23 @@ const wasOn = apRestore();
 // localStorage'daki eski kayıt yeni HTML varsayılanlarını ezer — bu göç bunu bir kereliğine
 // düzeltir, sonrasında kullanıcının kendi tercihleri normal şekilde geçerli olur.
 // v47.0 göçü: eski kayıtlı ayarlarda Matematik Kapısı yok ve sert tavan 5'te kalmış olabilir
+// v47.3 göçü: trailingConfirmTicks gibi alanlar sınır bekçisiz kaldığı için elle/kazayla
+// girilmiş anlamsız değerler (örn. 500) hiç düzeltilmeden kalıcı hâle gelebiliyordu.
+const SK_MIGRATE_473 = 'tugay_v47_3_migrated';
+if (!lsGet(SK_MIGRATE_473)) {
+  try {
+    let fixedAny = false;
+    [['trailingConfirmTicks',1,10,2],['exitConfirmTicks',2,10,2],['entryConfirmTicks',2,10,2]].forEach(([id,min,max,def]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const v = parseFloat(el.value);
+      if (isNaN(v) || v < min || v > max) { el.value = def; fixedAny = true; }
+    });
+    if (fixedAny && typeof saveSettings === 'function') saveSettings();
+    lsSet(SK_MIGRATE_473, '1');
+    if (fixedAny) log('🩹 [v47.3] Teyit tick alanlarında sınır dışı bir değer bulundu ve düzeltildi (bir kereliğine).', 'system');
+  } catch(e) {}
+}
 const SK_MIGRATE_470 = 'tugay_v47_0_migrated';
 if (!lsGet(SK_MIGRATE_470)) {
   try {
