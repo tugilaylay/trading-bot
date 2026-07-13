@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.8 OTOMATİK KALICI AYARLAR</title>
+<title>TUGAY × QUANT · v46.9 GÖÇ DÜZELTMESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.8 🔒</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.9 🔒</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -12477,6 +12477,24 @@ setInterval(async () => { await refreshOpenPrices(); renderVault(); }, 12000);
 });
 // Otopilot önceki oturumda açıksa ve el freni çekili değilse: kaldığı yerden devam
 const wasOn = apRestore();
+
+// v46.8: TEK SEFERLİK GÖÇ — eski oturumlarda Kovalama Freni/Hızlı Kovalama kapalı
+// kaydedilmiş ve Hafıza ayarları eski (4/2/35) kalmış olabilir. Dosya güncellense bile
+// localStorage'daki eski kayıt yeni HTML varsayılanlarını ezer — bu göç bunu bir kereliğine
+// düzeltir, sonrasında kullanıcının kendi tercihleri normal şekilde geçerli olur.
+const SK_MIGRATE_468 = 'tugay_v46_8_migrated';
+if (!lsGet(SK_MIGRATE_468)) {
+  try {
+    const cg = document.getElementById('apChaseGuardToggle'); if (cg) cg.checked = true;
+    const fe = document.getElementById('apFastEntryToggle'); if (fe) fe.checked = true;
+    const ml = document.getElementById('v40ApMemoryLookback'); if (ml) ml.value = 8;
+    const ms = document.getElementById('v40ApMemoryMinSample'); if (ms) ms.value = 5;
+    apSave();
+    lsSet(SK_MIGRATE_468, '1');
+    log('🔒 [v46.8] Kovalama Freni ve Hızlı Kovalama otomatik açıldı, Hafıza ayarları optimize edildi (bir kereliğine).', 'system');
+  } catch(e) {}
+}
+
 if (wasOn && !lsGet(SK_PANIC) && vaultActive()) {
   setTimeout(() => {
     brain('🔁 Sayfa yenilendi — otopilot önceki oturumdan devralınıyor...');
