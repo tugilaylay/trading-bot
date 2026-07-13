@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.7 PİLOT SADELEŞTİRME</title>
+<title>TUGAY × QUANT · v46.8 OTOMATİK KALICI AYARLAR</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.7 🧭</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.8 🔒</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1443,8 +1443,8 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <span>🧠 Otopilot Hafızası: bir coin'de otopilotun kendi son işlemleri kötüyse (bkz. eşikler), o coin'i kendiliğinden devre dışı bırak — senden onay beklemeden</span>
   </div>
   <div class="v40-ap-settings">
-    <div><label>Hafıza Penceresi (son N işlem)</label><input type="number" id="v40ApMemoryLookback" value="5" min="2" max="15"></div>
-    <div><label>Hafıza — Min. Örnek İşlem</label><input type="number" id="v40ApMemoryMinSample" value="3" min="2" max="10"></div>
+    <div><label>Hafıza Penceresi (son N işlem)</label><input type="number" id="v40ApMemoryLookback" value="8" min="2" max="15"></div>
+    <div><label>Hafıza — Min. Örnek İşlem</label><input type="number" id="v40ApMemoryMinSample" value="5" min="2" max="10"></div>
     <div><label>Hafıza — Min. Kazanma % (altı = devre dışı)</label><input type="number" id="v40ApMemoryMinWinRate" value="35" min="10" max="60" step="5"></div>
   </div>
   <div class="v40-ap-rot">
@@ -12468,7 +12468,7 @@ renderVault();
 renderPanicBtn();
 loadUniverse();
 setInterval(async () => { await refreshOpenPrices(); renderVault(); }, 12000);
-['v40ApScanMin','v40ApMinScore','v40ApMaxPos','v40ApPerPos','v40ApMaxExpo','v40ApUniverseN','v40ApRotation'].forEach(id => {
+['v40ApScanMin','v40ApMinScore','v40ApMaxPos','v40ApPerPos','v40ApMaxExpo','v40ApUniverseN','v40ApRotation','v40ApDynLev','v40ApDynLevMin','v40ApConfirmCycles','v40ApMemoryToggle','v40ApMemoryLookback','v40ApMemoryMinSample','v40ApMemoryMinWinRate','apChaseGuardToggle','apChaseGuardLookback','apChaseGuardMaxMovePct','apFastEntryToggle'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('change', () => {
     apSave();
