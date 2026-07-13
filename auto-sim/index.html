@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.6 UYUMLU KOVALAMA</title>
+<title>TUGAY × QUANT · v46.7 PİLOT SADELEŞTİRME</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.6 🤝</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.7 🧭</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1349,6 +1349,15 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <div class="v46-brief-body" id="v46BriefBody">Veri toplanıyor…</div>
   </div>
 
+  <!-- ═══ v46.7: 🛰️ Otopilotun canlı taraması — sayfanın en üstünde, ayarlardan önce ═══ -->
+  <div class="v40-card" id="v40RadarCard" style="padding-bottom:14px;">
+    <div class="v40-title" style="margin:0 0 10px;">🛰️ Canlı Tarama <span style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;">PİLOT NE GÖRÜYOR</span></div>
+    <div class="v40-radar-wrap">
+      <canvas id="v40Radar" width="262" height="262"></canvas>
+      <div class="v40-brain-log" id="v40BrainLog"><div class="v40-brain-line"><span class="t">--:--</span>🧠 Beyin uyku modunda. Otopilotu aç, avlanmaya başlayalım.</div></div>
+    </div>
+  </div>
+
 
 <!-- ═══ 💰 KASA ═══ -->
 <div class="v40-card" id="v40VaultCard">
@@ -1382,6 +1391,10 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     </div>
   </div>
   <div class="v40-sub" style="margin-top:8px;">Açtığında evrendeki en hacimli coinleri periyodik tarar, en güçlü sinyali skorlar, uygun yönü (LONG/SHORT) kendisi seçip pozisyon açar. SL/TP/trailing yönetimini mevcut risk motoru devralır. Sağ alttaki 🛑 buton her şeyi anında keser.</div>
+
+  <details class="acc-card" style="margin-top:10px;">
+    <summary style="cursor:pointer;font-weight:800;font-size:12.5px;padding:8px 0;">⚙️ Otopilot Ayarları</summary>
+    <div style="padding-top:4px;">
   <div class="v40-ap-settings">
     <div><label>Tarama Sıklığı</label><select id="v40ApScanMin"><option value="3">3 dk</option><option value="5" selected>5 dk</option><option value="10">10 dk</option><option value="15">15 dk</option></select></div>
     <div><label>Min. Fırsat Skoru (%)</label><input type="number" id="v40ApMinScore" value="60" min="30" max="95" step="5"></div>
@@ -1395,19 +1408,19 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
   <div class="v40-sub" style="margin-top:6px;">🧠 <b>Teyit Turu:</b> bir coin'in sinyali eşiği geçtikten sonra, o yönde ardışık kaç KAPANMIŞ mum onayı bekleneceği. 1 = eski davranış (anlık, riskli). 2+ önerilir — henüz oluşmakta olan mumun geçici sinyaliyle giriş yapılmasını önler.</div>
   <div class="acc-divider"></div>
   <div class="card-title" style="margin-top:4px;">
-    <span>🎯 Giriş Zamanlama — İki Seçenek, Birini Dene</span>
-    <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v46.5</span>
+    <span>🎯 Giriş Zamanlama</span>
+    <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v46.7 — ikisi birlikte önerilir</span>
   </div>
-  <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:4px 0 10px;">İkisi de aynı soruna (teyit turu boyunca hareketin bitmiş olması) farklı açıdan çözüm getiriyor. <b>Bağımsız</b> anahtarlar — birini aç, birkaç gün izle, Otopsi'de sonucu gör, gerekirse diğerine geç veya ikisini birden dene.</div>
+  <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin:4px 0 10px;">Hızlı Kovalama erken yakalar, Kovalama Freni "zaten çok mu gitmiş?" diye son kontrolü yapar. Birlikte tamamlayıcı çalışırlar — istersen birini kapatıp tek başına da kullanabilirsin.</div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
     <div style="flex:1;">
       <div style="font-weight:700;font-size:12px;">🛑 Kovalama Freni</div>
-      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Teyit turu YAVAŞ kalır (mevcut mantık aynı) ama giriş anında fiyat, ilk tespitten beri zaten çok hareket ettiyse giriş İPTAL edilir — "tren kaçtıysa binme".</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Son N mumda fiyat zaten çok gittiyse ("tükenmiş hareket") girişi atlar.</div>
     </div>
-    <label class="regime-toggle-switch"><input type="checkbox" id="apChaseGuardToggle"><span class="regime-toggle-slider"></span></label>
+    <label class="regime-toggle-switch"><input type="checkbox" id="apChaseGuardToggle" checked><span class="regime-toggle-slider"></span></label>
   </div>
-  <div class="form-grid" style="margin-bottom:10px;">
+  <div class="form-grid" style="margin-bottom:14px;">
     <div class="form-group">
       <label>Kaç Muma Bakılsın</label>
       <input type="number" id="apChaseGuardLookback" value="6" min="2" max="30" step="1" />
@@ -1417,16 +1430,14 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <input type="number" id="apChaseGuardMaxMovePct" value="0.6" min="0.1" max="5" step="0.1" />
     </div>
   </div>
-  <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-bottom:14px;"><b>v46.6:</b> "İlk tespitten beri" değil, son N kapanmış mumda coin'in GERÇEKTEN ne kadar gittiğine bakar — tarama zamanlamasından bağımsız, o yüzden Tur Bazlı ve Hızlı Kovalama'da AYNI şekilde çalışır. Fiyat o yönde zaten bu yüzdeden fazla gitmişse ("tükenmiş hareket" ihtimali) giriş atlanır. <b>İkisini birlikte açarsan:</b> Hızlı Kovalama fırsatı erken yakalar, Kovalama Freni "ama zaten çok mu gitmiş?" diye son kontrolü yapar — gerçekten tamamlayıcı çalışırlar artık.</div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
     <div style="flex:1;">
       <div style="font-weight:700;font-size:12px;">⚡ Hızlı Kovalama</div>
-      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Teyit turunu 1'e indirir — aday İLK tespitte, ekstra 5-10 dk beklemeden değerlendirilir. Gecikmeyi ortadan kaldırır ama teyidin verdiği güvenliği de azaltır.</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Teyit turunu 1'e indirir — aday ilk görülür görülmez değerlendirilir, dakikalarca beklenmez.</div>
     </div>
-    <label class="regime-toggle-switch"><input type="checkbox" id="apFastEntryToggle"><span class="regime-toggle-slider"></span></label>
+    <label class="regime-toggle-switch"><input type="checkbox" id="apFastEntryToggle" checked><span class="regime-toggle-slider"></span></label>
   </div>
-  <div style="font-size:10.5px;color:var(--muted);line-height:1.5;">Açıkken "Teyit Turu" ayarı bu mod için yok sayılır (dakikalar değil, ilk görülen anda değerlendirilir). Diğer tüm filtreler (CVD, Trend Gate, MTF, Kalabalık, Funding, Rejim, Soğuma) olduğu gibi çalışmaya devam eder — sadece "birden fazla tur bekle" adımı atlanıyor. <b>Öneri:</b> bu modu Kovalama Freni ile birlikte kullanmak riski dengeler; ama önce ayrı ayrı test edip hangisinin senin coin setinde daha iyi çalıştığını gör.</div>
   <div class="v40-ap-rot">
     <label class="regime-toggle-switch"><input type="checkbox" id="v40ApMemoryToggle" checked><span class="regime-toggle-slider"></span></label>
     <span>🧠 Otopilot Hafızası: bir coin'de otopilotun kendi son işlemleri kötüyse (bkz. eşikler), o coin'i kendiliğinden devre dışı bırak — senden onay beklemeden</span>
@@ -1444,10 +1455,8 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <label class="regime-toggle-switch"><input type="checkbox" id="v40ApDynLev" checked><span class="regime-toggle-slider"></span></label>
     <span>🎚️ Dinamik Kaldıraç: sakin coinde (örn. BTC) ayarladığın kaldıraça yakın, oynak coinde (örn. yeni altcoin) otomatik düşür</span>
   </div>
-  <div class="v40-radar-wrap">
-    <canvas id="v40Radar" width="262" height="262"></canvas>
-    <div class="v40-brain-log" id="v40BrainLog"><div class="v40-brain-line"><span class="t">--:--</span>🧠 Beyin uyku modunda. Otopilotu aç, avlanmaya başlayalım.</div></div>
-  </div>
+    </div>
+  </details>
 </div>
 
   <!-- ═══ v41.4: 🌍 PİYASA NABZI — genel piyasa havası, tek bakışta ═══ -->
@@ -2933,7 +2942,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
 <!-- ══════════ v41.2: ALT SEKME ÇUBUĞU — gerçek native app navigasyonu ══════════ -->
 <div class="qt-tabbar" id="qtTabbar">
-  <button class="qt-tab-btn active" data-tab="ozet" onclick="qtSwitchTab('ozet')"><span class="qt-tab-icon">📊</span>Özet</button>
+  <button class="qt-tab-btn active" data-tab="ozet" onclick="qtSwitchTab('ozet')"><span class="qt-tab-icon">🧭</span>Pilot</button>
   <button class="qt-tab-btn" data-tab="coins" onclick="qtSwitchTab('coins')"><span class="qt-tab-icon">🪙</span>Coinler</button>
   <button class="qt-tab-btn" data-tab="risk" onclick="qtSwitchTab('risk')"><span class="qt-tab-icon">🛡️</span>Risk</button>
   <button class="qt-tab-btn" data-tab="analytics" onclick="qtSwitchTab('analytics')"><span class="qt-tab-icon">🔬</span>Analiz</button>
