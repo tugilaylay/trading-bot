@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v46.3 HAYALET POZİSYON DÜZELTMESİ</title>
+<title>TUGAY × QUANT · v46.6 UYUMLU KOVALAMA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.3 🩹</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v46.6 🤝</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1393,6 +1393,40 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     <div><label>Teyit Turu (kapanmış mum)</label><input type="number" id="v40ApConfirmCycles" value="2" min="1" max="4"></div>
   </div>
   <div class="v40-sub" style="margin-top:6px;">🧠 <b>Teyit Turu:</b> bir coin'in sinyali eşiği geçtikten sonra, o yönde ardışık kaç KAPANMIŞ mum onayı bekleneceği. 1 = eski davranış (anlık, riskli). 2+ önerilir — henüz oluşmakta olan mumun geçici sinyaliyle giriş yapılmasını önler.</div>
+  <div class="acc-divider"></div>
+  <div class="card-title" style="margin-top:4px;">
+    <span>🎯 Giriş Zamanlama — İki Seçenek, Birini Dene</span>
+    <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v46.5</span>
+  </div>
+  <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:4px 0 10px;">İkisi de aynı soruna (teyit turu boyunca hareketin bitmiş olması) farklı açıdan çözüm getiriyor. <b>Bağımsız</b> anahtarlar — birini aç, birkaç gün izle, Otopsi'de sonucu gör, gerekirse diğerine geç veya ikisini birden dene.</div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:12px;">🛑 Kovalama Freni</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Teyit turu YAVAŞ kalır (mevcut mantık aynı) ama giriş anında fiyat, ilk tespitten beri zaten çok hareket ettiyse giriş İPTAL edilir — "tren kaçtıysa binme".</div>
+    </div>
+    <label class="regime-toggle-switch"><input type="checkbox" id="apChaseGuardToggle"><span class="regime-toggle-slider"></span></label>
+  </div>
+  <div class="form-grid" style="margin-bottom:10px;">
+    <div class="form-group">
+      <label>Kaç Muma Bakılsın</label>
+      <input type="number" id="apChaseGuardLookback" value="6" min="2" max="30" step="1" />
+    </div>
+    <div class="form-group">
+      <label>Maks. İzin Verilen Ön Hareket (%)</label>
+      <input type="number" id="apChaseGuardMaxMovePct" value="0.6" min="0.1" max="5" step="0.1" />
+    </div>
+  </div>
+  <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-bottom:14px;"><b>v46.6:</b> "İlk tespitten beri" değil, son N kapanmış mumda coin'in GERÇEKTEN ne kadar gittiğine bakar — tarama zamanlamasından bağımsız, o yüzden Tur Bazlı ve Hızlı Kovalama'da AYNI şekilde çalışır. Fiyat o yönde zaten bu yüzdeden fazla gitmişse ("tükenmiş hareket" ihtimali) giriş atlanır. <b>İkisini birlikte açarsan:</b> Hızlı Kovalama fırsatı erken yakalar, Kovalama Freni "ama zaten çok mu gitmiş?" diye son kontrolü yapar — gerçekten tamamlayıcı çalışırlar artık.</div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:12px;">⚡ Hızlı Kovalama</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">Teyit turunu 1'e indirir — aday İLK tespitte, ekstra 5-10 dk beklemeden değerlendirilir. Gecikmeyi ortadan kaldırır ama teyidin verdiği güvenliği de azaltır.</div>
+    </div>
+    <label class="regime-toggle-switch"><input type="checkbox" id="apFastEntryToggle"><span class="regime-toggle-slider"></span></label>
+  </div>
+  <div style="font-size:10.5px;color:var(--muted);line-height:1.5;">Açıkken "Teyit Turu" ayarı bu mod için yok sayılır (dakikalar değil, ilk görülen anda değerlendirilir). Diğer tüm filtreler (CVD, Trend Gate, MTF, Kalabalık, Funding, Rejim, Soğuma) olduğu gibi çalışmaya devam eder — sadece "birden fazla tur bekle" adımı atlanıyor. <b>Öneri:</b> bu modu Kovalama Freni ile birlikte kullanmak riski dengeler; ama önce ayrı ayrı test edip hangisinin senin coin setinde daha iyi çalıştığını gör.</div>
   <div class="v40-ap-rot">
     <label class="regime-toggle-switch"><input type="checkbox" id="v40ApMemoryToggle" checked><span class="regime-toggle-slider"></span></label>
     <span>🧠 Otopilot Hafızası: bir coin'de otopilotun kendi son işlemleri kötüyse (bkz. eşikler), o coin'i kendiliğinden devre dışı bırak — senden onay beklemeden</span>
@@ -2447,6 +2481,24 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       </div>
       </details>
       <!-- ═══ /Piyasa Koruması ═══ -->
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
+        <span>🚪 Giriş Sinyali Onayı (Erken Giriş Freni)</span>
+        <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v46.4 — ÖNERİLEN AÇIK</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="entryConfirmToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ardışık Kaç Tick'te Onaylansın</label>
+          <input type="number" id="entryConfirmTicks" value="2" min="2" max="10" step="1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Kapalıyken (eski davranış): gösterge skoru eşiği bir anlık tek tick'te bile aşsa bot ANINDA girer — tam da hareketin doruğunda/dibinde, tükendiği anda. Açıkken: giriş sinyali art arda belirttiğin sayıda tick boyunca KESİNTİSİZ sürmesi gerekir; sinyal bir ara zayıflarsa sayaç sıfırlanır. <b>Çıkış Sinyali Onayı'nın aynadaki hâli</b> — o zaten "erken çıkma", bu da "erken girme"yi önlüyor. Sonuç: hareketin ilk anlık sıçramasında değil, gerçekten süregelen bir eğilimde girersin. Filtreler (CVD, Trend Gate, MTF vb.) hâlâ normal çalışır; bu sadece son adımda bir teyit turu ekler.</div>
 
       <div class="acc-divider"></div>
 
@@ -3510,7 +3562,7 @@ const SETTINGS_FIELD_IDS = [
   'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
-  'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
+  'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
   'ratchetToggle', 'ratchetStepPct', 'ratchetLockRatio',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
@@ -9288,6 +9340,22 @@ async function coinTick(coin) {
   }
 }
 
+// ───────── v46.4: Giriş Sinyali Onayı (streak) — Çıkış Onayı'nın aynadaki hâli ─────────
+// Her coin+yön için ayrı sayaç tutar (state üzerinde, pozisyon açılmadan ÖNCE çalışır —
+// pos henüz yok, o yüzden pos değil state üzerinde saklanır). Sinyal bir ara kesilirse
+// sayaç sıfırlanır; bu bir zaman kilidi DEĞİL, "kesintisiz süregelme" testidir.
+function entryConfirmed(dir, state, score, minConfirm) {
+  const on = document.getElementById('entryConfirmToggle')?.checked;
+  if (!state.entryStreak) state.entryStreak = { long: 0, short: 0 };
+  const met = score >= minConfirm;
+  state.entryStreak[dir] = met ? (state.entryStreak[dir] || 0) + 1 : 0;
+  // Karşı yönün sayacı da sıfırlanır — aynı tick'te LONG teyit birikip SHORT'a sızmasın
+  state.entryStreak[dir === 'long' ? 'short' : 'long'] = 0;
+  if (!on) return true;
+  const req = Math.max(parseInt(document.getElementById('entryConfirmTicks')?.value) || 2, 1);
+  return state.entryStreak[dir] >= req;
+}
+
 async function coinTickInner(coin, state) {
   const cfg = COIN_CONFIG[coin];
   const tradeAmount = getEffectiveSetting(coin, 'tradeAmount', false);
@@ -9561,8 +9629,11 @@ async function coinTickInner(coin, state) {
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} LONG engellendi — Üst TF'ler boğa yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
     try{recordRejection(coin,'long','MTF Onayı');}catch(e){}
+    } else if (buyCount >= weightedMinConfirm && !entryConfirmed('long', state, buyCount, weightedMinConfirm)) {
+      // v46.4: sinyal var, filtreler temiz ama giriş teyit turu henüz tamamlanmadı — bekleniyor
+      log(`⏳ [Giriş Onayı] ${coin} LONG sinyali (skor:${buyCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.long||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
     } else if (buyCount >= weightedMinConfirm) {
-      // LONG (uzun) pozisyon — ağırlıklı skor yeterli VE trend gate onaylı
+      // LONG (uzun) pozisyon — ağırlıklı skor yeterli VE trend gate onaylı VE giriş teyidi tamam
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
       if (cvdEntryBlocked(coin, 'long')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'long')) return; // v45.0: kalabalık aşırı uçta
@@ -9586,8 +9657,10 @@ async function coinTickInner(coin, state) {
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} SHORT engellendi — Üst TF'ler ayı yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
     try{recordRejection(coin,'short','MTF Onayı');}catch(e){}
+    } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && !entryConfirmed('short', state, sellCount, weightedMinConfirm)) {
+      log(`⏳ [Giriş Onayı] ${coin} SHORT sinyali (skor:${sellCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.short||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
-      // SHORT (kısa) pozisyon — sadece futures simülasyon modunda, trend gate onaylı
+      // SHORT (kısa) pozisyon — sadece futures simülasyon modunda, trend gate onaylı VE giriş teyidi tamam
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
       if (cvdEntryBlocked(coin, 'short')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'short')) return; // v45.0: kalabalık aşırı uçta
@@ -11747,7 +11820,14 @@ async function scoreSymbol(symbol){
   let adx = null;
   try { adx = calcADX(highs, lows, closes).adx; } catch(e){}
   const closeTime = klines[klines.length-1][6];
-  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, adx, closeTime };
+  // v46.6: Kovalama Freni artık "ilk tespitten beri" DEĞİL, "son N mumda GERÇEKTEN ne kadar
+  // gitmiş" diye ölçüyor — tarama zamanlamasından bağımsız, hem Tur Bazlı hem Hızlı Kovalama
+  // modunda aynı şekilde anlamlı. Coin son birkaç mumda zaten büyük mesafe katetmişse
+  // (yön ne olursa olsun), "şimdi mi bindik" sorusunun cevabı budur.
+  const cgLookback = Math.max(parseInt(document.getElementById('apChaseGuardLookback')?.value) || 6, 2);
+  const refIdx = Math.max(0, closes.length - 1 - cgLookback);
+  const recentMovePct = closes[refIdx] ? (price - closes[refIdx]) / closes[refIdx] * 100 : 0;
+  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, adx, closeTime, recentMovePct };
 }
 
 /* ───────────── 🧠 OTOPİLOT HAFIZASI (v43.1) ─────────────
@@ -11864,6 +11944,10 @@ function apSettings(){
     dynLev: document.getElementById('v40ApDynLev').checked,
     dynLevMin: parseFloat(document.getElementById('v40ApDynLevMin').value) || 1,
     confirmCycles: Math.max(1, parseInt(document.getElementById('v40ApConfirmCycles')?.value) || 2),
+    chaseGuardOn: document.getElementById('apChaseGuardToggle')?.checked || false,
+    chaseGuardMaxMovePct: parseFloat(document.getElementById('apChaseGuardMaxMovePct')?.value) || 0.6,
+    chaseGuardLookback: Math.max(parseInt(document.getElementById('apChaseGuardLookback')?.value) || 6, 2),
+    fastEntryOn: document.getElementById('apFastEntryToggle')?.checked || false,
     memoryOn: document.getElementById('v40ApMemoryToggle')?.checked !== false,
     memoryLookback: parseInt(document.getElementById('v40ApMemoryLookback')?.value) || 5,
     memoryMinSample: parseInt(document.getElementById('v40ApMemoryMinSample')?.value) || 3,
@@ -11876,11 +11960,13 @@ function apRestore(){
     const s = JSON.parse(lsGet(SK_AP) || 'null');
     if (!s) return false;
     if (s.s) {
-      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin', confirmCycles:'v40ApConfirmCycles', memoryLookback:'v40ApMemoryLookback', memoryMinSample:'v40ApMemoryMinSample', memoryMinWinRate:'v40ApMemoryMinWinRate' };
+      const map = { scanMin:'v40ApScanMin', minScore:'v40ApMinScore', maxPos:'v40ApMaxPos', perPosPct:'v40ApPerPos', maxExpoPct:'v40ApMaxExpo', universeN:'v40ApUniverseN', dynLevMin:'v40ApDynLevMin', confirmCycles:'v40ApConfirmCycles', memoryLookback:'v40ApMemoryLookback', memoryMinSample:'v40ApMemoryMinSample', memoryMinWinRate:'v40ApMemoryMinWinRate', chaseGuardMaxMovePct:'apChaseGuardMaxMovePct', chaseGuardLookback:'apChaseGuardLookback' };
       Object.keys(map).forEach(k => { const el = document.getElementById(map[k]); if (el && s.s[k] !== undefined) el.value = s.s[k]; });
       const rot = document.getElementById('v40ApRotation'); if (rot && s.s.rotation !== undefined) rot.checked = s.s.rotation;
       const dl = document.getElementById('v40ApDynLev'); if (dl && s.s.dynLev !== undefined) dl.checked = s.s.dynLev;
       const mem = document.getElementById('v40ApMemoryToggle'); if (mem && s.s.memoryOn !== undefined) mem.checked = s.s.memoryOn;
+      const cg = document.getElementById('apChaseGuardToggle'); if (cg && s.s.chaseGuardOn !== undefined) cg.checked = s.s.chaseGuardOn;
+      const fe = document.getElementById('apFastEntryToggle'); if (fe && s.s.fastEntryOn !== undefined) fe.checked = s.s.fastEntryOn;
     }
     return !!s.on;
   } catch(e){ return false; }
@@ -11915,7 +12001,12 @@ function apStart(){
   ap.on = true; ap.candidates = {}; apSave(); apRenderState();
   const cyc = apSettings().confirmCycles;
   brain('🟢 <b>OTOPİLOT AKTİF.</b> Kasa: ' + fmt$(vault.balance) + ' | Hedef: en güçlü %' + apSettings().minScore + '+ sinyaller, ' + cyc + ' kapanmış mum teyidiyle.');
-  try { log('🧠 [Otopilot] Başlatıldı — evren taraması ' + apSettings().scanMin + ' dk\'da bir, teyit turu: ' + cyc + '.', 'system'); } catch(e){}
+  try {
+      const S0 = apSettings();
+      const modeTxt = S0.fastEntryOn ? '⚡ Hızlı Kovalama (teyit turu: 1, ilk tespitte değerlendirilir)' : ('🐢 Tur Bazlı (teyit turu: ' + cyc + ')');
+      const cgTxt = S0.chaseGuardOn ? (' · 🛑 Kovalama Freni AÇIK (limit %' + S0.chaseGuardMaxMovePct + ')') : '';
+      log('🧠 [Otopilot] Başlatıldı — evren taraması ' + S0.scanMin + ' dk\'da bir · Mod: ' + modeTxt + cgTxt + '.', 'system');
+    } catch(e){}
   try { requestWakeLock(); } catch(e){}
   apCycle();
   ap.timer = setInterval(apCycle, apSettings().scanMin * 60 * 1000);
@@ -12015,12 +12106,15 @@ async function apCycle(){
     const slots = Math.max(0, S.maxPos - openCount);
     if (slots === 0) { brain('😌 Tüm slotlar dolu (' + openCount + '/' + S.maxPos + ') — pozisyonlar risk motorunda.'); return; }
 
-    const confirmedShorts = Object.keys(ap.candidates).filter(s => ap.candidates[s].streak >= S.confirmCycles);
+    // v46.5: Hızlı Kovalama açıkken teyit eşiği fiilen 1 tura iner — aday ilk görüldüğü
+    // anda değerlendirmeye girer, dakikalarca ikinci tur beklemez.
+    const effConfirmCycles = S.fastEntryOn ? 1 : S.confirmCycles;
+    const confirmedShorts = Object.keys(ap.candidates).filter(s => ap.candidates[s].streak >= effConfirmCycles);
     if (!confirmedShorts.length) {
       const watching = Object.keys(ap.candidates)
         .sort((a,b) => ap.candidates[b].streak - ap.candidates[a].streak)
         .slice(0, 5)
-        .map(s => s + ' (' + ap.candidates[s].streak + '/' + S.confirmCycles + ' mum)');
+        .map(s => s + ' (' + ap.candidates[s].streak + '/' + effConfirmCycles + ' mum)');
       brain('👀 Eşiği (%' + S.minScore + ') geçen var ama teyit bekleniyor: ' + (watching.length ? watching.join(', ') : '—') + '. Sabır, canım.');
       return;
     }
@@ -12052,6 +12146,19 @@ async function apCycle(){
       const r = results.find(x => x.short === short);
       if (!r) return null;
       if (coinStates[short] && coinStates[short].openPosition) return null;
+      // v46.6: 🛑 Kovalama Freni — son N mumda GERÇEKLEŞMİŞ harekete bakar (tarama zamanlamasından
+      // bağımsız). Hem Tur Bazlı hem Hızlı Kovalama modunda aynı ölçüyle çalışır — ikisi birlikte
+      // açıkken de anlamlı: Hızlı Kovalama erken yakalar, Kovalama Freni "ama zaten çok gitmiş mi?"
+      // diye son kontrolü yapar. Böylece "erken yakala AMA tükenmiş hareketi kovalama" ikisi bir arada.
+      if (S.chaseGuardOn && typeof r.recentMovePct === 'number') {
+        const movedPct = c.direction === 'long' ? r.recentMovePct : -r.recentMovePct;
+        if (movedPct >= S.chaseGuardMaxMovePct) {
+          const reason = 'son ' + S.chaseGuardLookback + ' mumda %' + movedPct.toFixed(2) + ' (limit %' + S.chaseGuardMaxMovePct + ')';
+          brain('🛑 [Kovalama Freni] ' + short + ' teyitli ama son mumlarda fiyat zaten ' + reason + ' gitmiş — tükenmiş hareket olabilir, giriş atlandı.');
+          apBlockLog.push({ coin: short, tag: 'Kovalama Freni', reason });
+          return null;
+        }
+      }
       if (typeof isAutopilotCoinBlocked === 'function' && isAutopilotCoinBlocked(short)) {
         const st = autopilotCoinStats(short);
         const reason = 'kazanma %' + st.winRate.toFixed(0) + ' (eşik %' + (apMemorySettings().minWinRate) + ')';
