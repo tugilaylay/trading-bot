@@ -3534,10 +3534,8 @@ function loadPerfLog() {
   } catch(e) { perfLog = []; }
 }
 function savePerfLog() {
-  try {
-    if (perfLog.length > 200) perfLog = perfLog.slice(-200);
-    localStorage.setItem(SK_PERFLOG, JSON.stringify(perfLog));
-  } catch(e) {}
+  if (perfLog.length > 200) perfLog = perfLog.slice(-200);
+  safeLSSet(SK_PERFLOG, JSON.stringify(perfLog));
 }
 
 function recordPerfEntry(entry) {
@@ -4732,13 +4730,78 @@ function initCoinState(coin) {
 }
 
 // ───────── Storage ─────────
-function saveToStorage() {
+
+// v48.0: Kota Koruması — localStorage dolduğunda sessizce veri kaybetmek yerine
+// otomatik olarak eski/ağır verileri budayıp yeniden dener. Tüm ağır yazımlar
+// (işlem geçmişi, red defteri, perf log) bu sarmalayıcıdan geçer.
+let _lsQuotaWarned = false;
+function isQuotaError(e) {
+  return e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+}
+function safeLSSet(key, value) {
   try {
-    localStorage.setItem(SK, JSON.stringify(globalTradeHistory));
-    localStorage.setItem(SK_PNL, globalTotalPnl.toString());
-    localStorage.setItem(SK_COUNT, globalTradeCount.toString());
-    localStorage.setItem(SK_CHART, JSON.stringify(pnlHistory.slice(-100)));
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (!isQuotaError(e)) return false;
+    try { log('⚠️ Tarayıcı depolama alanı doldu — eski işlem verileri otomatik budanıyor...', 'warn'); } catch(_) {}
+    pruneStorageForSpace();
+    try {
+      localStorage.setItem(key, value);
+      try { log('✅ Depolama boşaltıldı, kayıt tamamlandı. (Eski işlemlerin detay fotoğrafları sadeleştirildi, özet verileri korundu.)', 'system'); } catch(_) {}
+      return true;
+    } catch (e2) {
+      if (!_lsQuotaWarned) {
+        _lsQuotaWarned = true;
+        try { log('🚫 Depolama hâlâ dolu! Ayarlar → Yedekle ile dışa aktarıp tarayıcı sitesi verilerini bir kez temizlemen gerekebilir.', 'error'); } catch(_) {}
+      }
+      return false;
+    }
+  }
+}
+// Eski işlemlerin ağır "giriş fotoğrafı" (entrySnapshot/entrySignals) verisini kırpar —
+// istatistikler (pnl, coin, tarih, kazanç/kayıp) hep kalır, sadece "neden açıldı?" detayı
+// en güncel işlemlerde tutulur. Hâlâ yetmezse geçmişi kademeli olarak kısaltır.
+function pruneStorageForSpace() {
+  try {
+    const KEEP_SNAPSHOT = 60; // en güncel 60 işlemde "Neden Açıldı?" detayı kalsın
+    if (Array.isArray(globalTradeHistory) && globalTradeHistory.length > KEEP_SNAPSHOT) {
+      const cut = globalTradeHistory.length - KEEP_SNAPSHOT;
+      for (let i = 0; i < cut; i++) {
+        delete globalTradeHistory[i].entrySnapshot;
+        delete globalTradeHistory[i].entrySignals;
+      }
+    }
+    // Hâlâ büyükse geçmişi kısalt (en yeni işlemler her zaman korunur)
+    if (Array.isArray(globalTradeHistory) && globalTradeHistory.length > 150) {
+      globalTradeHistory = globalTradeHistory.slice(-150);
+    }
+    if (Array.isArray(pnlHistory) && pnlHistory.length > 60) pnlHistory = pnlHistory.slice(-60);
+    if (typeof perfLog !== 'undefined' && Array.isArray(perfLog) && perfLog.length > 60) perfLog = perfLog.slice(-60);
+    if (window.v46Rej && Array.isArray(v46Rej.items) && v46Rej.items.length > 100) v46Rej.items = v46Rej.items.slice(-100);
   } catch(e) {}
+}
+
+function saveToStorage() {
+  // v48.0: düzenli budama — eski işlemlerin ağır detay fotoğrafını temizler ki kota
+  // sorunu baştan büyümesin (sadece quota hatası anında değil, her kayıtta hafif kontrol).
+  pruneOldEntrySnapshots();
+  safeLSSet(SK, JSON.stringify(globalTradeHistory));
+  safeLSSet(SK_PNL, globalTotalPnl.toString());
+  safeLSSet(SK_COUNT, globalTradeCount.toString());
+  safeLSSet(SK_CHART, JSON.stringify(pnlHistory.slice(-100)));
+}
+
+// Ağır iş yapmadan önce ucuz kontrol: sadece 60'tan eski VE hâlâ snapshot taşıyan
+// kayıt varsa temizler (çoğu çağrıda yapılacak iş yoktur, no-op'a yakın).
+function pruneOldEntrySnapshots() {
+  const KEEP_SNAPSHOT = 60;
+  if (!Array.isArray(globalTradeHistory) || globalTradeHistory.length <= KEEP_SNAPSHOT) return;
+  const cut = globalTradeHistory.length - KEEP_SNAPSHOT;
+  for (let i = 0; i < cut; i++) {
+    const t = globalTradeHistory[i];
+    if (t && (t.entrySnapshot || t.entrySignals)) { delete t.entrySnapshot; delete t.entrySignals; }
+  }
 }
 
 function loadFromStorage() {
@@ -6029,6 +6092,45 @@ function updateScoreBar(coin, buyCount, sellCount, minConfirm, totalIndicators) 
   }
 }
 
+// v48.0: "Neden Açıldı?" — pozisyon açılırken zaten kaydedilen entrySignals/entrySnapshot
+// verisini pozisyon kartında okunabilir bir güven kırılımına çevirir. Yeni bir hesaplama
+// motoru değil, var olan veriyi görünür kılan bir sunum katmanı.
+const REGIME_LABELS_TR = { uptrend: '▲ Yükseliş Trendi', downtrend: '▼ Düşüş Trendi', sideways: '◆ Yatay/Kararsız', unknown: '— Belirsiz' };
+function buildEntryReasonHtml(pos) {
+  if (!pos || !pos.entrySignals) return '';
+  const ids = Object.keys(pos.entrySignals);
+  if (!ids.length) return '';
+  const dir = pos.direction || 'long';
+  const wantSignal = dir === 'long' ? 'buy' : 'sell';
+  const agree = ids.filter(id => pos.entrySignals[id] === wantSignal).length;
+  const confidencePct = Math.round((agree / ids.length) * 100);
+  const confColor = confidencePct >= 75 ? 'var(--green)' : confidencePct >= 50 ? 'var(--yellow)' : 'var(--red)';
+  const rows = ids.map(id => {
+    const sig = pos.entrySignals[id];
+    const name = (INDICATOR_DEFS[id] && INDICATOR_DEFS[id].name) || id;
+    const ok = sig === wantSignal;
+    const icon = ok ? '✅' : (sig === 'hold' ? '➖' : '❌');
+    const color = ok ? 'var(--green)' : (sig === 'hold' ? 'var(--muted)' : 'var(--red)');
+    const sigLabel = sig === 'buy' ? 'AL' : sig === 'sell' ? 'SAT' : 'BEKLE';
+    return `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:10.5px;">
+      <span style="color:var(--muted)">${name}</span>
+      <span style="color:${color};font-weight:600">${icon} ${sigLabel}</span>
+    </div>`;
+  }).join('');
+  const snap = pos.entrySnapshot;
+  const extraBits = [];
+  if (snap && snap.regime) extraBits.push(`Rejim: <b>${REGIME_LABELS_TR[snap.regime] || snap.regime}</b>`);
+  if (snap && snap.atrPct != null) extraBits.push(`ATR: <b>%${snap.atrPct}</b>`);
+  const extraLine = extraBits.length ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${extraBits.join(' · ')}</div>` : '';
+  return `
+    <details style="margin-top:8px;">
+      <summary style="cursor:pointer;font-size:10.5px;color:var(--accent);font-weight:700;list-style:none;">🔍 Neden Açıldı? — Karar Güveni: <span style="color:${confColor}">${confidencePct}/100</span></summary>
+      <div style="margin-top:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;">
+        ${extraLine}${rows}
+      </div>
+    </details>`;
+}
+
 function renderPositionCard(coin, state, currentPrice) {
   if (document.hidden) return; // v45.4 Ekonomi Modu: arka planda görsel render yok — mantık etkilenmez
   saveOpenPositions();
@@ -6194,6 +6296,7 @@ function renderPositionCard(coin, state, currentPrice) {
       <span class="pos-label">SL/TP Kaynağı</span><span class="pos-value" style="font-size:11px;color:${pos.atrBased ? 'var(--green)' : 'var(--yellow)'}">${pos.atrBased ? '📊 ATR-bazlı (otomatik)' : '📌 Sabit/Özel (Coin Ayarları\'nda elle girilmiş olabilir)'}</span>
     </div>
     <div style="font-size:9.5px;color:var(--muted);margin-top:6px;text-align:center">${pos.atrBased ? '📐 SL/TP bu coin\'in giriş anındaki ATR\'sine göre ayarlandı · ' : ''}SL/TP her zaman aktif, bekleme sadece gösterge çıkışını etkiler${leverage>1?' · Likidasyon: -%'+(95/leverage).toFixed(0)+' fiyat hareketi':''}</div>
+    ${buildEntryReasonHtml(pos)}
   `;
   drawPosSparkline(coin, pos, stopLoss, takeProfit);
   renderDashboardSummary();
@@ -12695,7 +12798,7 @@ const SK_REJ = 'tugay_v46_rejections';
 const REJ_HORIZON = 30 * 60 * 1000; // 30 dk sonra hüküm verilir
 window.v46Rej = { items: [] };
 try { v46Rej.items = JSON.parse(localStorage.getItem(SK_REJ) || '[]'); } catch(e){}
-window.v46RejSave = function(){ try { localStorage.setItem(SK_REJ, JSON.stringify(v46Rej.items.slice(-300))); } catch(e){} };
+window.v46RejSave = function(){ try { safeLSSet(SK_REJ, JSON.stringify(v46Rej.items.slice(-300))); } catch(e){} };
 
 function v46Price(coin){
   try {
