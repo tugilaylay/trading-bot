@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v47.3 SINIR BEKÇİSİ</title>
+<title>TUGAY × QUANT · v47.4 SÜRELİ MANUEL SOĞUMA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.3 🚧</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.4 ⏱️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2315,6 +2315,21 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="acc-divider"></div>
 
+      <!-- ── v47.4: Manuel Kapatma Soğuması artık SÜRELİ ── -->
+      <div class="card-title">
+        <span>👆 Manuel Kapatma Soğuması</span>
+        <span class="optional-badge" style="background:rgba(12,107,64,0.2);color:var(--green);border-color:rgba(12,107,64,0.4);">v47.4 — artık otomatik kalkıyor</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Süre (dakika)</label>
+          <input type="number" id="manualCooldownMin" value="45" min="10" max="240" step="5" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Bir coin'i elle kapattığında, bot o coinde belirttiğin süre boyunca otomatik pozisyon açmaz — kararına saygı gösterir. <b>Eskiden bu soğuma süresizdi</b> ("Soğumayı Kaldır" butonuna basmadan asla bitmiyordu); artık süre dolunca kendiliğinden kalkıyor, istersen yine de erken kaldırabilirsin.</div>
+
+      <div class="acc-divider"></div>
+
       <!-- ── v37.0: İşlem Saatleri Filtresi ── -->
       <div class="card-title">
         <span>⏰ İşlem Saatleri Filtresi</span>
@@ -3142,18 +3157,26 @@ const SK_MANUAL_COOLDOWN = 'tugay_v41_manualcooldown';
 let manualCooldownCoins = {}; // { TLM: true }
 try { manualCooldownCoins = JSON.parse(localStorage.getItem(SK_MANUAL_COOLDOWN) || '{}'); } catch(e) { manualCooldownCoins = {}; }
 function setManualCooldown(coin) {
-  manualCooldownCoins[coin] = true;
+  // v47.4: artık SÜRESİZ değil — kullanıcı ayarına göre bir bitiş zamanı damgalanıyor.
+  const mins = Math.max(parseFloat(document.getElementById('manualCooldownMin')?.value) || 45, 1);
+  const until = Date.now() + mins * 60 * 1000;
+  manualCooldownCoins[coin] = until;
   try { localStorage.setItem(SK_MANUAL_COOLDOWN, JSON.stringify(manualCooldownCoins)); } catch(e) {}
-  if (coinStates[coin]) coinStates[coin].manualCooldown = true;
+  if (coinStates[coin]) coinStates[coin].manualCooldown = until;
 }
 function clearManualCooldown(coin) {
   delete manualCooldownCoins[coin];
   try { localStorage.setItem(SK_MANUAL_COOLDOWN, JSON.stringify(manualCooldownCoins)); } catch(e) {}
   if (coinStates[coin]) coinStates[coin].manualCooldown = false;
 }
-// Tek doğruluk kaynağı: hafızadaki state VEYA kalıcı kayıt — ikisinden biri true'ysa soğuma aktif.
+// v47.4: Tek doğruluk kaynağı: hafızadaki VEYA kalıcı kayıttaki bitiş zamanı — süre dolduysa
+// otomatik pasif sayılır (eski kayıtlarda `true` (boolean) kalmış olabilir, onu da güvenle
+// "hâlâ aktif, süresiz" değil "geçersiz veri" sayıp temizliyoruz — geriye dönük uyumluluk).
 function isManualCooldownActive(coin) {
-  return !!(coinStates[coin]?.manualCooldown || manualCooldownCoins[coin]);
+  const raw = coinStates[coin]?.manualCooldown || manualCooldownCoins[coin];
+  if (!raw) return false;
+  if (raw === true) { clearManualCooldown(coin); return false; } // v47.4 göçü: eski süresiz kayıt
+  return Date.now() < raw;
 }
 function setLossCooldown(coin) {
   const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
@@ -3567,7 +3590,7 @@ const SETTINGS_FIELD_IDS = [
   'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
-  'mathGateToggle', 'mathGateCostMult', 'mathGateMinRR', 'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
+  'mathGateToggle', 'mathGateCostMult', 'mathGateMinRR', 'manualCooldownMin', 'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
   'ratchetToggle', 'ratchetStepPct', 'ratchetLockRatio',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
@@ -3748,6 +3771,7 @@ function loadSettings() {
       { id: 'trailingActivationPct', min: 0.1, max: 10, def: 1.2 },
       { id: 'circuitBreakerCount', min: 2, max: 15,  def: 4    }, // v37.0
       { id: 'trailingConfirmTicks', min: 1, max: 10, def: 2 }, // v47.3: 500 gibi anlamsız değerleri artık engeller
+      { id: 'manualCooldownMin', min: 10, max: 240, def: 45 }, // v47.4
       { id: 'exitConfirmTicks',     min: 2, max: 10, def: 2 },
       { id: 'entryConfirmTicks',    min: 2, max: 10, def: 2 },
     ];
@@ -4703,7 +4727,7 @@ function initCoinState(coin) {
     interval: null,
     openPosition: null,
     tradeCount: 0,
-    manualCooldown: !!manualCooldownCoins[coin] // v41.7: kalıcı kayıttan geri yükle
+    manualCooldown: manualCooldownCoins[coin] || false // v47.4: artık zaman damgası (veya eski boolean, isManualCooldownActive temizler)
   };
 }
 
@@ -7878,7 +7902,7 @@ async function manualSell(coin) {
     // XLM'i manuel sattın → bot hemen yeni XLM açıyordu sorunu bu şekilde çözülür.
     state.manualCooldown = true;
     setManualCooldown(coin); // v41.7: kalıcı hale getir — sayfa yenilense de kaybolmasın
-    log('🧊 [Manuel Soğuma] ' + coin + ' — Manuel kapatıldı. Bot bu coinde otomatik işlem açmayacak. Paneldeki "Soğumayı Kaldır" butonuna bas veya coini yeniden başlat.', 'warn', coin);
+    log('🧊 [Manuel Soğuma] ' + coin + ' — Manuel kapatıldı. Bot ' + (parseFloat(document.getElementById('manualCooldownMin')?.value) || 45) + ' dakika bu coinde otomatik işlem açmayacak, sonra kendiliğinden kalkacak. İstersen paneldeki "Soğumayı Kaldır" ile erken kaldırabilirsin.', 'warn', coin);
     renderPositionCard(coin, state, price);
     updateCooldownUI(coin);
     return;
