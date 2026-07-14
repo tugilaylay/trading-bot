@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v47.4 SÜRELİ MANUEL SOĞUMA</title>
+<title>TUGAY × QUANT · v47.5 SL/TP KAYNAK GÖRÜNÜRLÜĞÜ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.4 ⏱️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.5 📊</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -6189,6 +6189,9 @@ function renderPositionCard(coin, state, currentPrice) {
     </div>
     <div class="pos-row">
       <span class="pos-label">Gösterge Çıkışı</span><span class="pos-value" style="color:${remainingMs>0?'var(--yellow)':'var(--green)'};font-size:11px">${holdInfo}</span>
+    </div>
+    <div class="pos-row" title="ATR-bazlı ise SL/TP piyasa oynaklığına göre otomatik ölçekli. Sabitse Coin Özel Ayarları'nda elle girilmiş bir değer var — ATR-Bağıl Ölçekle görmezden geliniyor.">
+      <span class="pos-label">SL/TP Kaynağı</span><span class="pos-value" style="font-size:11px;color:${pos.atrBased ? 'var(--green)' : 'var(--yellow)'}">${pos.atrBased ? '📊 ATR-bazlı (otomatik)' : '📌 Sabit/Özel (Coin Ayarları\'nda elle girilmiş olabilir)'}</span>
     </div>
     <div style="font-size:9.5px;color:var(--muted);margin-top:6px;text-align:center">${pos.atrBased ? '📐 SL/TP bu coin\'in giriş anındaki ATR\'sine göre ayarlandı · ' : ''}SL/TP her zaman aktif, bekleme sadece gösterge çıkışını etkiler${leverage>1?' · Likidasyon: -%'+(95/leverage).toFixed(0)+' fiyat hareketi':''}</div>
   `;
