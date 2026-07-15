@@ -1999,7 +1999,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Açıkken: İz Süren Stop'un kapanış tetiği (mesafe VEYA başa-baş tabanı), tek bir anlık tikte değil, <b>art arda N tick boyunca kesintisiz</b> sürerse kapanışı gerçekleştirir. Bu bir zaman kilidi DEĞİLDİR — coin isterse birkaç saniyede, isterse dakikalarca sürede çıkabilir; tek şart anlık titremeyle değil gerçek bir dönüşle kapanmasıdır. Sinyal çıkışındaki "Gürültü Filtresi" ile aynı mantık, trailing'e uygulanmış hali.</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon kâra geçtikçe stop-loss seviyesi de arkasından gelir (en iyi noktanın belirttiğin % kadar altında/üstünde kalır), böylece kazancın bir kısmı kilitlenir. Sabit Stop-Loss ile birlikte çalışır — hangisi önce tetiklenirse o uygulanır. <b style="color:orange;">v43.3 FIX:</b> Eskiden "en iyi fiyat" girişten <b>0.01%</b> bile iyi olsa devreye giriyordu — yani neredeyse her pozisyon anlık gürültüyle "iz sürmeye" başlıyor ve gerçek bir kâr hiç oluşmadan zararla kapanıyordu. Artık İz Süren Stop, pozisyon en az <b>Aktivasyon Eşiği</b> kadar kaldıraçlı kâra geçmeden hiç devreye girmiyor — önce gerçek bir kâr olmalı ki "izlenecek" bir şey olsun.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Pozisyon kâra geçtikçe stop seviyesi arkasından gelir ve kazancın bir kısmını kilitler — Aktivasyon Eşiği kadar gerçek kâr oluşmadan devreye girmez.</div>
 
       <div class="acc-divider"></div>
 
@@ -2068,7 +2068,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="tp2Pct" value="60" min="30" max="90" step="10" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: fiyat Take-Profit hedefine ulaştığında pozisyonun <b>tamamı kapanmaz</b> — belirttiğin yüzdesi kapatılır (kâr garantiye alınır), kalan "runner" kısmı <b>İz Süren Stop</b> ile trendde kalmaya devam eder. Büyük trend günlerinde TP'nin 2-3 katına kadar sürebilir. <b>Şart: İz Süren Stop açık olmalı</b> — kapalıysa güvenlik için pozisyonun tamamı normal şekilde TP'de kapanır. <b>v47.1:</b> Kâr Merdiveni ile tamamlayıcı çalışır — büyük bölüm burada garantiye alınır, kalan "runner" kısmı Merdiven'in yükselen tabanında korunarak koşar.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">TP'ye ulaşınca pozisyonun belirttiğin yüzdesi kapatılıp kâr garantilenir, kalan "runner" kısım İz Süren Stop ile trendde koşmaya devam eder (İz Süren Stop açık olmalı).</div>
 
       <div class="acc-divider"></div>
 
@@ -2081,7 +2081,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Bot Sağlığı kartında zaten hesaplanan <b>yarım Kelly</b> değeri artık pozisyon boyutuna gerçekten uygulanır. Son 50 işlemde istatistiksel edge güçlüyse (yarım Kelly &gt; %2) miktar <b>1.5x'e kadar büyür</b>, edge zayıf/negatifse <b>0.5x'e düşer</b>. En az 10 kapanmış işlem gerekir — veri yoksa hiçbir şey değişmez. ATR boyutlandırma ve Dinamik Boyut ile üst üste çalışır; mutlak tavan (baz miktarın 1.5 katı) her durumda geçerlidir. Profesyonel fonların "kazanırken büyü, kaybederken küçül" prensibinin matematiksel hali.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Son 50 işlemdeki istatistiksel üstünlüğe (yarım Kelly) göre pozisyon boyutu 0.5x–1.5x arası otomatik ölçeklenir; en az 10 kapanmış işlem gerekir.</div>
 
       <div class="acc-divider"></div>
 
@@ -2094,7 +2094,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: botun kendi kümülatif kâr eğrisi, son 10 işlemlik kendi ortalamasının <b>altına</b> inmişse (strateji "soğuk dönemde"), yeni pozisyonlar <b>yarı boyutla</b> açılır. Eğri ortalamanın üstüne çıkınca otomatik normale döner. Devre Kesici'nin yumuşak versiyonu: tamamen durmak yerine hasarı sınırlayarak stratejinin toparlanmasına izin verir. En az 12 kapanmış işlem gerekir.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Kâr eğrisi kendi 10 işlemlik ortalamasının altına inince (soğuk dönem) yeni pozisyonlar yarı boyutla açılır, eğri toparlanınca normale döner.</div>
 
       <div class="acc-divider"></div>
 
@@ -2113,7 +2113,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="timeStopCandles" value="12" min="2" max="100" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon belirtilen mum sayısı boyunca ne TP'ye ne SL'e gitmediyse ve hâlâ <b>başa baş komisyon tabanının altındaysa</b> otomatik kapatılır. Mantık: sinyal doğruysa fiyat makul sürede yürür; yürümediyse tez çürümüştür ve o sermaye başka fırsatta çalışmalıdır. <b>Kârdaki pozisyona asla dokunmaz</b> — onları trailing/runner yönetir. 5m grafikte 12 mum = 1 saat; 1h grafikte 12 mum = yarım gün.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirtilen mum sayısı boyunca ne TP'ye ne SL'e giden ve hâlâ başa baş altındaki pozisyon otomatik kapatılır — kârdaki pozisyona asla dokunmaz.</div>
 
       <div class="acc-divider"></div>
 
@@ -2126,7 +2126,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Botun yeni duyusu: WebSocket'ten her gerçekleşen işlemin <b>agresif tarafı</b> okunur (taker alım − taker satım = CVD). Göstergelerin hepsi aynı mum verisinin türeviyken bu, tamamen bağımsız bir bilgi kanalıdır. Açıkken: LONG sinyali gelse bile son 60 saniyede gerçek para <b>net satıyorsa</b> (akış oranı &lt; −%15) giriş engellenir — boş yükselişe binilmez. SHORT için tersi. Sadece çalışan coinlerin akışı dinlenir; veri yoksa filtre kendini devre dışı bırakır.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Gerçek para son 60 saniyede net satıyorsa LONG, net alıyorsa SHORT açılmaz — göstergelerden bağımsız emir akışı (CVD) teyidi.</div>
 
       <div class="acc-divider"></div>
 
@@ -2138,7 +2138,19 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Binance Futures'un halka açık pozisyonlanma verisi: hesapların Long/Short oranı. Açıkken: oran <b>≥ 3</b> ise (piyasanın ezici çoğunluğu zaten long) yeni LONG engellenir — kalabalığın en yoğun olduğu yer, squeeze'in başladığı yerdir. Oran <b>≤ 0.33</b> ise SHORT engellenir. Coin detay şeridinde ⚔️ L/S ve 📜 OI çipleri olarak da görünür (5 dk'da bir güncellenir).</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">L/S oranı aşırı uçtaysa (≥3 veya ≤0.33) kalabalıkla aynı yöne girilmez — squeeze koruması.</div>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
+        <span>🌊 Akış Uzlaşı Kapısı (CVD + OI + L/S)</span>
+        <span class="optional-badge" style="background:rgba(80,200,120,0.2);color:var(--green);border-color:rgba(80,200,120,0.4);">V48 — ÖNERİLEN AÇIK</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="flowGateToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Göstergeler geçmişi anlatır, akış şu anı: bot girişten önce CVD (gerçek alış/satış), OI değişimi ve L/S oranını tek skorda birleştirir — alıcılar net sahadayken SHORT, satıcılar sahadayken LONG açılmaz; eşiği bot kanıt ağırlığıyla kendisi belirler, veri yoksa karışmaz.</div>
 
       <div class="acc-divider"></div>
 
@@ -2150,7 +2162,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: her gerçek pozisyon açılışında iki gölge strateji (🅱️ Sabırlı Avcı, 🅲 Hızlı Tahsildar) aynı girişi <b>sanal olarak</b> kopyalar ve kendi çıkış kurallarıyla yönetir. Kasaya asla dokunmazlar. Sonuçlar Analiz → Strateji Arenası'nda yan yana birikir.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Her gerçek girişte iki gölge strateji aynı pozisyonu sanal kopyalar ve kendi çıkış kurallarıyla yönetir — sonuçlar Analiz → Strateji Arenası'nda birikir.</div>
 
       <div class="acc-divider"></div>
 
@@ -2168,7 +2180,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="dailyLossLimitPct" value="40" min="10" max="1000" step="5" />
         </div>
       </div>
-      <div id="dailyLossStatus" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: TÜM coinlerin bugünkü toplam zararı belirttiğin tutara ulaşırsa, bot tamamen durur ve hiçbir coinde yeni pozisyon açılmaz. Gün değişince (gece yarısı) sayaç sıfırlanır.</div>
+      <div id="dailyLossStatus" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Günlük toplam zarar belirttiğin tutara ulaşırsa bot tüm coinlerde durur; sayaç gece yarısı sıfırlanır.</div>
 
       <div class="acc-divider"></div>
 
@@ -2186,7 +2198,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="perCoinLossLimitPct" value="20" min="5" max="300" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: bugün hangi coin belirttiğin tutarı kadar zarar ettiyse SADECE O coin durur, diğer coinler çalışmaya devam eder. Böylece bir coindeki kötü gidiş, başka bir coindeki fırsatı kaçırmana neden olmaz.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Bugün limit kadar zarar eden coin tek başına durur, diğerleri çalışmaya devam eder.</div>
 
       <div class="acc-divider"></div>
 
@@ -2204,7 +2216,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="maxPositionsCount" value="2" min="1" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: aynı anda en fazla belirttiğin sayıda pozisyon açık olabilir. Limit doluyken bot yeni bir sinyal görse bile pozisyon açmaz (log'a not düşülür). Kripto coinleri birbirine yüksek korelasyonlu olduğu için (BTC düşünce çoğu düşer), aynı anda çok fazla coin'de pozisyon açmak göründüğünden daha az "çeşitlendirme", daha çok tekrarlanan aynı risktir — bu limit o riski sınırlar.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Aynı anda en fazla belirttiğin sayıda pozisyon açılabilir — coinler yüksek korelasyonlu olduğu için fazlası çeşitlendirme değil, aynı riskin tekrarıdır.</div>
 
       <div class="acc-divider"></div>
 
@@ -2229,7 +2241,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="btcCorrThreshold" value="3" step="0.5" min="0.5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: BTC son 4 saatte belirtilen % kadar düşüyorsa, diğer tüm coinlerde LONG pozisyon açılmaz. Altcoinler BTC ile yüksek korelasyonlu — BTC düşerken LONG almak en sık zarar kaynağı.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">BTC son 4 saatte eşik kadar düşüyorsa hiçbir coinde LONG açılmaz — BTC düşerken altcoin LONG'u en sık zarar kaynağıdır.</div>
 
       <div class="acc-divider"></div>
 
@@ -2254,7 +2266,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="fgThreshold" value="25" step="5" min="5" max="50" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Fear &amp; Greed endeksi belirttiğin değerin altına düşünce (Aşırı Korku) LONG pozisyon açılmaz. Endeks her 30 dakikada bir güncellenir, header'da canlı gösterilir. 0-25 = Aşırı Korku · 25-45 = Korku · 45-55 = Nötr · 55-75 = Açgözlülük · 75+ = Aşırı Açgözlülük.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Fear &amp; Greed endeksi eşiğin altındayken (Aşırı Korku) LONG açılmaz; endeks 30 dk'da bir güncellenir.</div>
 
       <div class="acc-divider"></div>
 
@@ -2273,7 +2285,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="fundingThreshold" value="0.05" min="0.01" max="0.3" step="0.01" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: Binance Vadeli funding oranı coin bazında 15 dk'da bir çekilir. Funding <b>+eşiğin üstündeyse</b> kalabalık LONG tarafında demektir — long squeeze riski yüksek, <b>yeni LONG engellenir</b>. Funding <b>-eşiğin altındaysa</b> kalabalık SHORT'ta — short squeeze riski, <b>yeni SHORT engellenir</b>. Kalabalığın tersinde durmak profesyonel fonların en bilinen istatistiksel avantajlarından biridir. Normal funding ±0.01% civarıdır; 0.05+ belirgin aşırılıktır.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Funding oranı +eşiğin üstündeyse yeni LONG, -eşiğin altındaysa yeni SHORT engellenir — kalabalığın tersinde durma koruması.</div>
 
       <div class="acc-divider"></div>
 
@@ -2292,7 +2304,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="circuitBreakerCount" value="4" min="2" max="15" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: belirttiğin sayıda <b>üst üste kayıp</b> yaşanırsa bot <b>TÜM coinlerde otomatik durur</b>, ekranda kırmızı uyarı gösterir ve Telegram'a haber verir. Dinamik boyutlandırma işlem miktarını küçültür ama botu durdurmaz — bu özellik ise "strateji bu piyasada çalışmıyor" durumunda hesabı tamamen korur. Profesyonel fonların hepsinde standart bir güvenlik mekanizmasıdır.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirttiğin sayıda üst üste kayıpta bot tüm coinlerde otomatik durur, ekranda uyarır ve Telegram'a haber verir.</div>
 
       <div class="acc-divider"></div>
 
@@ -2311,7 +2323,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="lossCooldownMin" value="45" min="10" max="240" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: bir coin <b>Stop-Loss veya likidasyonla zararlı kapanırsa</b>, SADECE o coin'de belirttiğin süre boyunca yeni pozisyon açılmaz (diğer coinler etkilenmez, açık pozisyonlar normal yönetilir). Stop yiyen coin genelde hâlâ aynı kaotik harekette — bot hemen tekrar girip aynı stopu bir daha yiyebilir ("revenge trade"in bot versiyonu). Soğuma bu döngüyü kırar. TP veya sinyalle kapanan işlemler soğuma başlatmaz.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">SL/likidasyonla zararlı kapanan coin belirttiğin süre boyunca yeni pozisyona kapatılır — aynı kaotik harekete hemen geri girme ("revenge trade") döngüsünü kırar.</div>
 
       <div class="acc-divider"></div>
 
@@ -2326,7 +2338,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="manualCooldownMin" value="45" min="10" max="240" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Bir coin'i elle kapattığında, bot o coinde belirttiğin süre boyunca otomatik pozisyon açmaz — kararına saygı gösterir. <b>Eskiden bu soğuma süresizdi</b> ("Soğumayı Kaldır" butonuna basmadan asla bitmiyordu); artık süre dolunca kendiliğinden kalkıyor, istersen yine de erken kaldırabilirsin.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Elle kapattığın coinde belirttiğin süre boyunca otomatik pozisyon açılmaz; süre dolunca kendiliğinden kalkar.</div>
 
       <div class="acc-divider"></div>
 
@@ -2349,7 +2361,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="time" id="tradingHoursEnd" value="23:00" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: belirttiğin saat aralığı <b>dışında yeni pozisyon açılmaz</b> (açık pozisyonlar normal şekilde yönetilmeye ve kapatılmaya devam eder). Gece 03:00 gibi düşük likidite saatlerinde spread genişler ve ani iğneler (wick) artar — çoğu strateji bu saatlerde zarar üretir. Bitiş saati başlangıçtan küçükse gece yarısını aşan aralık kabul edilir (örn. 21:00 → 02:00).</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirttiğin saat aralığı dışında yeni pozisyon açılmaz (açık pozisyonlar normal yönetilir) — düşük likidite saatlerinde iğneler artar.</div>
 
       <div class="acc-divider"></div>
 
@@ -2367,7 +2379,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="slippagePct" value="0.02" min="0" max="0.5" step="0.01" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Binance Vadeli İşlemler'de taker komisyonu, işlem büyüklüğünün (margin × kaldıraç) yaklaşık %0.04-0.05'i kadardır ve hem girişte hem çıkışta ayrı ayrı alınır. Kayma (slippage) ise emrin beklediğinden biraz farklı bir fiyattan gerçekleşmesidir. <b style="color:orange;">v42 — Likidite Duyarlı Kayma:</b> girdiğin kayma değeri artık taban değerdir; coin'in 24s hacmine göre otomatik ölçeklenir (≥$500M hacim ×1 · $100-500M ×1.5 · $30-100M ×3 · &lt;$30M ×5). Yani BTC'de %0.02 kalırken VANRY gibi sığ bir coinde gerçekçi şekilde %0.10'a çıkar — "sim'de kazandım, canlıda kazanamadım" şokunu önlemek için. Gerçekçi olması için artık kapanan her işlemde bu maliyetler K/Z'dan otomatik düşülüyor — gösterilen kâr/zarar artık komisyonsuz "kağıt üstü" bir rakam değil. Sıfır girersen etkisiz olur.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Komisyon + kayma her işlemde K/Z'dan otomatik düşülür; kayma coin'in 24s hacmine göre otomatik ölçeklenir (BTC ×1, sığ coin ×5'e kadar).</div>
 
       <div class="acc-divider"></div>
 
@@ -2385,7 +2397,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="atrReferencePct" value="1.5" min="0.1" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: yukarıdaki "İşlem Miktarı" artık tüm coinlerde sabit kalmaz — her coin'in son 14 mumdaki ortalama gerçek aralığına (ATR) göre otomatik küçülür/büyür. Oynaklığı referans değerin üstünde olan bir coin'de (örn. küçük bir altcoin) pozisyon küçülür, oynaklığı düşük bir coin'de (örn. BTC, sakin dönemlerde) pozisyon büyür — amaç her coin'de kabaca benzer bir DOLAR RİSKİ taşımak. Ölçekleme 0.3x-2x aralığıyla sınırlıdır, aşırı uçlara gitmez.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">İşlem miktarı her coin'in oynaklığına (ATR) göre 0.3x–2x arası otomatik ölçeklenir — amaç her coin'de benzer dolar riski taşımak.</div>
 
       <div class="acc-divider"></div>
 
@@ -2408,10 +2420,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        Açıkken: her pozisyon açıldığı anda o coin'in ATR'sine göre SL/TP hesaplanır, kapanana kadar sabit kalır.
-        <b style="color:orange;">v34 Fix:</b> Kaldıraç artık çift sayılmıyor — SL/TP ham fiyat % olarak hesaplanır, kaldıraç zaten leveragedChange'de var.
-        <b>Varsayılan ve önerilen: SL=1.5×ATR, TP=2.5×ATR (risk:ödül 1:1.67)</b> — ne çok dar (gürültüyle sürekli stop yer) ne çok geniş (TP'ye asla ulaşmaz).
-        <b style="color:orange;">v41.9.2 Güvenlik Kilidi:</b> Bu iki alan artık <b>0.8–3.0</b> (SL) ve <b>1.0–6.0</b> (TP) aralığının dışına asla çıkamaz — yanlışlıkla "5" veya "400" gibi bir sayı yazsan bile alan otomatik olarak en yakın güvenli sınıra çekilir ve sana haber verir.
+        Her pozisyonun SL/TP'si giriş anındaki ATR'ye göre hesaplanır ve kapanana kadar sabit kalır — önerilen SL=1.5×ATR, TP=2.5×ATR (güvenlik kilidi aşırı değerleri otomatik düzeltir).
       </div>
 
       <div class="acc-divider"></div>
@@ -2435,9 +2444,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        <b style="color:var(--green);">Göstergeler HIZ ölçer, bu kalkan KONUM ölçer.</b> Momentum göstergeleri düşüşün sonunda bile "SAT" der — çünkü hareket hâlâ aşağı yönlü, ama <b>bitmek üzere</b>. Sonuç: dibe kadar düşmüş coine SHORT girip gelen tepki yükselişinde SL yemek (DEXE vakası).
-        Açıkken bot, girişten önce iki şeye bakar: <b>1) Konum</b> — fiyat, son N mumun en düşüğüne belirlediğin ATR mesafesinden yakınsa SHORT reddedilir (dibe bu kadar yakınken aşağıda kalan yol SL riskini karşılamaz); tepe için simetrik olarak LONG reddedilir. <b>2) Gerilme</b> — fiyat EMA20'den 2.5×ATR'den fazla kopmuşsa hareket "tükenmiş" sayılır, o yönde giriş reddedilir (fazla gerilen lastik geri teper).
-        Reddedilen her giriş nedeniyle birlikte log'a ve Red Defteri'ne yazılır — kalkan haklı mı haksız mı, 30 dk sonra hükümde görürsün. Hem manuel bot hem otopilot girişlerinde çalışır; açık pozisyonlara asla dokunmaz.
+        Fiyat son N mumun dibine/tepesine emniyet mesafesinden yakınsa veya EMA20'den aşırı kopmuşsa o yönde giriş reddedilir — dipten SHORT, tepeden LONG açılmaz; her ret nedeniyle Red Defteri'ne yazılır.
       </div>
 
       <div class="acc-divider"></div>
@@ -2457,9 +2464,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         </div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        <b style="color:#ff6b6b;">v34 — Kritik güvenlik ağı.</b> ATR SL ne derse desin, kaldıraçlı zarar bu değere ulaşırsa pozisyon <b>yeni mum beklenmeden ANINDA</b> kapatılır.
-        Örn. 4x kaldıraç + %8 limit = fiyat %2 düşünce acil çıkış. Önceden SOL -31$, XRP -24$ zarara kadar açık kalıyordu — bu önler.
-        (%85'ine ulaşınca uyarı verir, tam %100'de kapatır.)
+        Kaldıraçlı zarar bu değere ulaşırsa pozisyon yeni mum beklenmeden anında kapatılır — ATR SL'den bağımsız kritik güvenlik ağı.
       </div>
 
       <div class="acc-divider"></div>
@@ -2544,7 +2549,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="entryConfirmTicks" value="2" min="2" max="10" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Kapalıyken (eski davranış): gösterge skoru eşiği bir anlık tek tick'te bile aşsa bot ANINDA girer — tam da hareketin doruğunda/dibinde, tükendiği anda. Açıkken: giriş sinyali art arda belirttiğin sayıda tick boyunca KESİNTİSİZ sürmesi gerekir; sinyal bir ara zayıflarsa sayaç sıfırlanır. <b>Çıkış Sinyali Onayı'nın aynadaki hâli</b> — o zaten "erken çıkma", bu da "erken girme"yi önlüyor. Sonuç: hareketin ilk anlık sıçramasında değil, gerçekten süregelen bir eğilimde girersin. Filtreler (CVD, Trend Gate, MTF vb.) hâlâ normal çalışır; bu sadece son adımda bir teyit turu ekler.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Giriş sinyalinin art arda belirttiğin sayıda tick sürmesi gerekir — anlık sıçramada değil, süregelen eğilimde girersin.</div>
 
       <div class="acc-divider"></div>
 
@@ -2562,7 +2567,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="exitConfirmTicks" value="2" min="2" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Kapalıyken (varsayılan): minimum tutma süresi dolduktan sonra, gösterge sinyali ters döndüğü AN (tek bir tick'te) pozisyon kapanır — anlık bir gürültü bile yeterli olabilir. Açıkken: ters sinyalin art arda belirttiğin sayıda tick boyunca KESİNTİSİZ sürmesi gerekir; sinyal bir ara tekrar lehine dönerse sayaç sıfırlanır ve baştan başlar. Amaç: tek seferlik bir gösterge sıçramasıyla erken çıkmayı önlemek, gerçek bir tersine dönüşü beklemek.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Ters sinyalin art arda belirttiğin sayıda tick sürmesi gerekir — tek seferlik gösterge sıçramasıyla erken çıkış önlenir.</div>
 
       <div class="acc-divider"></div>
 
@@ -2583,7 +2588,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="btn-row" style="margin-top:8px;">
         <button class="btn btn-toggle-all" style="flex:1" onclick="playTradeFeedback('buy'); playTradeFeedback('sell');">🔊 Test Et</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: pozisyon açılış/kapanışlarında kısa bir bip sesi + (destekleyen cihazlarda) titreşim verilir — Telegram'a bakmadan hissetmen için. <b>Önemli dürüstlük notu:</b> Titreşim (Vibration API) Android tarayıcılarda çalışır, <b>iOS Safari bunu desteklemez</b> — iPhone'da sadece ses duyarsın, titreşim hissetmezsin. Ses için sekmenin arka planda da açık olması ve telefon sessize alınmamış olması gerekir.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Pozisyon açılış/kapanışlarında bip + titreşim verir (titreşim iOS Safari'de desteklenmez, sadece Android'de çalışır).</div>
 
       <div class="acc-divider"></div>
 
@@ -2596,7 +2601,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: sekme <b>arka plandayken</b> bile işlem açılış/kapanışlarında işletim sistemi bildirimi gösterilir. Başka sekmede çalışırken veya telefon kilitliyken botu takip etmeni sağlar. İlk açışta tarayıcı izin soracak — "İzin Ver" demen yeterli. Telegram bildirimlerinden bağımsız çalışır.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Sekme arka plandayken bile işlem bildirimleri işletim sistemi bildirimi olarak gösterilir; ilk açışta tarayıcı izin ister.</div>
 
       <div class="acc-divider"></div>
 
@@ -2629,7 +2634,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Açıkken: AL/SAT işlemleri ve pozisyon kapanışları doğrudan Telegram'a bildirim olarak gönderilir. Tarayıcı sekmesi açık olmalı (telefon kilitliyken JS duraklayabilir). Bilgiler sadece tarayıcında saklanır, kaydedilmez. <b>v41:</b> Otomatik haftalık rapor açıksa, her Pazar 20:00'den sonra sekme açıkken haftanın özeti (K/Z, kazanma oranı, en iyi/kötü coin, kapanış sebepleri) bir kez Telegram'a gönderilir.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">İşlemler Telegram'a anlık bildirim olarak gider (sekme açık olmalı); haftalık rapor açıksa Pazar akşamı haftanın özeti gönderilir.</div>
       </details>
       <!-- ═══ /Bildirimler ═══ -->
 
@@ -3643,7 +3648,7 @@ const SETTINGS_FIELD_IDS = [
   'kellySizingToggle', 'equityThrottleToggle', 'timeStopToggle', 'timeStopCandles',
   'atrTrailingScaleToggle', 'atrTrailingRefPct', 'trailingConfirmToggle', 'trailingConfirmTicks',
   // v45.0: akıllı filtreler + arena
-  'cvdFilterToggle', 'crowdFilterToggle', 'arenaToggle',
+  'cvdFilterToggle', 'crowdFilterToggle', 'flowGateToggle', 'arenaToggle',
   // v45.2: 🧬 Evrim Motoru
   'evoIndicatorsToggle', 'evoMinTrades', 'evoWinFloor', 'evoRiskToggle'
 ];
@@ -5883,6 +5888,69 @@ function cvdEntryBlocked(coin, dir) {
   if (dir === 'long' && st.ratio < -TH) {
     log(`🌊 [CVD Akış] ${coin} — LONG sinyali var ama son 60 sn'de gerçek para NET SATIYOR (akış oranı ${(st.ratio*100).toFixed(0)}%, ${(st.delta/1000).toFixed(1)}K$ satış baskın). Boş yükseliş — giriş engellendi.`, 'warn', coin);
     try{recordRejection(coin,'long','CVD Akış');}catch(e){}
+    return true;
+  }
+  // v48.0 ASİMETRİ FİX: Bu filtre eskiden SADECE long tarafını koruyordu — para alırken
+  // SHORT açmayı hiç engellemiyordu (DEXE vakası: alış baskın, bot yine short girdi).
+  if (dir === 'short' && st.ratio > TH) {
+    log(`🌊 [CVD Akış] ${coin} — SHORT sinyali var ama son 60 sn'de gerçek para NET ALIYOR (akış oranı +${(st.ratio*100).toFixed(0)}%, ${(st.delta/1000).toFixed(1)}K$ alış baskın). Alıcıya karşı short — giriş engellendi.`, 'warn', coin);
+    try{recordRejection(coin,'short','CVD Akış');}catch(e){}
+    return true;
+  }
+  return false;
+}
+
+// ───────── v48.0: 🌊 Akış Uzlaşı Kapısı ─────────
+// SORUN: Bot yalnızca GÖSTERGELERE bakıyordu — göstergeler mum verisinden türer, yani hep
+// GEÇMİŞİ anlatır. Oysa alış/satış akışı (CVD), Open Interest değişimi ve Long/Short oranı
+// ŞU ANDA piyasada kimin sahada olduğunu söyler. Bu kapı üçünü tek bir "akış skoruna"
+// çevirir ve akış, sinyale GÜÇLÜ şekilde karşıysa girişi reddeder.
+// Eşik sabit değil — kullanıcı sayı ayarlamaz, bot kanıt ağırlığıyla kendi karar verir:
+//   • CVD (son 2 dk taker akışı): en güncel ve en güvenilir kanıt → ağırlık 2
+//   • OI değişimi × akış yönü: OI artıyor + alış baskın = YENİ long parası giriyor (güçlü
+//     boğa kanıtı); OI artıyor + satış baskın = yeni short parası (güçlü ayı kanıtı);
+//     OI düşüyorsa pozisyon kapanışı = zayıf kanıt → ağırlık ±1 / ±0.5
+//   • L/S oranı: ılımlı eğilim küçük kanıt (±0.5); aşırı uçlar zaten Kalabalık filtresinin işi
+// Skor +2'ye ulaşırsa (alıcılar net sahada) SHORT reddedilir; -2'de LONG reddedilir.
+// Veri yoksa karışmaz — kanıt olmadan hüküm yok. Açık pozisyonlara asla dokunmaz.
+function flowConfluenceBlocked(coin, dir) {
+  if (!document.getElementById('flowGateToggle')?.checked) return false;
+  const st = (typeof getCvdStats === 'function') ? getCvdStats(coin, 120) : null;
+  const pd = posDataCache[coin];
+  let score = 0;
+  const evidence = [];
+
+  if (st && typeof st.ratio === 'number') {
+    const cvdVote = Math.max(-1, Math.min(1, st.ratio / 0.3)); // ±%30 akış oranı = tam oy
+    score += cvdVote * 2;
+    evidence.push(`CVD ${(st.ratio*100).toFixed(0)}%`);
+  }
+  if (pd && typeof pd.oiChangePct === 'number' && !isNaN(pd.oiChangePct) && st) {
+    const flowUp = st.ratio > 0.05, flowDown = st.ratio < -0.05;
+    if (pd.oiChangePct > 0.5) { // OI belirgin artıyor: YENİ para giriyor, yönünü akış söyler
+      if (flowUp)   { score += 1;   evidence.push(`OI +%${pd.oiChangePct.toFixed(1)}·alışla (yeni long)`); }
+      if (flowDown) { score -= 1;   evidence.push(`OI +%${pd.oiChangePct.toFixed(1)}·satışla (yeni short)`); }
+    } else if (pd.oiChangePct < -0.5) { // OI düşüyor: pozisyonlar KAPANIYOR (zayıf kanıt)
+      if (flowUp)   { score += 0.5; evidence.push(`OI %${pd.oiChangePct.toFixed(1)}·alışla (short kapanışı)`); }
+      if (flowDown) { score -= 0.5; evidence.push(`OI %${pd.oiChangePct.toFixed(1)}·satışla (long kapanışı)`); }
+    }
+  }
+  if (pd && typeof pd.lsRatio === 'number' && !isNaN(pd.lsRatio)) {
+    if (pd.lsRatio >= 1.5 && pd.lsRatio < 3)  { score += 0.5; evidence.push(`L/S ${pd.lsRatio.toFixed(2)} (long eğilimli)`); }
+    if (pd.lsRatio <= 0.67 && pd.lsRatio > 0.33) { score -= 0.5; evidence.push(`L/S ${pd.lsRatio.toFixed(2)} (short eğilimli)`); }
+  }
+
+  if (evidence.length === 0) return false; // hiç veri yok — kanıtsız hüküm verilmez
+
+  const BLOCK_TH = 2;
+  if (dir === 'short' && score >= BLOCK_TH) {
+    log(`🌊 [Akış Uzlaşı] ${coin} SHORT engellendi — akış skoru +${score.toFixed(1)}: ALICILAR sahada (${evidence.join(' · ')}). Göstergeler geçmişi anlatır, akış şu anı — alıcıya karşı short açılmadı.`, 'warn', coin);
+    try{recordRejection(coin,'short','Akış Uzlaşı');}catch(e){}
+    return true;
+  }
+  if (dir === 'long' && score <= -BLOCK_TH) {
+    log(`🌊 [Akış Uzlaşı] ${coin} LONG engellendi — akış skoru ${score.toFixed(1)}: SATICILAR sahada (${evidence.join(' · ')}). Göstergeler geçmişi anlatır, akış şu anı — satıcıya karşı long açılmadı.`, 'warn', coin);
+    try{recordRejection(coin,'long','Akış Uzlaşı');}catch(e){}
     return true;
   }
   return false;
@@ -9907,6 +9975,7 @@ async function coinTickInner(coin, state) {
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
       if (cvdEntryBlocked(coin, 'long')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'long')) return; // v45.0: kalabalık aşırı uçta
+      if (flowConfluenceBlocked(coin, 'long')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
       if (!mathGateOk(coin, 'long', slTp, leverage)) return;
@@ -9939,6 +10008,7 @@ async function coinTickInner(coin, state) {
       if (typeof v40FundsOk === 'function' && !v40FundsOk(effectiveTradeAmount, coin)) { return; } // v40: kasa bekçisi
       if (cvdEntryBlocked(coin, 'short')) return;   // v45.0: emir akışı sinyali onaylamıyor
       if (crowdEntryBlocked(coin, 'short')) return; // v45.0: kalabalık aşırı uçta
+      if (flowConfluenceBlocked(coin, 'short')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
       state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
@@ -10487,6 +10557,7 @@ const RISK_CHIP_DEFS = [
   { id: 'atrTrailingScaleToggle',icon: '📐', name: 'ATR Trailing' },     // v44.1
   { id: 'trailingConfirmToggle', icon: '✅', name: 'Trailing Teyit' },   // v44.1
   { id: 'cvdFilterToggle',       icon: '🌊', name: 'CVD Akış' },         // v45
+  { id: 'flowGateToggle',        icon: '🌊', name: 'Akış Uzlaşı' },      // v48
   { id: 'crowdFilterToggle',     icon: '🐑', name: 'Kalabalık' },        // v45
 ];
 
@@ -12509,6 +12580,14 @@ async function apCycle(){
         brain('🐑 [Kalabalık] ' + short + ' teyitli ama ' + reason + ' — squeeze riski, engellendi.');
         apBlockLog.push({ coin: short, tag: 'Kalabalık', reason });
         return null;
+      }
+      if (typeof flowConfluenceBlocked === 'function') {
+        try { await fetchPositioning(short); } catch(e) {} // OI+L/S verisini kapıdan önce hazırla (5 dk cache, spam yapmaz)
+        if (flowConfluenceBlocked(short, c.direction)) {
+          brain('🌊 [Akış Uzlaşı] ' + short + ' teyitli ama CVD+OI+L/S birleşik akış kanıtı sinyale güçlü şekilde karşı — engellendi (detay logda).');
+          apBlockLog.push({ coin: short, tag: 'Akış Uzlaşı', reason: 'akış skoru sinyale karşı' });
+          return null;
+        }
       }
       if (fundingOn) {
         try {
