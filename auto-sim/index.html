@@ -1307,6 +1307,16 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <span class="hero-badge" id="heroBadgeBestCoin">En iyi: —</span>
       <span class="hero-badge" id="heroBadgeExposure" title="Şu an açık pozisyonlardaki toplam para (risk altındaki sermaye)">💼 Açık Risk: 0 $</span>
     </div>
+    <!-- v48.2: 🧮 Beklenti Paneli — "kaşıkla alıp kepçeyle verme" dengesizliğini anında gösterir -->
+    <div id="expectancyPanel" style="display:none;margin-top:10px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);">
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;font-size:11px;">
+        <span style="white-space:nowrap;">📈 Ort. Kazanç: <b id="expAvgWin" style="color:var(--green)">—</b></span>
+        <span style="white-space:nowrap;">📉 Ort. Kayıp: <b id="expAvgLoss" style="color:var(--red)">—</b></span>
+        <span style="white-space:nowrap;">⚖️ Gerçekleşen R:R: <b id="expRR">—</b></span>
+        <span style="white-space:nowrap;">🎯 İşlem Başı Beklenti: <b id="expPerTrade">—</b></span>
+      </div>
+      <div id="expVerdict" style="font-size:10px;color:var(--muted);text-align:center;margin-top:5px;"></div>
+    </div>
   </div>
 
   <!-- 🚨 v37.0: Devre Kesici Banner — üst üste kayıp serisinde bot kendini durdurunca görünür -->
@@ -9633,6 +9643,45 @@ function updateHeroBadges() {
   const wins  = globalTradeHistory.filter(t => t.pnl >= 0).length;
   const total = globalTradeHistory.length;
   const wr    = total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '—';
+
+  // v48.2: 🧮 Beklenti Paneli — win rate tek başına yalan söyler; işlem başına
+  // GERÇEK beklentiyi (ortalama kazanç/kayıp dengesini) canlı gösterir.
+  const expPanel = document.getElementById('expectancyPanel');
+  if (expPanel) {
+    if (total >= 5) {
+      const winTrades = globalTradeHistory.filter(t => t.pnl >= 0);
+      const lossTrades = globalTradeHistory.filter(t => t.pnl < 0);
+      const avgWin = winTrades.length ? winTrades.reduce((s,t) => s + t.pnl, 0) / winTrades.length : 0;
+      const avgLoss = lossTrades.length ? Math.abs(lossTrades.reduce((s,t) => s + t.pnl, 0) / lossTrades.length) : 0;
+      const winP = winTrades.length / total;
+      const expectancy = winP * avgWin - (1 - winP) * avgLoss;
+      const rr = avgLoss > 0 ? avgWin / avgLoss : null;
+
+      expPanel.style.display = '';
+      const eW = document.getElementById('expAvgWin'), eL = document.getElementById('expAvgLoss'),
+            eR = document.getElementById('expRR'), eP = document.getElementById('expPerTrade'),
+            eV = document.getElementById('expVerdict');
+      if (eW) eW.textContent = '+' + avgWin.toFixed(2) + ' $';
+      if (eL) eL.textContent = '-' + avgLoss.toFixed(2) + ' $';
+      if (eR) {
+        eR.textContent = rr !== null ? '1:' + rr.toFixed(2) : '—';
+        eR.style.color = rr !== null ? (rr >= 1 ? 'var(--green)' : 'var(--red)') : '';
+      }
+      if (eP) {
+        eP.textContent = (expectancy >= 0 ? '+' : '') + expectancy.toFixed(2) + ' $';
+        eP.style.color = expectancy >= 0 ? 'var(--green)' : 'var(--red)';
+      }
+      if (eV) {
+        if (expectancy >= 0.5) eV.textContent = '✅ Sistem pozitif beklentide — her işlem istatistiksel olarak para kazandırıyor. Boyut büyütme bu bölgede düşünülebilir.';
+        else if (expectancy >= 0) eV.textContent = '🌤️ Başa baş bölgesi — sistem zarar üretmiyor ama henüz kazanmıyor. Kazananlara daha çok yol ver (Kâr Merdiveni/Trailing eşiği).';
+        else if (rr !== null && rr < 1 && winP >= 0.5) eV.textContent = '⚠️ Kaşık-kepçe dengesizliği: kazanma oranı iyi ama ortalama kayıp ortalama kazançtan BÜYÜK. Sorun girişte değil — kayıp boyutunu küçült (işlem miktarı ↓) ve kazananları erken kilitleme.';
+        else if (winP < 0.5 && rr !== null && rr >= 1.5) eV.textContent = '⚠️ Az isabet, iyi R:R — giriş kalitesini artır (filtreleri sıkılaştır), çıkışlara dokunma.';
+        else eV.textContent = '🔴 Hem isabet hem R:R zayıf — boyutu küçült ve strateji ayarlarını gözden geçir; bu bölgede işlem sayısını artırmak zararı büyütür.';
+      }
+    } else {
+      expPanel.style.display = 'none';
+    }
+  }
 
   const el1 = document.getElementById('heroBadgeWinRate');
   const el2 = document.getElementById('heroBadgeTrades');
