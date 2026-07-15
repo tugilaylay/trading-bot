@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v47.5 SL/TP KAYNAK GÖRÜNÜRLÜĞÜ</title>
+<title>TUGAY × QUANT · v48.4 ERKEN RADAR OTOPİLOTA BAĞLI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v47.5 📊</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.4 🛰️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -9406,6 +9406,13 @@ function renderCoinDetail(coin) {
       const crowd = pd.lsRatio >= 3 ? ' 🐑!' : pd.lsRatio <= 0.33 ? ' 🐑!' : '';
       smartHtml += `<span class="cd-item">⚔️ L/S: <b>${pd.lsRatio.toFixed(2)}${crowd}</b></span>`;
     }
+    // v48.3: 🛰️ Erken Radar çipi — kalabalık fiyata yansımadan önceki öncü skor
+    const rad = coinStates[coin]?.earlyRadar;
+    if (rad && Date.now() - rad.t < 5 * 60 * 1000) {
+      const rc = rad.score >= 40 ? 'var(--green)' : rad.score <= -40 ? 'var(--red)' : 'var(--muted)';
+      const pulse = Math.abs(rad.score) >= 60 ? ' ⚡' : '';
+      smartHtml += `<span class="cd-item" title="Öncü bileşenler: ${(rad.parts || []).join(' · ') || 'nötr'} — emir defteri + hacim patlaması + CVD ivmesi + OI. Otopilotta veto/teyit katmanı olarak bağlı.">🛰️ Öncü: <b style="color:${rc}">${rad.score >= 0 ? '+' : ''}${rad.score}${pulse}</b></span>`;
+    }
   } catch(e) {}
 
   el.innerHTML = `
@@ -9755,6 +9762,102 @@ function entryConfirmed(dir, state, score, minConfirm) {
   return state.entryStreak[dir] >= req;
 }
 
+// ───────── v48.3: 🛰️ ERKEN RADAR — "kalabalık gelmeden fark et" ─────────
+// v48.4: Radar adayları için hafif emir defteri çekimi — panel 3dk cache'inden bağımsız,
+// 60 sn kendi cache'i var. Otopilot adayı henüz "çalışan coin" olmadığı için Baskı verisi
+// yoksa radar kör kalırdı; bu helper o gözü açar. Başarısızlıkta sessizce geçer.
+async function fetchDepthLean(coin) {
+  try {
+    const cfg = COIN_CONFIG[coin];
+    if (!cfg) return;
+    const e = coinDetailData[coin] = coinDetailData[coin] || {};
+    if (e._depthAt && Date.now() - e._depthAt < 60 * 1000) return;
+    e._depthAt = Date.now();
+    const r = await fetch('https://api.binance.com/api/v3/depth?symbol=' + cfg.symbol + '&limit=50');
+    const ob = await r.json();
+    if (ob?.bids && ob?.asks) {
+      const bidSum = ob.bids.reduce((s, b) => s + parseFloat(b[1]), 0);
+      const askSum = ob.asks.reduce((s, a) => s + parseFloat(a[1]), 0);
+      const total = bidSum + askSum;
+      if (total > 0) e.buyPct = bidSum / total * 100;
+    }
+  } catch(e) {}
+}
+// DÜRÜSTLÜK NOTU: Kimsenin emrini GERÇEKLEŞMEDEN görmek halka açık veriyle imkânsızdır —
+// o ayrıcalık borsanın eşleştirme motorunun içindekilere aittir. Ama kalabalık bir coine
+// yönelmeden hemen ÖNCE dört öncü iz bırakır ve dördü de halka açıktır:
+//   1) EMİR DEFTERİ eğilimi (buyPct): alış duvarları fiyat hareketinden ÖNCE dizilir
+//   2) HACİM PATLAMASI: son kapanan mumun hacmi, önceki 20 mumun ortalamasının katları
+//   3) CVD İVMESİ: son 30sn akışı 120sn ortalamasından hızlanıyorsa para YENİ geliyor demektir
+//   4) OI × AKIŞ: açık sözleşme artarken alış baskınsa piyasaya taze long parası akıyordur
+// Radar bunları -100..+100 tek skora çevirir. v48.4: otopilotta VETO+TEYİT katmanı olarak
+// bağlıdır (yön aleyhine ≥40 → giriş reddedilir); çip + erken uyarı logu da devam eder.
+// Girişleri yine mevcut kapılar (Tükenme, Akış Uzlaşı, Trend Gate...) yönetir.
+function computeEarlyRadar(coin, state, klines, closes) {
+  try {
+    const parts = [];
+    let score = 0, weightUsed = 0;
+
+    // 1) Emir defteri eğilimi (coinDetailData 3 dk cache'inden)
+    const bp = coinDetailData[coin]?.buyPct;
+    if (bp !== undefined && !isNaN(bp)) {
+      const lean = Math.max(-1, Math.min(1, (bp - 50) / 25)); // %75 alış = tam oy
+      score += lean * 30; weightUsed += 30;
+      if (Math.abs(lean) > 0.4) parts.push((lean > 0 ? 'alış duvarı %' : 'satış duvarı %') + (lean > 0 ? bp.toFixed(0) : (100 - bp).toFixed(0)));
+    }
+
+    // 2) Hacim patlaması — son KAPANAN mum vs önceki 20 mum ortalaması, yön mum renginden
+    if (Array.isArray(klines) && klines.length >= 23) {
+      const vols = klines.map(k => parseFloat(k[5]));
+      const lastIdx = vols.length - 2; // -1 oluşmakta olan mum, -2 son kapanan
+      const avg20 = vols.slice(lastIdx - 20, lastIdx).reduce((s, v) => s + v, 0) / 20;
+      if (avg20 > 0) {
+        const burst = vols[lastIdx] / avg20;
+        if (burst >= 1.8) {
+          const dirUp = parseFloat(klines[lastIdx][4]) >= parseFloat(klines[lastIdx][1]);
+          const mag = Math.min(1, (burst - 1) / 3); // 4x hacim = tam oy
+          score += (dirUp ? 1 : -1) * mag * 25;
+          parts.push('hacim x' + burst.toFixed(1) + (dirUp ? '↑' : '↓'));
+        }
+        weightUsed += 25;
+      }
+    }
+
+    // 3) CVD ivmesi — 30sn akışı 120sn'den belirgin hızlıysa para ŞİMDİ geliyor
+    if (typeof getCvdStats === 'function') {
+      const fast = getCvdStats(coin, 30), slow = getCvdStats(coin, 120);
+      if (fast && slow && typeof fast.ratio === 'number' && typeof slow.ratio === 'number') {
+        const accel = fast.ratio - slow.ratio;
+        score += Math.max(-1, Math.min(1, accel / 0.3)) * 25; weightUsed += 25;
+        if (Math.abs(accel) > 0.15) parts.push('CVD ivmesi ' + (accel > 0 ? '+' : '') + (accel * 100).toFixed(0) + 'p');
+      }
+    }
+
+    // 4) OI × akış yönü — taze para mı giriyor, pozisyon mu kapanıyor?
+    const pd = posDataCache[coin];
+    if (pd && typeof pd.oiChangePct === 'number' && !isNaN(pd.oiChangePct) && typeof getCvdStats === 'function') {
+      const st = getCvdStats(coin, 60);
+      if (st && Math.abs(st.ratio) > 0.05 && Math.abs(pd.oiChangePct) > 0.3) {
+        const dir = st.ratio > 0 ? 1 : -1;
+        const mag = Math.min(1, Math.abs(pd.oiChangePct) / 2);
+        score += dir * mag * (pd.oiChangePct > 0 ? 20 : 10); // OI artışı taze para = güçlü; azalışı = zayıf
+        parts.push('OI ' + (pd.oiChangePct > 0 ? '+' : '') + pd.oiChangePct.toFixed(1) + '%' + (st.ratio > 0 ? '·alışla' : '·satışla'));
+      }
+      weightUsed += 20;
+    }
+
+    if (weightUsed < 50) { state.earlyRadar = null; return; } // yetersiz veri — radar susar
+    const norm = Math.round(Math.max(-100, Math.min(100, score * (100 / weightUsed))));
+    state.earlyRadar = { score: norm, parts, t: Date.now() };
+
+    // Erken uyarı: |skor| ≥ 60 → log (coin başına 10 dk susturma)
+    if (Math.abs(norm) >= 60 && (!state._radarAlertAt || Date.now() - state._radarAlertAt > 10 * 60 * 1000)) {
+      state._radarAlertAt = Date.now();
+      log(`🛰️ [Erken Radar] ${coin} öncü skor ${norm > 0 ? '+' : ''}${norm} — ${parts.join(' · ') || 'çok yönlü birikim'}. Kalabalık henüz fiyata yansımadı; ${norm > 0 ? 'yukarı' : 'aşağı'} hazırlık kokusu var. (Bilgi amaçlı — girişler yine kapılardan geçer.)`, 'system', coin);
+    }
+  } catch(e) { state.earlyRadar = null; }
+}
+
 async function coinTickInner(coin, state) {
   const cfg = COIN_CONFIG[coin];
   const tradeAmount = getEffectiveSetting(coin, 'tradeAmount', false);
@@ -9773,6 +9876,7 @@ async function coinTickInner(coin, state) {
 
   // Volatiliteye göre pozisyon boyutu (ATR) — toggle kapalıyken effectiveTradeAmount === tradeAmount
   const atr = calculateATR(highs, lows, closes, 14);
+  computeEarlyRadar(coin, state, klines, closes); // v48.3: 🛰️ öncü skor her tick tazelenir
   let effectiveTradeAmount = getAtrAdjustedAmount(tradeAmount, atr, price);
   // 🛡️ v36.1 MUTLAK TAVAN: effectiveTradeAmount asla baz miktarın 1.5 katını geçemez.
   // 750 USDT bug: localStorage'da eski büyük tradeAmount kalmış olabilir ya da ATR sizing
@@ -12304,6 +12408,29 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
       brain('🛡️ [Tükenme Kalkanı] ' + short + ' ' + direction.toUpperCase() + ' engellendi — ' + exhaustReason + '.');
       try { recordRejection(short, direction, 'Tükenme Kalkanı'); } catch(e) {}
       return false;
+    }
+  } catch(e) {}
+  // ───── v48.4: 🛰️ ERKEN RADAR × OTOPİLOT — veto + teyit katmanı ─────
+  // Radar tek başına pozisyon AÇMAZ (sinyal hâlâ göstergelerden gelir ve tüm kapılardan
+  // geçer); burada son sözü söyler: öncü akış yönün ALEYHİNEYSE (≤-40 long'a, ≥+40 short'a)
+  // giriş veto edilir — "kalabalık ters yöne hazırlanırken" pozisyon açılmaz. Yön LEHİNEYSE
+  // (≥+40 long'a) teyit notu düşülür; böylece hangi işlemlerin radar onaylı açıldığı
+  // Red Defteri + log'dan istatistiksel olarak izlenebilir.
+  try {
+    await fetchDepthLean(short); // emir defteri eğilimi (60 sn cache) — radar bileşeni 1
+    const radState = coinStates[short] || {};
+    computeEarlyRadar(short, radState, klines, closesArr);
+    if (coinStates[short]) coinStates[short].earlyRadar = radState.earlyRadar;
+    const rad = radState.earlyRadar;
+    if (rad) {
+      const opposes = (direction === 'long' && rad.score <= -40) || (direction === 'short' && rad.score >= 40);
+      const agrees  = (direction === 'long' && rad.score >= 40) || (direction === 'short' && rad.score <= -40);
+      if (opposes) {
+        brain('🛰️ [Erken Radar VETO] ' + short + ' ' + direction.toUpperCase() + ' engellendi — öncü skor ' + (rad.score > 0 ? '+' : '') + rad.score + ' yönün aleyhine (' + (rad.parts || []).join(' · ') + '). Kalabalık ters yöne hazırlanıyor.');
+        try { recordRejection(short, direction, 'Erken Radar'); } catch(e) {}
+        return false;
+      }
+      if (agrees) brain('🛰️ [Erken Radar ✓] ' + short + ' ' + direction.toUpperCase() + ' radar onaylı — öncü skor ' + (rad.score > 0 ? '+' : '') + rad.score + ' (' + (rad.parts || []).join(' · ') + '). Göstergeler + akış + öncüler aynı yönde.');
     }
   } catch(e) {}
   // 🎚️ Dinamik Kaldıraç: sakin coinde tavan kaldıraca yakın, oynak coinde otomatik düşer
