@@ -6217,6 +6217,10 @@ function buildEntryReasonHtml(pos) {
   const extraBits = [];
   if (snap && snap.regime) extraBits.push(`Rejim: <b>${REGIME_LABELS_TR[snap.regime] || snap.regime}</b>`);
   if (snap && snap.atrPct != null) extraBits.push(`ATR: <b>%${snap.atrPct}</b>`);
+  // v48.1: giriş ANINDAKİ akış fotoğrafı — "bot o saniye ne gördü?" kanıtı
+  if (snap && snap.flowPct != null) extraBits.push(`Giriş anı akış: <b style="color:${snap.flowPct >= 0 ? 'var(--green)' : 'var(--red)'}">${snap.flowPct >= 0 ? '+' : ''}%${snap.flowPct}</b>`);
+  if (snap && snap.oiPct != null) extraBits.push(`OI: <b>${snap.oiPct >= 0 ? '+' : ''}%${snap.oiPct}</b>`);
+  if (snap && snap.ls != null) extraBits.push(`L/S: <b>${snap.ls}</b>`);
   const extraLine = extraBits.length ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${extraBits.join(' · ')}</div>` : '';
   return `
     <details style="margin-top:8px;">
@@ -6741,12 +6745,23 @@ function playTradeFeedback(kind) {
 // Pozisyon açıldığı anda tüm gösterge değerleri + bağlam (saat, gün, rejim, oynaklık)
 // dondurulup pozisyona iliştirilir; kapanışta işlem kaydına geçer. Otopsi motoru bu
 // fotoğrafları madenleyerek "hangi koşullarda kazanıyorum/kaybediyorum" desenlerini bulur.
-function buildEntrySnapshot(rawValues, regimeInfo, atr, price) {
+function buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin) {
   const d = new Date();
+  // v48.1: Giriş anındaki AKIŞ fotoğrafı — "girişten sonra akış döndü mü, yoksa bot
+  // ters akışa mı girdi?" tartışması kanıtla çözülsün diye o saniyenin verisi saklanır.
+  let flowPct = null, oiPct = null, ls = null;
+  try {
+    const st = (typeof getCvdStats === 'function' && coin) ? getCvdStats(coin, 60) : null;
+    if (st && typeof st.ratio === 'number') flowPct = +(st.ratio * 100).toFixed(0);
+    const pd = coin ? posDataCache[coin] : null;
+    if (pd && typeof pd.oiChangePct === 'number' && !isNaN(pd.oiChangePct)) oiPct = +pd.oiChangePct.toFixed(2);
+    if (pd && typeof pd.lsRatio === 'number' && !isNaN(pd.lsRatio)) ls = +pd.lsRatio.toFixed(2);
+  } catch(e) {}
   return {
     vals: { ...rawValues },
     regime: regimeInfo?.regime || null,
     atrPct: (price > 0 && atr) ? +(atr / price * 100).toFixed(3) : null,
+    flowPct, oiPct, ls,
     hour: d.getHours(),
     dow: d.getDay() // 0=Pazar
   };
@@ -9979,7 +9994,7 @@ async function coinTickInner(coin, state) {
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
       if (!mathGateOk(coin, 'long', slTp, leverage)) return;
-      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
+      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const lvTxt = leverage > 1 ? ` ${leverage}x` : '';
@@ -10011,7 +10026,7 @@ async function coinTickInner(coin, state) {
       if (flowConfluenceBlocked(coin, 'short')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
-      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price), interval: iv };
+      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
@@ -12633,7 +12648,9 @@ async function apCycle(){
           }
         } catch(e){}
       }
-      return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.confirmCycles };
+      // v48.1 FIX: kartta "1/2" görünüp kafa karıştırmasın — Hızlı Kovalama açıkken
+      // fiilen kullanılan eşik 1'dir; kayda ham ayarı değil GERÇEK eşiği yaz.
+      return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.fastEntryOn ? 1 : S.confirmCycles };
     }));
 
     const candidates = candidateChecks.filter(Boolean).sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
