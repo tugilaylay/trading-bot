@@ -2417,6 +2417,32 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="acc-divider"></div>
 
       <div class="card-title">
+        <span>🛡️ Tükenme Kalkanı (Dip/Tepe Koruması)</span>
+        <span class="optional-badge" style="background:rgba(80,200,120,0.2);color:var(--green);border-color:rgba(80,200,120,0.4);">V48 — ÖNERİLEN AÇIK</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="exhaustionGuardToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Geriye Bakılacak Mum Sayısı</label>
+          <input type="number" id="exhaustionLookback" value="50" min="10" max="200" step="5" />
+        </div>
+        <div class="form-group">
+          <label>Dip/Tepe Emniyet Mesafesi (× ATR)</label>
+          <input type="number" id="exhaustionAtrMult" value="1.5" min="0.5" max="5" step="0.1" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
+        <b style="color:var(--green);">Göstergeler HIZ ölçer, bu kalkan KONUM ölçer.</b> Momentum göstergeleri düşüşün sonunda bile "SAT" der — çünkü hareket hâlâ aşağı yönlü, ama <b>bitmek üzere</b>. Sonuç: dibe kadar düşmüş coine SHORT girip gelen tepki yükselişinde SL yemek (DEXE vakası).
+        Açıkken bot, girişten önce iki şeye bakar: <b>1) Konum</b> — fiyat, son N mumun en düşüğüne belirlediğin ATR mesafesinden yakınsa SHORT reddedilir (dibe bu kadar yakınken aşağıda kalan yol SL riskini karşılamaz); tepe için simetrik olarak LONG reddedilir. <b>2) Gerilme</b> — fiyat EMA20'den 2.5×ATR'den fazla kopmuşsa hareket "tükenmiş" sayılır, o yönde giriş reddedilir (fazla gerilen lastik geri teper).
+        Reddedilen her giriş nedeniyle birlikte log'a ve Red Defteri'ne yazılır — kalkan haklı mı haksız mı, 30 dk sonra hükümde görürsün. Hem manuel bot hem otopilot girişlerinde çalışır; açık pozisyonlara asla dokunmaz.
+      </div>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
         <span>🛑 Maksimum Kaldıraçlı Zarar Sınırı</span>
         <span class="optional-badge" style="background:rgba(255,60,60,0.2);color:#ff6b6b;border-color:rgba(255,60,60,0.4);">ÖNERİLEN AÇIK</span>
         <label class="regime-toggle-switch">
@@ -3593,6 +3619,8 @@ const SETTINGS_FIELD_IDS = [
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
   'maxPositionsToggle', 'maxPositionsCount', 'commissionPct', 'slippagePct',
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
+  // v48.0: Tükenme Kalkanı (dip/tepe koruması)
+  'exhaustionGuardToggle', 'exhaustionLookback', 'exhaustionAtrMult',
   'maxLevLossToggle', 'maxLevLossPct',
   'adxMinFilterToggle', 'adxMinValue', 'trendGateToggle', 'sidewaysBlockToggle',
   'exitConfirmToggle', 'exitConfirmTicks',
@@ -8623,6 +8651,54 @@ function isSidewaysEntryBlocked(regime) {
   return regime === 'sideways';
 }
 
+// ───────── v48.0: 🛡️ Tükenme Kalkanı (Dip/Tepe Koruması) ─────────
+// SORUN (DEXE vakası): coin son 50 mumda dibe kadar düşmüş, momentum göstergeleri hâlâ
+// "SAT" diyor (çünkü hareket AŞAĞI yönlü BİTİYOR), bot dipten SHORT açıyor ve gelen
+// tepki yükselişinde SL yiyor. Göstergeler hız ölçer, KONUM ölçmez — bu kalkan konum ölçer.
+// İki bağımsız kontrol yapar, ikisi de SADECE yeni girişleri etkiler:
+//   1) KONUM: fiyat, son N mumun en düşüğüne "X × ATR"den yakınsa SHORT engellenir
+//      (dibe bu kadar yakınken aşağıda kalan yol, SL riskini karşılamaz). Tepe için simetrik: LONG engellenir.
+//   2) GERİLME: fiyat EMA20'den 2.5×ATR'den fazla kopmuşsa hareket "tükenmiş" sayılır —
+//      lastik fazla gerilmiş, geri tepme (mean reversion) olasılığı yüksek; o yönde giriş engellenir.
+// Dönüş: null = engel yok, string = engel nedeni (log + Red Defteri için hazır metin).
+function exhaustionEntryBlocked(direction, highs, lows, closes, atr, price) {
+  const toggle = document.getElementById('exhaustionGuardToggle');
+  if (!toggle || !toggle.checked) return null;
+  if (!atr || !price || price <= 0 || !Array.isArray(closes) || closes.length < 25) return null;
+
+  const lookback = Math.max(10, Math.min(200, parseInt(document.getElementById('exhaustionLookback')?.value) || 50));
+  const atrMult  = Math.max(0.5, Math.min(5, parseFloat(document.getElementById('exhaustionAtrMult')?.value) || 1.5));
+  const STRETCH_MULT = 2.5; // EMA20'den kopma eşiği (sabit — aşırı ayar karmaşası olmasın)
+
+  // Son N mum (şu an OLUŞMAKTA olan mum hariç — o hâlâ değişebilir, yanıltır)
+  const h = highs.slice(-(lookback + 1), -1);
+  const l = lows.slice(-(lookback + 1), -1);
+  if (h.length < 10 || l.length < 10) return null;
+  const highestHigh = Math.max(...h);
+  const lowestLow = Math.min(...l);
+
+  const ema20 = calcEMA(closes.slice(-20), 20);
+
+  if (direction === 'short') {
+    const distToLow = price - lowestLow;
+    if (distToLow < atrMult * atr) {
+      return `fiyat son ${lookback} mumun DİBİNE çok yakın (dibe uzaklık: ${(distToLow / atr).toFixed(1)}×ATR < eşik ${atrMult}×ATR). Düşecek yer kalmamışken SHORT = tepki yükselişine yem olmak`;
+    }
+    if (ema20 && price < ema20 - STRETCH_MULT * atr) {
+      return `düşüş aşırı gerilmiş — fiyat EMA20'nin ${((ema20 - price) / atr).toFixed(1)}×ATR altında (eşik: ${STRETCH_MULT}). Lastik fazla gerildi, geri tepme olasılığı yüksek`;
+    }
+  } else {
+    const distToHigh = highestHigh - price;
+    if (distToHigh < atrMult * atr) {
+      return `fiyat son ${lookback} mumun TEPESİNE çok yakın (tepeye uzaklık: ${(distToHigh / atr).toFixed(1)}×ATR < eşik ${atrMult}×ATR). Çıkacak yer kalmamışken LONG = kâr satışına yem olmak`;
+    }
+    if (ema20 && price > ema20 + STRETCH_MULT * atr) {
+      return `yükseliş aşırı gerilmiş — fiyat EMA20'nin ${((price - ema20) / atr).toFixed(1)}×ATR üstünde (eşik: ${STRETCH_MULT}). Lastik fazla gerildi, geri çekilme olasılığı yüksek`;
+    }
+  }
+  return null;
+}
+
 // ───────── Trend Gate: Trende Karşı Pozisyon Engeli (v32) ─────────
 // Düşüş trendinde LONG açmayı, yükseliş trendinde SHORT açmayı engeller.
 // EMA Trend göstergesi (EMA50 vs EMA200) baz alınır — bu en güvenilir uzun vadeli filtredir.
@@ -9820,6 +9896,9 @@ async function coinTickInner(coin, state) {
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} LONG engellendi — Üst TF'ler boğa yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
     try{recordRejection(coin,'long','MTF Onayı');}catch(e){}
+    } else if (buyCount >= weightedMinConfirm && (state._exhaustReason = exhaustionEntryBlocked('long', highs, lows, closes, atr, price))) {
+      log(`🛡️ [Tükenme Kalkanı] ${coin} LONG engellendi — ${state._exhaustReason}.`, 'warn', coin);
+    try{recordRejection(coin,'long','Tükenme Kalkanı');}catch(e){}
     } else if (buyCount >= weightedMinConfirm && !entryConfirmed('long', state, buyCount, weightedMinConfirm)) {
       // v46.4: sinyal var, filtreler temiz ama giriş teyit turu henüz tamamlanmadı — bekleniyor
       log(`⏳ [Giriş Onayı] ${coin} LONG sinyali (skor:${buyCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.long||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
@@ -9850,6 +9929,9 @@ async function coinTickInner(coin, state) {
       const tf3v = document.getElementById('mtfTf3')?.value || '4h';
       log(`📊 [MTF] ${coin} SHORT engellendi — Üst TF'ler ayı yönünü onaylamıyor (${document.getElementById('interval').value} + ${tf2v} + ${tf3v} uyuşmuyor).`, 'warn', coin);
     try{recordRejection(coin,'short','MTF Onayı');}catch(e){}
+    } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && (state._exhaustReason = exhaustionEntryBlocked('short', highs, lows, closes, atr, price))) {
+      log(`🛡️ [Tükenme Kalkanı] ${coin} SHORT engellendi — ${state._exhaustReason}.`, 'warn', coin);
+    try{recordRejection(coin,'short','Tükenme Kalkanı');}catch(e){}
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && !entryConfirmed('short', state, sellCount, weightedMinConfirm)) {
       log(`⏳ [Giriş Onayı] ${coin} SHORT sinyali (skor:${sellCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.short||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
@@ -10388,6 +10470,7 @@ const RISK_CHIP_DEFS = [
   { id: 'maxPositionsToggle',    icon: '📦', name: 'Maks. Pozisyon' },
   { id: 'dynSizingToggle',       icon: '📏', name: 'Dinamik Boyut' },
   { id: 'atrTpSlToggle',         icon: '📐', name: 'ATR SL/TP' },
+  { id: 'exhaustionGuardToggle', icon: '🛡️', name: 'Tükenme Kalkanı' },
   { id: 'btcCorrToggle',         icon: '🔗', name: 'BTC Filtre' },
   { id: 'fgFilterToggle',        icon: '😱', name: 'F&G Filtre' },
   { id: 'sidewaysBlockToggle',   icon: '🚫', name: 'Yatay Engel' },
@@ -12078,6 +12161,16 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   const highsArr  = klines ? klines.map(k=>parseFloat(k[2])) : [];
   const lowsArr   = klines ? klines.map(k=>parseFloat(k[3])) : [];
   const atr = klines ? calculateATR(highsArr, lowsArr, closesArr, 14) : null;
+  // v48.0: 🛡️ Tükenme Kalkanı — dip/tepe bölgesinde geç kalmış girişleri otopilotta da engelle
+  // (DEXE vakası: dibe kadar düşmüş coine SHORT girip tepki yükselişinde SL yemek)
+  try {
+    const exhaustReason = exhaustionEntryBlocked(direction, highsArr, lowsArr, closesArr, atr, price);
+    if (exhaustReason) {
+      brain('🛡️ [Tükenme Kalkanı] ' + short + ' ' + direction.toUpperCase() + ' engellendi — ' + exhaustReason + '.');
+      try { recordRejection(short, direction, 'Tükenme Kalkanı'); } catch(e) {}
+      return false;
+    }
+  } catch(e) {}
   // 🎚️ Dinamik Kaldıraç: sakin coinde tavan kaldıraca yakın, oynak coinde otomatik düşer
   const leverage = tradeMode === 'futures_sim' ? v40DynamicLeverage(baseLeverage, atr, price) : 1;
   const slTp = computeEffectiveTpSl(getEffectiveSetting(short,'stopLoss',true), getEffectiveSetting(short,'takeProfit',true), atr, price, leverage);
