@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v48.4 ERKEN RADAR OTOPİLOTA BAĞLI</title>
+<title>TUGAY × QUANT · v48.5 GERÇEK BAŞA BAŞ TABANI (LİKİDİTE DUYARLI)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.4 🛰️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.5 ⚖️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -10274,8 +10274,15 @@ async function coinTickInner(coin, state) {
     // olsun garanti taban her zaman gerçek başa baş oluyor.
     const commissionPctG = parseFloat(document.getElementById('commissionPct')?.value) || 0;
     const slippagePctG = parseFloat(document.getElementById('slippagePct')?.value) || 0;
+    // v48.5 FIX (RE vakası): taban eskiden HAM kayma girdisiyle hesaplanıyordu (%0.02),
+    // ama gerçek K/Z sığ coinlerde kaymayı likidite çarpanıyla ×1.5-5 büyütür. Sonuç:
+    // taban %0.28'de "başa baş" derken gerçek başa baş %0.5'teydi — brüt +1.28$, net -2.35$
+    // ile "zararsız çıkış" NET ZARARLA kapandı. Artık taban, Matematik Kapısı'nın kullandığı
+    // aynı likidite-duyarlı maliyet fonksiyonunu kullanır: taban = GERÇEK başa baş.
     const breakevenFloorPct = trailingOn && !!pos.trailingArmed
-      ? calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100
+      ? (typeof estimateRoundTripCostLevPct === 'function'
+          ? estimateRoundTripCostLevPct(coin, pos.leverage || 1) / 100
+          : calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100)
       : null;
     const rawHitTrailingFloor = trailingOn && !!pos.trailingArmed && breakevenFloorPct !== null
       && leveragedChange <= breakevenFloorPct;
@@ -10463,7 +10470,9 @@ async function coinTickInner(coin, state) {
       const IV_MS = { '1m': 60000, '5m': 300000, '15m': 900000, '1h': 3600000, '4h': 14400000 };
       const tsCandles = Math.max(parseInt(document.getElementById('timeStopCandles')?.value) || 12, 2);
       const candlesHeld = (Date.now() - (pos.openedAt || Date.now())) / (IV_MS[iv] || 300000);
-      const beFloorTs = calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG) / 100;
+      const beFloorTs = (typeof estimateRoundTripCostLevPct === 'function'
+        ? estimateRoundTripCostLevPct(coin, pos.leverage || 1)
+        : calculateBreakevenTP(pos.leverage || 1, commissionPctG, slippagePctG)) / 100; // v48.5: likidite-duyarlı gerçek başa baş
       if (candlesHeld >= tsCandles && leveragedChange < beFloorTs) {
         hitTimeStop = true;
         log(`⌛ [Zaman Stopu] ${coin} — ${Math.floor(candlesHeld)} mum geçti (limit: ${tsCandles}), pozisyon hâlâ başa baş altında (%${(leveragedChange*100).toFixed(2)}). Tez çürüdü, sermaye serbest bırakılıyor.`, 'warn', coin);
