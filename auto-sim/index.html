@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v48.5 GERÇEK BAŞA BAŞ TABANI (LİKİDİTE DUYARLI)</title>
+<title>TUGAY × QUANT · v48.6 NEFES PAYI — TRAILING GERÇEK KÂR GÖRMEDEN SİLAHLANMAZ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.5 ⚖️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.6 🫁</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -10244,7 +10244,16 @@ async function coinTickInner(coin, state) {
     const trailDistancePct   = baseTrailDistancePct * trailScaleMult;
 
     if (trailingOn) {
-      if (!pos.trailingArmed && leveragedChange >= trailActivationPct) {
+      // v48.6 FIX (SUI vakası — "nefes aldırmıyor"): eşik ölçekle küçülünce (×0.60) trailing
+      // %0.3-0.6 kârda silahlanıyordu — yani GERÇEK başa baş tabanının dibinde. Armed olur
+      // olmaz taban hemen altında durduğundan en ufak nefeste pozisyon kapanıyordu (SUI:
+      // %0.59'da armed, taban %0.60 → 5 sn sonra kapanış). Kural: trailing, gerçek (likidite
+      // duyarlı) başa başın en az 1.75 KATI kâr görülmeden ASLA silahlanmaz — coine önce
+      // maliyetini çıkaracak, sonra nefes alacak alan tanınır.
+      const realFloorPct = (typeof estimateRoundTripCostLevPct === 'function'
+        ? estimateRoundTripCostLevPct(coin, pos.leverage || 1) / 100 : 0);
+      const effArmThreshold = Math.max(trailActivationPct, realFloorPct * 1.75);
+      if (!pos.trailingArmed && leveragedChange >= effArmThreshold) {
         pos.trailingArmed = true;
         pos.trailingArmedAt = Date.now(); // v45.0: İşlem Sineması'nda "trailing devreye girdi" anı işaretlenir
         pos.bestPrice = price; // izleme, aktivasyon anındaki fiyattan başlar — gürültüden değil
