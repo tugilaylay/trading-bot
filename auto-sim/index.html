@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.5 SADE ANA SAYFA (PROTOTİP ANA ÖZET)</title>
+<title>TUGAY × QUANT · v49.6 GRAFİK SADECE COİNLER SAYFASINDA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1316,7 +1316,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.5 🏠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.6 🏠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1368,6 +1368,8 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
     </div>
   </div>
 
+  <!-- ══════════ v49.6: Global grafik bloğu — SADECE Coinler sekmesinde görünür ══════════ -->
+  <div id="globalChartBlock">
   <!-- ══════════ EXECUTION CYCLE ══════════ -->
   <div class="qt-exec-wrap">
     <div class="qt-exec-head">
@@ -1423,6 +1425,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div id="expVerdict" style="font-size:10px;color:var(--muted);text-align:center;margin-top:5px;"></div>
     </div>
   </div>
+  </div><!-- /globalChartBlock v49.6 -->
 
   <!-- 🚨 v37.0: Devre Kesici Banner — üst üste kayıp serisinde bot kendini durdurunca görünür -->
   <div id="circuitBreakerBanner" style="display:none; margin-bottom:18px; padding:16px 20px; border-radius:14px;
@@ -3168,6 +3171,12 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       btns[j].classList.toggle('active', btns[j].getAttribute('data-tab') === tabName);
     }
     try { localStorage.setItem(KEY, tabName); } catch (e) {}
+
+    // v49.6: Global grafik bloğu (BTC mumları + hero K/Z) SADECE Coinler sekmesinde görünür
+    try {
+      var gcb = document.getElementById('globalChartBlock');
+      if (gcb) gcb.style.display = (tabName === 'coins') ? '' : 'none';
+    } catch (e) {}
 
     if (!skipScroll) {
       var panel = document.getElementById('tabPanel-' + tabName);
