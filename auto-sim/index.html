@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.4 SAF SİYAH TERMİNAL (BİNANCE NEON)</title>
+<title>TUGAY × QUANT · v49.5 SADE ANA SAYFA (PROTOTİP ANA ÖZET)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -798,6 +798,40 @@
   @property --flame-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
   .coin-panel { position: relative; transition: box-shadow 0.4s ease; }
 
+  /* ═══ v49.5: Prototip stili sade ANA ÖZET (Pilot sekmesi en üstü) ═══ */
+  .home-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 16px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  html[data-theme="dark"] .home-hero::before { content:''; position:absolute; inset:0; opacity:.6;
+    background: radial-gradient(120% 80% at 100% 0%, rgba(79,209,197,0.10), transparent 60%); pointer-events:none; }
+  .home-hero-status { font-family: var(--mono); font-size: 11.5px; color: var(--muted); position: relative; }
+  .home-hero-status b { color: var(--accent); }
+  .home-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; position: relative; }
+  .home-chip { font-family: var(--mono); font-size: 10px; padding: 5px 9px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .home-chip b { color: var(--text); }
+  .home-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin: 4px 2px 10px; display: flex; align-items: center; gap: 8px; }
+  .home-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .home-pos-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; margin-bottom: 14px; }
+  .home-pos-row { display: flex; align-items: center; gap: 11px; padding: 13px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .home-pos-row:last-child { border-bottom: none; }
+  .home-pos-coin { display: flex; flex-direction: column; min-width: 58px; }
+  .home-pos-coin .sym { font-weight: 700; font-size: 14px; }
+  .home-pos-side { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 5px; margin-top: 3px; width: fit-content; }
+  .home-pos-side.long { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+  .home-pos-side.short { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+  .home-pos-mid { flex: 1; min-width: 0; }
+  .home-pos-bar { height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; position: relative; margin-bottom: 5px; }
+  .home-pos-bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+  .home-pos-meta { font-family: var(--mono); font-size: 9.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .home-pos-pnl { text-align: right; font-family: var(--mono); min-width: 66px; }
+  .home-pos-pnl .p1 { font-size: 15px; font-weight: 700; line-height: 1.1; }
+  .home-pos-pnl .p2 { font-size: 10px; color: var(--muted); }
+  .home-empty { padding: 22px; text-align: center; color: var(--muted); font-size: 12px; }
+  .home-details-toggle { background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    font-family: var(--font); font-size: 11px; padding: 10px; border-radius: 10px; width: 100%; cursor: pointer; margin-bottom: 14px; }
+
   /* ═══ v49.3: Risk kategori + Basit/Gelişmiş filtresi ═══ */
   .risk-filter-bar { margin: 14px 0 4px; }
   .rf-modes { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border);
@@ -1282,7 +1316,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.4 🖤</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.5 🏠</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1411,6 +1445,22 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
 
   <!-- ═══ v41.2 SEKME PANELİ: ÖZET ═══ -->
   <div class="qt-tab-panel active" data-tab="ozet" id="tabPanel-ozet">
+
+  <!-- ═══ v49.5: Prototip stili sade ANA ÖZET — canlı veriden beslenir, motora dokunmaz ═══ -->
+  <div class="home-eyebrow">Bot şu an ne yapıyor</div>
+  <div class="home-hero">
+    <div class="home-hero-status" id="homeHeroStatus">Başlatılmadı · otopilotu aç, avlanmaya başlayalım</div>
+    <div class="home-chips" id="homeHeroChips"></div>
+  </div>
+
+  <div class="home-eyebrow">Açık pozisyonlar · <span style="text-transform:none;letter-spacing:0;font-family:var(--display);">karta dokun → coin paneli</span></div>
+  <div class="home-pos-card" id="homePosCard">
+    <div class="home-empty">📭 Açık pozisyon yok</div>
+  </div>
+
+  <button class="home-details-toggle" onclick="toggleHomeDetails()" id="homeDetailsBtn">⚙️ Pilot ayarları & detaylar ▾</button>
+
+  <div id="homeDetailsWrap">
 
   <!-- 📟 v38.0: Sistem Durumu Şeridi — tek bakışta tüm yapılandırma -->
   <div class="system-strip" id="systemStrip">
@@ -1662,6 +1712,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 </style>
 
 
+  </div><!-- /homeDetailsWrap v49.5 -->
   </div>
   <!-- ═══ /ÖZET ═══ -->
 
@@ -5302,6 +5353,76 @@ function initRiskFilter() {
   document.getElementById('rfAdv')?.classList.toggle('active', riskMode === 'advanced');
   _riskSectionsCache = null; // yeniden tara
   applyRiskFilter();
+}
+
+// ═══ v49.5: Prototip stili sade ANA ÖZET besleyicisi ═══
+// Mevcut canlı state'ten (coinStates, hero rozetleri) okur, prototip görünümünü çizer.
+// Hiçbir motor fonksiyonunu değiştirmez — sadece ek bir görsel katman.
+function toggleHomeDetails() {
+  const w = document.getElementById('homeDetailsWrap');
+  const b = document.getElementById('homeDetailsBtn');
+  if (!w) return;
+  const hidden = w.style.display === 'none';
+  w.style.display = hidden ? '' : 'none';
+  if (b) b.innerHTML = hidden ? '⚙️ Pilot ayarları & detaylar ▾' : '⚙️ Pilot ayarları & detaylar ▸';
+}
+function renderHomeSummary() {
+  if (document.hidden) return;
+  const statusEl = document.getElementById('homeHeroStatus');
+  const chipsEl = document.getElementById('homeHeroChips');
+  if (statusEl) {
+    const openCount = (typeof getOpenPositionCount === 'function') ? getOpenPositionCount() : 0;
+    const apOn = document.getElementById('v40ApToggle')?.checked;
+    const dayPnl = (typeof dailyPnlTracker !== 'undefined' && dailyPnlTracker) ? dailyPnlTracker.pnl : 0;
+    const dayStr = (dayPnl >= 0 ? '+' : '') + dayPnl.toFixed(2) + '$';
+    const dayColor = dayPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    statusEl.innerHTML = apOn
+      ? `Görevde · <b>${openCount}</b> açık pozisyon · bugün <b style="color:${dayColor}">${dayStr}</b>`
+      : `Bekliyor · otopilotu aç, avlanmaya başlayalım · bugün <b style="color:${dayColor}">${dayStr}</b>`;
+  }
+  if (chipsEl) {
+    const winEl = document.getElementById('heroBadgeWinRate');
+    const expEl = document.getElementById('expPerTrade');
+    const exposureEl = document.getElementById('heroBadgeExposure');
+    const win = winEl ? winEl.textContent.replace('Win:', '').trim() : '—';
+    const exp = expEl ? expEl.textContent.trim() : '—';
+    const exposure = exposureEl ? exposureEl.textContent.replace('💼', '').trim() : '—';
+    chipsEl.innerHTML =
+      `<span class="home-chip">💼 <b>${exposure}</b></span>` +
+      `<span class="home-chip">🎯 Beklenti: <b>${exp}</b></span>` +
+      `<span class="home-chip">✓ Win: <b>${win}</b></span>`;
+  }
+  const posCard = document.getElementById('homePosCard');
+  if (!posCard) return;
+  const openCoins = Object.keys(coinStates).filter(c => coinStates[c] && coinStates[c].openPosition);
+  if (openCoins.length === 0) {
+    posCard.innerHTML = '<div class="home-empty">📭 Açık pozisyon yok · Coinler sekmesinden manuel açabilirsin</div>';
+    return;
+  }
+  posCard.innerHTML = openCoins.map(coin => {
+    const st = coinStates[coin];
+    const pos = st.openPosition;
+    const price = st.lastTickPrice || pos.entryPrice;
+    const dir = pos.direction || 'long';
+    const lev = pos.leverage || 1;
+    const change = dir === 'short' ? (pos.entryPrice - price) / pos.entryPrice : (price - pos.entryPrice) / pos.entryPrice;
+    const levChange = change * lev;
+    const pnlUsd = pos.amount * change * lev;
+    const sl = (pos.stopLossPct != null) ? pos.stopLossPct : 0.02;
+    const tp = (pos.takeProfitPct != null) ? pos.takeProfitPct : 0.05;
+    const range = sl + tp || 1;
+    let prog = Math.max(0, Math.min(100, ((levChange + sl) / range) * 100));
+    const pnlColor = pnlUsd >= 0 ? 'var(--green)' : 'var(--red)';
+    const fillColor = pnlUsd >= 0 ? 'linear-gradient(90deg,var(--red),var(--yellow),var(--green))' : 'linear-gradient(90deg,var(--red),var(--yellow))';
+    return `<div class="home-pos-row" onclick="qtSwitchTab('coins')">
+      <div class="home-pos-coin"><span class="sym">${coin}</span><span class="home-pos-side ${dir}">${dir==='short'?'SHORT':'LONG'} ${lev}x</span></div>
+      <div class="home-pos-mid">
+        <div class="home-pos-bar"><div class="home-pos-bar-fill" style="left:0;width:${prog}%;background:${fillColor}"></div></div>
+        <div class="home-pos-meta">Giriş ${formatPrice(pos.entryPrice)} · TP +%${(tp*100).toFixed(1)} · SL -%${(sl*100).toFixed(1)}</div>
+      </div>
+      <div class="home-pos-pnl"><div class="p1" style="color:${pnlColor}">${levChange>=0?'+':''}${(levChange*100).toFixed(2)}%</div><div class="p2">${pnlUsd>=0?'+':''}${pnlUsd.toFixed(2)}$</div></div>
+    </div>`;
+  }).join('');
 }
 
 
@@ -10007,6 +10128,7 @@ function updateHeroBadges() {
   }
 
   const el1 = document.getElementById('heroBadgeWinRate');
+  try { renderHomeSummary(); } catch(e) {} // v49.5: prototip ana özetini de tazele
   const el2 = document.getElementById('heroBadgeTrades');
   const el3 = document.getElementById('heroBadgeBestCoin');
   if (el1) el1.textContent = `Win: ${wr}`;
@@ -12077,6 +12199,7 @@ window.addEventListener('load', () => {
   loadSettings();
   try { applyLogFilter(); } catch(e) {} // v48.7: kayıtlı "Sadece Kritik" tercihini ilk yüklemede uygula
   try { initRiskFilter(); } catch(e) {} // v49.3: risk kategori/mod filtresini uygula
+  try { renderHomeSummary(); } catch(e) {} // v49.5: ana özeti ilk yüklemede çiz
   runInputClampSweep(); // v41.9.3: eski/bozuk kayıtlı değerleri (örn. Breakeven=45) sayfa açılır açılmaz düzelt
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
