@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.7 BRİFİNG+NABIZ+LEADERBOARD ANALİZE TAŞINDI</title>
+<title>TUGAY × QUANT · v49.8 ANALİZ + RİSK PROTOTİP GÖRÜNÜMÜ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -798,6 +798,27 @@
   @property --flame-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
   .coin-panel { position: relative; transition: box-shadow 0.4s ease; }
 
+  /* ═══ v49.8: Prototip stili ANALİZ özeti ═══ */
+  .an-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin: 6px 2px 10px; display: flex; align-items: center; gap: 8px; }
+  .an-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .an-statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .an-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .an-stat .sv { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .an-stat .sk { font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+  .an-verdict { border-radius: 12px; padding: 13px 15px; font-size: 12.5px; line-height: 1.55;
+    display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; color: var(--text);
+    background: color-mix(in srgb, var(--yellow) 12%, transparent); border: 1px solid color-mix(in srgb, var(--yellow) 32%, transparent); }
+  .an-verdict .vi { font-size: 18px; flex-shrink: 0; }
+  .an-gates { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+  .an-gate { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border); font-size: 12px; }
+  .an-gate:first-child { border-top: none; }
+  .an-gate .gi { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface2); flex-shrink: 0; font-size: 16px; }
+  .an-gate .gm { flex: 1; }
+  .an-gate .gm .gn { font-weight: 600; }
+  .an-gate .gm .gd { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+  .an-gate .gv { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+
   /* ═══ v49.5: Prototip stili sade ANA ÖZET (Pilot sekmesi en üstü) ═══ */
   .home-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
     padding: 16px; margin-bottom: 14px; position: relative; overflow: hidden; }
@@ -1316,7 +1337,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.7 📊</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.8 📊</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2800,8 +2821,26 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: ANALİZ ═══ -->
   <div class="qt-tab-panel" data-tab="analytics" id="tabPanel-analytics">
+
+  <!-- ═══ v49.8: Prototip stili ANALİZ özeti — canlı veriden ═══ -->
+  <div class="an-eyebrow">Performans özeti</div>
+  <div class="an-statgrid" id="anStatGrid">
+    <div class="an-stat"><div class="sv" id="anWin">—</div><div class="sk">Kazanma oranı</div></div>
+    <div class="an-stat"><div class="sv" id="anExp">—</div><div class="sk">İşlem başı beklenti</div></div>
+    <div class="an-stat"><div class="sv" id="anAvgWin">—</div><div class="sk">Ortalama kazanç</div></div>
+    <div class="an-stat"><div class="sv" id="anAvgLoss">—</div><div class="sk">Ortalama kayıp</div></div>
+  </div>
+  <div class="an-verdict" id="anVerdict" style="display:none;"><span class="vi">🌤️</span><span id="anVerdictText"></span></div>
+
+  <div class="an-eyebrow">Kapılar ne yaptı?</div>
+  <div class="an-gates" id="anGates">
+    <div class="an-gate"><div class="gi">🛡️</div><div class="gm"><div class="gn">Veri toplanıyor</div><div class="gd">bot çalışınca kapı istatistikleri burada birikir</div></div></div>
+  </div>
+
   <!-- v49.7: Sabah Brifingi + Piyasa Nabzı + En Kârlı Coinler buraya taşınır (JS ile) -->
   <div id="analyticsMoveTarget"></div>
+
+  <div class="an-eyebrow">🔬 Gelişmiş araçlar</div>
   <details class="setup-card acc-card" id="backtestCompareDetails" data-accid="backtest">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -3206,6 +3245,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         if (typeof renderCorrelationMatrix === 'function') renderCorrelationMatrix(); // v41.8
         if (typeof fetchMarketPulse === 'function') fetchMarketPulse(); // v49.7 — Piyasa Nabzı artık burada
         if (typeof renderDailyBriefing === 'function') renderDailyBriefing(); // v49.7 — Sabah Brifingi burada
+        if (typeof renderAnalyticsSummary === 'function') renderAnalyticsSummary(); // v49.8 — prototip özeti
       }
     } catch (e) { /* grafik hatası sekmeyi etkilemesin */ }
   };
@@ -5374,6 +5414,38 @@ function initRiskFilter() {
 // DOM taşıma (appendChild) — elementler AYNI kalır, ID'ler AYNI kalır, sadece konum değişir.
 // Onları besleyen tüm fonksiyonlar (renderDailyBriefing, fetchMarketPulse, updateLeaderboard)
 // hiç değişmeden çalışmaya devam eder. Motora sıfır dokunuş.
+// ═══ v49.8: Prototip stili ANALİZ özeti besleyicisi ═══
+function renderAnalyticsSummary() {
+  if (document.hidden) return;
+  const winSrc = document.getElementById('heroBadgeWinRate');
+  const anWin = document.getElementById('anWin');
+  if (anWin && winSrc) anWin.textContent = winSrc.textContent.replace('Win:', '').trim();
+  const copy = (dst, src) => {
+    const d = document.getElementById(dst), s = document.getElementById(src);
+    if (d && s) d.textContent = s.textContent.trim();
+  };
+  copy('anExp','expPerTrade'); copy('anAvgWin','expAvgWin'); copy('anAvgLoss','expAvgLoss');
+  const anExp = document.getElementById('anExp'), pe = document.getElementById('expPerTrade');
+  if (anExp && pe) anExp.style.color = pe.style.color || '';
+  const aw = document.getElementById('anAvgWin'); if (aw) aw.style.color = 'var(--green)';
+  const al = document.getElementById('anAvgLoss'); if (al) al.style.color = 'var(--red)';
+  const vEl = document.getElementById('anVerdict'), vTxt = document.getElementById('anVerdictText');
+  const srcVerdict = document.getElementById('expVerdict');
+  if (vEl && vTxt && srcVerdict && srcVerdict.textContent.trim()) {
+    vTxt.textContent = srcVerdict.textContent.trim(); vEl.style.display = '';
+  } else if (vEl) { vEl.style.display = 'none'; }
+  const gatesEl = document.getElementById('anGates');
+  if (gatesEl && window.v46Rej && Array.isArray(window.v46Rej.items) && window.v46Rej.items.length) {
+    const counts = {};
+    window.v46Rej.items.forEach(it => { const g = (it && (it.gate || it.reason)) || 'Bilinmeyen'; counts[g] = (counts[g]||0)+1; });
+    const icons = { 'Tükenme Kalkanı':'🛡️','Matematik Kapısı':'🧮','Akış Uzlaşı':'🌊','CVD Akış':'🌊','Erken Radar':'🛰️','Kalabalık':'🐑','Trend Gate':'🧭' };
+    const rows = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,6).map(g =>
+      `<div class="an-gate"><div class="gi">${icons[g]||'🚪'}</div><div class="gm"><div class="gn">${g}</div><div class="gd">${counts[g]} giriş engelledi</div></div><div class="gv" style="color:var(--muted)">izleniyor</div></div>`
+    ).join('');
+    if (rows) gatesEl.innerHTML = rows;
+  }
+}
+
 function relocateAnalyticsBlocks() {
   const target = document.getElementById('analyticsMoveTarget');
   if (!target) return;
@@ -10157,6 +10229,7 @@ function updateHeroBadges() {
 
   const el1 = document.getElementById('heroBadgeWinRate');
   try { renderHomeSummary(); } catch(e) {} // v49.5: prototip ana özetini de tazele
+  try { renderAnalyticsSummary(); } catch(e) {} // v49.8: analiz özetini de tazele
   const el2 = document.getElementById('heroBadgeTrades');
   const el3 = document.getElementById('heroBadgeBestCoin');
   if (el1) el1.textContent = `Win: ${wr}`;
