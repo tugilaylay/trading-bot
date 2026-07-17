@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v48.7 GÜVENLİK + SADE LOG (DIŞ DENETİM SONRASI)</title>
+<title>TUGAY × QUANT · v48.8 GÜVENLİK KİLİDİ GENİŞLETİLDİ (-101$ GÜNÜ SONRASI)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.7 🔒</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.8 🔒</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -3825,6 +3825,14 @@ function loadSettings() {
       { id: 'manualCooldownMin', min: 10, max: 240, def: 45 }, // v47.4
       { id: 'exitConfirmTicks',     min: 2, max: 10, def: 2 },
       { id: 'entryConfirmTicks',    min: 2, max: 10, def: 2 },
+      // v48.8: yükleme anında da aynı kritik alanlar denetlenir — localStorage'da zaten
+      // bozuk bir değer oturuyorsa, kullanıcı o alana hiç dokunmasa bile açılışta düzelir.
+      { id: 'maxPositionsCount', min: 1, max: 10, def: 3 },
+      { id: 'lossCooldownMin',   min: 10, max: 240, def: 45 },
+      { id: 'atrReferencePct',   min: 0.3, max: 5, def: 1.5 },
+      { id: 'btcCorrThreshold',  min: 1, max: 15, def: 3 },
+      { id: 'exhaustionAtrMult', min: 0.5, max: 5, def: 1.5 },
+      { id: 'exhaustionLookback', min: 10, max: 200, def: 50 },
     ];
     guards.forEach(({ id, min, max, def }) => {
       const el = document.getElementById(id);
@@ -3894,6 +3902,17 @@ const INPUT_CLAMP_RULES = {
   // v41.9.3: "45 Breakeven", "4 USDT Günlük Limit" gibi anlamsız değerlere karşı ek kilitler
   dailyLossLimitPct:     { min: 10,   max: 1000, def: 40,   label: 'Günlük Toplam Zarar Limiti (USDT)' },
   perCoinLossLimitPct:   { min: 5,    max: 300,  def: 20,   label: 'Coin Bazlı Zarar Limiti (USDT)' },
+  // v48.8 GÜVENLİK KİLİDİ GENİŞLETMESİ — 17.07 "-101$ günü" vaka analizinden:
+  // bu 5 alan o gün YANLIŞLIKLA (0,5 pozisyon / 1,8 dk soğuma / %20 referans oynaklık gibi)
+  // anlamsız değerlere düşmüştü ve HİÇBİRİ o zamana kadar canlı kilide bağlı değildi —
+  // sadece sayfa açılışında kontrol ediliyordu, aradaki her değişiklik sınamasızdı.
+  maxPositionsCount:     { min: 1,    max: 10,   def: 3,    label: 'Maks. Eşzamanlı Pozisyon' },
+  lossCooldownMin:       { min: 10,   max: 240,  def: 45,   label: 'Kayıp Sonrası Coin Soğuması (dk)' },
+  atrReferencePct:       { min: 0.3,  max: 5,    def: 1.5,  label: 'Pozisyon Boyutu Referans Oynaklık %' },
+  circuitBreakerCount:   { min: 2,    max: 15,   def: 4,    label: 'Devre Kesici Üst Üste Kayıp Limiti' },
+  btcCorrThreshold:      { min: 1,    max: 15,   def: 3,    label: 'BTC Korelasyon Eşiği %' },
+  exhaustionAtrMult:     { min: 0.5,  max: 5,    def: 1.5,  label: 'Tükenme Kalkanı Emniyet Mesafesi' },
+  exhaustionLookback:    { min: 10,   max: 200,  def: 50,   label: 'Tükenme Kalkanı Mum Sayısı' },
 };
 
 function attachInputClamps() {
