@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v48.6 NEFES PAYI — TRAILING GERÇEK KÂR GÖRMEDEN SİLAHLANMAZ</title>
+<title>TUGAY × QUANT · v48.7 GÜVENLİK + SADE LOG (DIŞ DENETİM SONRASI)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1211,7 +1211,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.6 🫁</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.7 🔒</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1785,7 +1785,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="password" id="secretKey" placeholder="Testnet Secret Key (opsiyonel)" autocomplete="off" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);padding-bottom:14px;line-height:1.6;">Fiyat ve mum verileri Binance'in <b>herkese açık</b> uç noktalarından çekilir — anahtar gerektirmez. Bu alanlar ileride gerçek emir gönderimi eklenirse kullanılacak. Anahtarlar sadece bu tarayıcıda saklanır, hiçbir sunucuya gönderilmez.</div>
+      <div style="font-size:11px;color:var(--muted);padding-bottom:14px;line-height:1.6;">Fiyat ve mum verileri Binance'in <b>herkese açık</b> uç noktalarından çekilir — anahtar gerektirmez. Bu alanlar ileride gerçek emir gönderimi eklenirse kullanılacak; <b>şu an kodun hiçbir yerinde okunmuyor</b>. v48.7: güvenlik için artık kaydedilmiyor — sayfa yenilenince/sekmeyi kapatınca temizlenir, düz metin olarak diskte kalmaz.</div>
     </details>
 
     <!-- ── v36.8: Multi-Timeframe Analizi ── -->
@@ -2944,6 +2944,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
   <div class="log-card">
     <div class="log-header">
       <div class="card-title" style="margin:0">📋 Bot Günlüğü (Tüm Coinler)</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);cursor:pointer;user-select:none;">
+        <input type="checkbox" id="logCriticalOnlyToggle" onchange="applyLogFilter()" style="width:15px;height:15px;">
+        🎯 Sadece Kritik
+      </label>
       <button class="btn btn-clear" style="padding:8px 14px;font-size:11px;border-radius:8px;" onclick="clearLog()">Temizle</button>
     </div>
     <div class="log-body" id="logBody">
@@ -3620,13 +3624,13 @@ function clearPerfLog() {
   log('🗑️ Performans günlüğü temizlendi.', 'warn');
 }
 
-// ───────── Ayarların Kaydedilmesi (API key, mod, kaldıraç, SL/TP vb.) ─────────
-// API Key/Secret Key DAHİL kaydedilir — sadece bu tarayıcıda, localStorage'da kalır,
-// hiçbir sunucuya gönderilmez. NOT: Bot şu an gerçek bir emir göndermiyor (bkz. yorum, fetchKlines/fetchPrice).
-// İleride gerçek Binance bağlantısı eklenirse, secret key'in düz metin localStorage'da
-// tutulması GÜVENLİ DEĞİLDİR — o aşamaya geçilmeden önce bu mimari mutlaka gözden geçirilmeli.
+// ───────── Ayarların Kaydedilmesi (mod, kaldıraç, SL/TP vb.) ─────────
+// v48.7 GÜVENLİK DÜZELTMESİ: API Key/Secret Key artık BİLEREK bu listede DEĞİL.
+// Eski yorum "sadece bu tarayıcıda kalır" diyordu ama düz metin localStorage'da durmak,
+// tarayıcı uzantıları/XSS için gereksiz bir hedef oluşturuyordu — üstelik alan kodun
+// hiçbir yerinde okunmuyordu (grep doğrulandı). Sıfır fonksiyonel kayıp, gerçek risk kapandı.
 const SETTINGS_FIELD_IDS = [
-  'apiKey', 'secretKey', 'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
+  'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
   'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
   'mathGateToggle', 'mathGateCostMult', 'mathGateMinRR', 'manualCooldownMin', 'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
@@ -3636,6 +3640,7 @@ const SETTINGS_FIELD_IDS = [
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
   // v48.0: Tükenme Kalkanı (dip/tepe koruması)
   'exhaustionGuardToggle', 'exhaustionLookback', 'exhaustionAtrMult',
+  'logCriticalOnlyToggle',
   'maxLevLossToggle', 'maxLevLossPct',
   'adxMinFilterToggle', 'adxMinValue', 'trendGateToggle', 'sidewaysBlockToggle',
   'exitConfirmToggle', 'exitConfirmTicks',
@@ -3790,6 +3795,11 @@ function loadSettings() {
     const saved = localStorage.getItem(SK_SETTINGS);
     if (!saved) return;
     const settings = JSON.parse(saved);
+    // v48.7: eski sürümlerden kalmış olabilecek düz metin anahtarları sessizce temizle
+    if ('apiKey' in settings || 'secretKey' in settings) {
+      delete settings.apiKey; delete settings.secretKey;
+      try { localStorage.setItem(SK_SETTINGS, JSON.stringify(settings)); } catch(e) {}
+    }
     SETTINGS_FIELD_IDS.forEach(id => {
       const el = document.getElementById(id);
       if (!el || !(id in settings)) return;
@@ -4975,14 +4985,34 @@ function log(msg, type = 'info', coin = null) {
   }
   const line = document.createElement('div');
   line.className = 'log-line';
+  line.dataset.type = type; // v48.7: filtre bunu okur
   let tag = '';
   if (coin) {
     const c = COIN_CONFIG[coin];
     tag = `<span class="log-tag" style="background:${c.color}33;color:${c.color}">${coin}</span>`;
   }
   line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${tag}${msg}</span>`;
+  // v48.7: 🎯 Sadece Kritik açıkken info/system satırları eklenirken zaten gizlenir —
+  // ekran arka planda değilken de log akışı yorucu kalabalıklaşmasın.
+  if (document.getElementById('logCriticalOnlyToggle')?.checked && (type === 'info' || type === 'system')) {
+    line.style.display = 'none';
+  }
   body.appendChild(line);
   body.scrollTop = body.scrollHeight;
+}
+
+// v48.7: 🎯 Sadece Kritik Loglar — "her şeyi logluyor, önemli olanı görmek zor" eleştirisine
+// doğrudan cevap. Açıkken info/system (rutin tarama, tik tik güncellemeler) gizlenir;
+// warn/error/buy/sell (uyarılar, VETO'lar, gerçek al-sat olayları) her zaman görünür kalır.
+// Ekonomi Modu arka plan tamponunu boşaltırken de aynı filtre uygulanır — tutarlı davranış.
+function applyLogFilter() {
+  const critOnly = document.getElementById('logCriticalOnlyToggle')?.checked;
+  const body = document.getElementById('logBody');
+  if (!body) return;
+  body.querySelectorAll('.log-line').forEach(line => {
+    const t = line.dataset.type;
+    line.style.display = (critOnly && (t === 'info' || t === 'system')) ? 'none' : '';
+  });
 }
 
 function clearLog() {
@@ -10690,15 +10720,18 @@ document.addEventListener('visibilitychange', async () => {
       const buf = window.__ecoLogBuf || [];
       if (buf.length) {
         const body = document.getElementById('logBody');
+        const critOnly = document.getElementById('logCriticalOnlyToggle')?.checked; // v48.7
         buf.forEach(e => {
           const line = document.createElement('div');
           line.className = 'log-line';
+          line.dataset.type = e.type; // v48.7
           let tag = '';
           if (e.coin && COIN_CONFIG[e.coin]) {
             const c = COIN_CONFIG[e.coin];
             tag = `<span class="log-tag" style="background:${c.color}33;color:${c.color}">${e.coin}</span>`;
           }
           line.innerHTML = `<span class="log-time">${e.now}</span><span class="log-msg ${e.type}">${tag}${e.msg}</span>`;
+          if (critOnly && (e.type === 'info' || e.type === 'system')) line.style.display = 'none'; // v48.7
           body.appendChild(line);
         });
         body.scrollTop = body.scrollHeight;
@@ -11756,6 +11789,7 @@ window.addEventListener('load', () => {
   loadIndicatorPrefs();
   renderIndicatorSelector();
   loadSettings();
+  try { applyLogFilter(); } catch(e) {} // v48.7: kayıtlı "Sadece Kritik" tercihini ilk yüklemede uygula
   runInputClampSweep(); // v41.9.3: eski/bozuk kayıtlı değerleri (örn. Breakeven=45) sayfa açılır açılmaz düzelt
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
