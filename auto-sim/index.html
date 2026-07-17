@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.3 RİSK SAYFASI KATEGORİLİ + BASİT/GELİŞMİŞ</title>
+<title>TUGAY × QUANT · v49.4 SAF SİYAH TERMİNAL (BİNANCE NEON)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -58,7 +58,28 @@
     --input-bg: #1c232e;
     color-scheme: dark;
   }
-  html[data-theme="dark"] body::before { opacity: 0.4; }
+  /* v49.4: Terminal modunda kağıt dokusu KAPALI — prototipteki temiz siyah + köşe teal
+     aurora getirilir. Böylece gece modu birebir prototipteki Binance havasına kavuşur. */
+  html[data-theme="dark"] body::before {
+    opacity: 1;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(79,209,197,0.10), transparent 55%),
+      radial-gradient(100% 50% at 0% 100%, rgba(167,139,250,0.07), transparent 55%);
+  }
+
+  /* v49.4: Terminal modu neon rötuşları — eski kahve/mor karışık gölgeler yerine temiz teal.
+     Yalnızca koyu temada geçerli; kağıt teması etkilenmez. */
+  html[data-theme="dark"] .ticker-wrap { box-shadow: 0 0 24px rgba(79,209,197,0.06) inset; }
+  html[data-theme="dark"] .logo-mark, html[data-theme="dark"] .qt-brand-mark {
+    box-shadow: 0 0 20px rgba(79,209,197,0.35), 0 0 40px rgba(167,139,250,0.20);
+  }
+  html[data-theme="dark"] .coin-panel { box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset; }
+  html[data-theme="dark"] .setup-card, html[data-theme="dark"] .trade-table,
+  html[data-theme="dark"] .log-card, html[data-theme="dark"] .acc-card {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  /* Aktif sekme ve vurgu öğelerinde teal parıltı */
+  html[data-theme="dark"] .qt-tab-btn.active::before { box-shadow: 0 0 12px var(--accent); }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -1261,7 +1282,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.3 🎨</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.4 🖤</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
