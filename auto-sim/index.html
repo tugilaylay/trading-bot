@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.1 KATLANABİLİR COIN PANELİ</title>
+<title>TUGAY × QUANT · v49.3 RİSK SAYFASI KATEGORİLİ + BASİT/GELİŞMİŞ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -740,13 +740,17 @@
 
   /* Trade table */
   .trade-table { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
-  .trade-table table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  /* v49.2: mobilde tablo sağ tarafı kesiliyordu — gövdeyi yatay kaydırılabilir yaptık,
+     hücreler sarılmadan (nowrap) tam okunur, parmakla sağa kaydırılır. */
+  .trade-table .acc-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .trade-table table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 560px; }
+  .trade-table th { white-space: nowrap; }
+  .trade-table td { padding: 12px 16px; border-bottom: 1px solid rgba(35,45,66,0.5); font-family: var(--mono); font-size: 11.5px; white-space: nowrap; }
   .trade-table th {
     padding: 13px 16px; text-align: left; font-size: 10px; font-weight: 700;
     color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;
     border-bottom: 1px solid var(--border); background: var(--surface2);
   }
-  .trade-table td { padding: 12px 16px; border-bottom: 1px solid rgba(35,45,66,0.5); font-family: var(--mono); font-size: 11.5px; }
   .trade-table tr:last-child td { border-bottom: none; }
   .badge { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; }
   .badge-al { background: rgba(14,124,74,0.15); color: var(--green); }
@@ -772,6 +776,22 @@
   /* 🔥 Çalışan coin paneli: canlı, nefes alan alev çerçevesi */
   @property --flame-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
   .coin-panel { position: relative; transition: box-shadow 0.4s ease; }
+
+  /* ═══ v49.3: Risk kategori + Basit/Gelişmiş filtresi ═══ */
+  .risk-filter-bar { margin: 14px 0 4px; }
+  .rf-modes { display: flex; gap: 4px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px; margin-bottom: 10px; }
+  .rf-mode { flex: 1; background: none; border: none; color: var(--muted); font-family: var(--font);
+    font-weight: 700; font-size: 12px; padding: 9px; border-radius: 9px; cursor: pointer; transition: all .2s; }
+  .rf-mode.active { background: var(--accent); color: var(--chip-ink); }
+  .rf-cats { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .rf-cat { flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    font-family: var(--font); font-size: 11px; font-weight: 600; padding: 7px 12px; border-radius: 100px; cursor: pointer; transition: all .2s; }
+  .rf-cat.active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+  .rf-hint { font-size: 10.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  /* Filtre gizleme: kart görünürlüğü data-cat / data-adv'e göre JS ile ayarlanır */
+  .risk-section-hidden { display: none !important; }
 
   /* ═══ v49.1: Katlanabilir coin paneli — kapalıyken tek satır özet + hızlı al/sat ═══ */
   .cp-summary {
@@ -1241,7 +1261,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.1 🎨</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.3 🎨</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1973,6 +1993,22 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <!-- 🛡️ v38.0: Risk Özeti Şeridi — tüm korumaların durumu tek bakışta -->
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Aktif korumaların özeti (yeşil = açık) — detaylar aşağıda:</div>
       <div class="risk-chip-strip" id="riskChipStrip"></div>
+
+      <!-- ═══ v49.3: Kategori + Basit/Gelişmiş filtresi ═══ -->
+      <div class="risk-filter-bar">
+        <div class="rf-modes">
+          <button class="rf-mode active" id="rfSimple" onclick="setRiskMode('simple')">🌱 Basit</button>
+          <button class="rf-mode" id="rfAdv" onclick="setRiskMode('advanced')">⚙️ Gelişmiş</button>
+        </div>
+        <div class="rf-cats" id="rfCats">
+          <button class="rf-cat active" data-cat="all" onclick="setRiskCat('all',this)">Tümü</button>
+          <button class="rf-cat" data-cat="giris" onclick="setRiskCat('giris',this)">🎯 Giriş</button>
+          <button class="rf-cat" data-cat="cikis" onclick="setRiskCat('cikis',this)">🚪 Çıkış</button>
+          <button class="rf-cat" data-cat="koruma" onclick="setRiskCat('koruma',this)">🛡️ Koruma</button>
+          <button class="rf-cat" data-cat="boyut" onclick="setRiskCat('boyut',this)">⚖️ Boyut</button>
+        </div>
+        <div class="rf-hint" id="rfHint">Basit mod: en önemli ayarlar görünür. Gelişmiş: hepsi açılır.</div>
+      </div>
 
       <!-- ── v41: Risk Profilleri — tek tıkla tüm ayarları set eder ── -->
       <div class="acc-divider"></div>
@@ -5139,7 +5175,115 @@ function onTradeModeChange() {
 }
 
 // ───────── Render coin panels dynamically ─────────
-// ═══ v49.1: Katlanabilir coin paneli ═══
+// ═══ v49.3: Risk sayfası kategorileştirme + Basit/Gelişmiş filtresi ═══
+// HTML kartlarının İÇERİĞİNE dokunmadan, çalışma zamanında her ayar bölümünü (card-title +
+// onu takip eden içerik) bir "bölüm" olarak gruplar, kategori ve mod etiketi atar, filtreler.
+// Her bölüm = bir .card-title'dan bir sonraki .card-title'a (veya acc-divider grubuna) kadar.
+const RISK_SECTION_MAP = {
+  // başlık anahtar kelimesi → [kategori, basitte-görünür-mü]
+  'İz Süren Stop':        ['cikis', true],
+  'Matematik Kapısı':     ['giris', true],
+  'Kâr Merdiveni':        ['cikis', true],
+  'Runner Modu':          ['cikis', false],
+  'Kelly Boyutlandırma':  ['boyut', false],
+  'Equity Freni':         ['boyut', false],
+  'Zaman Stopu':          ['cikis', false],
+  'CVD Akış':             ['giris', false],
+  'Kalabalık Filtresi':   ['giris', false],
+  'Akış Uzlaşı':          ['giris', true],
+  'Strateji Arenası':     ['giris', false],
+  'Toplam Günlük Zarar':  ['koruma', true],
+  'Coin Bazlı Zarar':     ['koruma', false],
+  'Maksimum Eşzamanlı':   ['boyut', true],
+  'BTC Korelasyon':       ['koruma', false],
+  'Fear': ['koruma', false],
+  'Funding Rate':         ['koruma', false],
+  'Devre Kesici':         ['koruma', true],
+  'Kayıp Sonrası':        ['koruma', true],
+  'Manuel Kapatma Soğ':   ['koruma', false],
+  'İşlem Saatleri':       ['koruma', false],
+  'Komisyon':             ['boyut', false],
+  'Volatiliteye Göre':    ['boyut', false],
+  'ATR Bazlı Stop':       ['cikis', true],
+  'Tükenme Kalkanı':      ['giris', true],
+  'Maksimum Kaldıraçlı':  ['koruma', true],
+  'Piyasa Rejimi':        ['giris', false],
+  'ADX Minimum':          ['giris', false],
+  'Trend Gate':           ['giris', false],
+  'Giriş Sinyali Onayı':  ['giris', false],
+  'Çıkış Sinyali Onayı':  ['cikis', false],
+  'Ses & Titreşim':       ['koruma', false],
+  'Tarayıcı Bildirim':    ['koruma', false],
+};
+let riskMode = 'simple', riskCat = 'all';
+function classifyRiskSection(titleText) {
+  for (const key in RISK_SECTION_MAP) {
+    if (titleText.includes(key)) return RISK_SECTION_MAP[key];
+  }
+  return null; // eşleşmeyen (Risk Profilleri, özet vb.) her zaman görünür
+}
+// Bir bölümü oluşturan DOM düğümlerini toplar: kendinden ÖNCEKI acc-divider + card-title +
+// bir sonraki acc-divider'a/card-title'a kadar olan her şey.
+function getRiskSections() {
+  const body = document.querySelector('#tabPanel-risk .acc-body');
+  if (!body) return [];
+  const titles = Array.from(body.querySelectorAll(':scope > .card-title'));
+  const sections = [];
+  titles.forEach(title => {
+    const txt = title.textContent || '';
+    const cls = classifyRiskSection(txt);
+    if (!cls) return; // sınıflandırılamayan başlıklar filtrelenmez
+    const nodes = [];
+    // başlıktan hemen önceki acc-divider da bu bölüme ait
+    let prev = title.previousElementSibling;
+    if (prev && prev.classList.contains('acc-divider')) nodes.push(prev);
+    nodes.push(title);
+    let n = title.nextElementSibling;
+    while (n && !n.classList.contains('card-title') && !(n.classList.contains('acc-divider') && n.nextElementSibling && n.nextElementSibling.classList.contains('card-title'))) {
+      nodes.push(n);
+      n = n.nextElementSibling;
+    }
+    sections.push({ nodes, cat: cls[0], simple: cls[1] });
+  });
+  return sections;
+}
+let _riskSectionsCache = null;
+function applyRiskFilter() {
+  if (!_riskSectionsCache) _riskSectionsCache = getRiskSections();
+  _riskSectionsCache.forEach(sec => {
+    const catOk = (riskCat === 'all' || sec.cat === riskCat);
+    const modeOk = (riskMode === 'advanced' || sec.simple);
+    const show = catOk && modeOk;
+    sec.nodes.forEach(node => node.classList.toggle('risk-section-hidden', !show));
+  });
+}
+function setRiskMode(m) {
+  riskMode = m;
+  document.getElementById('rfSimple')?.classList.toggle('active', m === 'simple');
+  document.getElementById('rfAdv')?.classList.toggle('active', m === 'advanced');
+  const hint = document.getElementById('rfHint');
+  if (hint) hint.textContent = m === 'simple'
+    ? 'Basit mod: en önemli ayarlar görünür. Gelişmiş: hepsi açılır.'
+    : 'Gelişmiş mod: tüm ince ayarlar görünüyor. Basit\'e dönmek için soldaki düğme.';
+  try { localStorage.setItem('tugay_risk_mode', m); } catch(e) {}
+  applyRiskFilter();
+}
+function setRiskCat(c, btn) {
+  riskCat = c;
+  document.querySelectorAll('#rfCats .rf-cat').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyRiskFilter();
+}
+// Sayfa yüklenince kaydedilmiş modu uygula (kartlar DOM'a girdikten sonra)
+function initRiskFilter() {
+  try { riskMode = localStorage.getItem('tugay_risk_mode') || 'simple'; } catch(e) { riskMode = 'simple'; }
+  document.getElementById('rfSimple')?.classList.toggle('active', riskMode === 'simple');
+  document.getElementById('rfAdv')?.classList.toggle('active', riskMode === 'advanced');
+  _riskSectionsCache = null; // yeniden tara
+  applyRiskFilter();
+}
+
+
 // Panelin detay gövdesini açar/kapar. Kapalı durum coin bazında hatırlanır (localStorage),
 // böylece sayfa yenilense de tercih korunur. Canlı güncelleme döngüsüne DOKUNMAZ — sadece
 // görünürlük değişir, tüm ID'ler ve render fonksiyonları aynen çalışmaya devam eder.
@@ -6191,7 +6335,7 @@ function updateWsBadge() {
   if (!b) {
     b = document.createElement('div');
     b.id = 'wsBadge';
-    b.style.cssText = 'position:fixed;bottom:14px;right:14px;z-index:9999;font-family:var(--mono);font-size:10px;font-weight:700;padding:5px 10px;border-radius:100px;letter-spacing:0.5px;pointer-events:none;backdrop-filter:blur(6px);transition:all 0.4s;';
+    b.style.cssText = 'position:fixed;bottom:88px;right:12px;z-index:9999;font-family:var(--mono);font-size:9px;font-weight:700;padding:4px 9px;border-radius:100px;letter-spacing:0.5px;pointer-events:none;backdrop-filter:blur(6px);transition:all 0.4s;opacity:0.92;';
     document.body.appendChild(b);
   }
   if (wsLive.status === 'live') {
@@ -11911,6 +12055,7 @@ window.addEventListener('load', () => {
   renderIndicatorSelector();
   loadSettings();
   try { applyLogFilter(); } catch(e) {} // v48.7: kayıtlı "Sadece Kritik" tercihini ilk yüklemede uygula
+  try { initRiskFilter(); } catch(e) {} // v49.3: risk kategori/mod filtresini uygula
   runInputClampSweep(); // v41.9.3: eski/bozuk kayıtlı değerleri (örn. Breakeven=45) sayfa açılır açılmaz düzelt
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
@@ -13186,7 +13331,11 @@ function restoreAccordions(){
     const key = 'accOpen_' + d.dataset.accid;
     const saved = lsGet(key);
     if (saved !== null) d.open = (saved === '1');
-    d.addEventListener('toggle', () => lsSet(key, d.open ? '1' : '0'));
+    d.addEventListener('toggle', () => {
+      lsSet(key, d.open ? '1' : '0');
+      // v49.3: risk kartı açılınca kategori/mod filtresini (yeniden) uygula
+      if (d.dataset.accid === 'riskmgmt' && d.open) { _riskSectionsCache = null; try { initRiskFilter(); } catch(e) {} }
+    });
   });
 }
 restoreAccordions();
