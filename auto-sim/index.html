@@ -9,51 +9,53 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v48.8 GÜVENLİK KİLİDİ GENİŞLETİLDİ (-101$ GÜNÜ SONRASI)</title>
+<title>TUGAY × QUANT · v49.1 KATLANABİLİR COIN PANELİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
   :root {
-    --bg: #C7C0A4;
-    --surface: #D6D0B4;
-    --surface2: #CEC8AC;
-    --surface3: #C1BA9C;
-    --border: #A69E7C;
-    --accent: #9C6F0A;
-    --accent2: #4E3690;
+    /* v49 — "Sıcak Kağıt" teması (prototip paleti). Değişken İSİMLERİ korundu;
+       sadece değerler yenilendi, böylece 13.500 satırın hiçbiri kırılmaz. */
+    --bg: #ddd4c2;
+    --surface: #e8e0d0;
+    --surface2: #f1ebde;
+    --surface3: #d3c9b4;
+    --border: #c3b8a1;
+    --accent: #0b7d72;
+    --accent2: #6a48e8;
     --btc-color: #8C5200;
     --eth-color: #35499E;
-    --green: #0C6B40;
-    --red: #A93226;
-    --yellow: #A97705;
-    --text: #1C1A10;
-    --muted: #57523F;
-    --chip-ink: #E9E5D2;
-    --input-bg: #D6D0B4;
+    --green: #0f6f4f;
+    --red: #b13d3d;
+    --yellow: #8a6410;
+    --text: #221f18;
+    --muted: #574f40;
+    --chip-ink: #f1ebde;
+    --input-bg: #e8e0d0;
     --font: 'IBM Plex Mono', 'Courier New', monospace;
     --mono: 'IBM Plex Mono', monospace; --display: 'Archivo', sans-serif;
     color-scheme: light;
     transition: background-color 0.35s ease, color 0.35s ease;
   }
 
-  /* ═══ GECE MODU — mürekkep tersine döner, kâğıt ruhu kalır ═══ */
+  /* ═══ TERMİNAL MODU (v49) — koyu zemin, teal + mor neon vurgular ═══ */
   html[data-theme="dark"] {
-    --bg: #14120C;
-    --surface: #1C1911;
-    --surface2: #221E14;
-    --surface3: #292418;
-    --border: #3A3424;
-    --accent: #D9A441;
-    --accent2: #8B6FD9;
+    --bg: #0b0e13;
+    --surface: #141922;
+    --surface2: #1c232e;
+    --surface3: #263041;
+    --border: #263041;
+    --accent: #4fd1c5;
+    --accent2: #a78bfa;
     --btc-color: #E0932E;
     --eth-color: #7C93E8;
-    --green: #3FBE80;
-    --red: #E2685C;
-    --yellow: #E0B23A;
-    --text: #F1EAD9;
-    --muted: #9C9478;
-    --chip-ink: #14120C;
-    --input-bg: #221E14;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e8eef7;
+    --muted: #8a97ab;
+    --chip-ink: #0b0e13;
+    --input-bg: #1c232e;
     color-scheme: dark;
   }
   html[data-theme="dark"] body::before { opacity: 0.4; }
@@ -770,6 +772,34 @@
   /* 🔥 Çalışan coin paneli: canlı, nefes alan alev çerçevesi */
   @property --flame-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
   .coin-panel { position: relative; transition: box-shadow 0.4s ease; }
+
+  /* ═══ v49.1: Katlanabilir coin paneli — kapalıyken tek satır özet + hızlı al/sat ═══ */
+  .cp-summary {
+    display: none; align-items: center; gap: 10px; padding: 4px 0 2px; cursor: pointer;
+  }
+  .coin-panel.collapsed .cp-summary { display: flex; }
+  .coin-panel.collapsed .coin-panel-body { display: none; }
+  .cp-summary-mid { flex: 1; min-width: 0; }
+  .cp-sum-line { font-family: var(--mono); font-size: 10px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cp-sum-pnl { text-align: right; font-family: var(--mono); min-width: 62px; }
+  .cp-sum-pnl .p1 { font-size: 15px; font-weight: 700; line-height: 1.1; }
+  .cp-sum-pnl .p2 { font-size: 10px; color: var(--muted); }
+  .cp-sum-caret { font-size: 11px; color: var(--muted); transition: transform .25s; }
+  .coin-panel:not(.collapsed) .cp-sum-caret { transform: rotate(90deg); }
+  .coin-panel.collapsed .cp-quick.only-collapsed { display: flex !important; }
+  .cp-quick { display: flex; gap: 8px; margin-top: 8px; }
+  .coin-panel:not(.collapsed) .cp-quick.only-collapsed { display: none; }
+  .cp-qbtn { flex: 1; padding: 9px; border-radius: 9px; font-family: var(--font); font-weight: 700;
+    font-size: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+    cursor: pointer; transition: transform .12s; }
+  .cp-qbtn:active { transform: scale(0.96); }
+  .cp-qbuy { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--border)); }
+  .cp-qsell { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--border)); }
+  .cp-qbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .cp-collapse-btn { background: none; border: none; color: var(--muted); font-size: 11px;
+    cursor: pointer; font-family: var(--mono); padding: 6px; margin-top: 4px; width: 100%;
+    border-top: 1px dashed var(--border); }
   .coin-panel.live {
     border-color: transparent !important;
     background-clip: padding-box;
@@ -1211,7 +1241,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v48.8 🔒</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.1 🎨</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5109,6 +5139,42 @@ function onTradeModeChange() {
 }
 
 // ───────── Render coin panels dynamically ─────────
+// ═══ v49.1: Katlanabilir coin paneli ═══
+// Panelin detay gövdesini açar/kapar. Kapalı durum coin bazında hatırlanır (localStorage),
+// böylece sayfa yenilense de tercih korunur. Canlı güncelleme döngüsüne DOKUNMAZ — sadece
+// görünürlük değişir, tüm ID'ler ve render fonksiyonları aynen çalışmaya devam eder.
+let cpCollapsedState = {};
+try { cpCollapsedState = JSON.parse(localStorage.getItem('tugay_cp_collapsed') || '{}'); } catch(e) { cpCollapsedState = {}; }
+function toggleCoinPanel(coin) {
+  const panel = document.getElementById('panel-' + coin);
+  if (!panel) return;
+  const nowCollapsed = !panel.classList.contains('collapsed');
+  panel.classList.toggle('collapsed', nowCollapsed);
+  cpCollapsedState[coin] = nowCollapsed;
+  try { localStorage.setItem('tugay_cp_collapsed', JSON.stringify(cpCollapsedState)); } catch(e) {}
+  // Açıldıysa grafik/pozisyon kartı gizliyken güncellenmemiş olabilir — tazele
+  if (!nowCollapsed) {
+    try { if (coinStates[coin]) { renderPositionCard(coin, coinStates[coin], coinStates[coin].lastTickPrice); } } catch(e) {}
+    try { if (coinStates[coin]?.lastKlines) drawCoinLiveChart(coin, coinStates[coin].lastKlines, coinStates[coin].lastTickPrice, coinStates[coin]); } catch(e) {}
+  }
+}
+// Kapalı panelin tek satır özetini besler — renderPositionCard her tikte çağırır.
+// Böylece kart kapalı olsa bile fiyat/K/Z canlı akmaya devam eder.
+function updateCoinPanelSummary(coin, data) {
+  const lineEl = document.getElementById('cpSumLine-' + coin);
+  const pnlEl = document.getElementById('cpSumPnl-' + coin);
+  const qSell = document.getElementById('cpQSell-' + coin);
+  if (data && data.hasPos) {
+    if (lineEl) lineEl.innerHTML = `<b style="color:${data.sideColor}">${data.sideLabel}</b> · Giriş ${data.entry} · TP +%${data.tp} · SL -%${data.sl}`;
+    if (pnlEl) pnlEl.innerHTML = `<div class="p1" style="color:${data.pnlColor}">${data.pctStr}</div><div class="p2">${data.usdStr}</div>`;
+    if (qSell) qSell.disabled = false;
+  } else {
+    if (lineEl) lineEl.textContent = data && data.emptyText ? data.emptyText : '📭 Açık pozisyon yok';
+    if (pnlEl) pnlEl.innerHTML = '';
+    if (qSell) qSell.disabled = !(data && data.canShort);
+  }
+}
+
 function renderCoinPanels() {
   const grid = document.getElementById('coinGrid');
   grid.innerHTML = '';
@@ -5147,6 +5213,24 @@ function renderCoinPanels() {
           <button class="btn-bot-toggle" id="botToggle-${coin}" onclick="toggleCoinBot('${coin}')" title="Bu coin'in botunu başlat">▶</button>
         </div>
       </div>
+
+      <!-- ═══ v49.1: Kapalı görünüm — canlı özet satırı (renderPositionCard besler) ═══ -->
+      <div class="cp-summary" onclick="toggleCoinPanel('${coin}')">
+        <div class="cp-summary-mid">
+          <div class="cp-sum-line" id="cpSumLine-${coin}">📭 Açık pozisyon yok</div>
+        </div>
+        <div class="cp-sum-pnl" id="cpSumPnl-${coin}"></div>
+        <span class="cp-sum-caret">▶</span>
+      </div>
+      <!-- Kapalıyken de görünen hızlı al/sat -->
+      <div class="cp-quick only-collapsed" style="display:none;" id="cpQuick-${coin}">
+        <button class="cp-qbtn cp-qbuy" onclick="manualBuy('${coin}')">⚡ Manuel AL</button>
+        <button class="cp-qbtn cp-qsell" onclick="manualSell('${coin}')" id="cpQSell-${coin}" disabled>⚡ Manuel SAT</button>
+      </div>
+
+      <!-- ═══ Detay gövdesi — dokununca açılır/kapanır ═══ -->
+      <div class="coin-panel-body">
+      <button class="cp-collapse-btn" onclick="toggleCoinPanel('${coin}')">▲ Kartı küçült</button>
 
       <!-- ═══ v41.5: 🔬 Coin Detay Şeridi — hacim, değişim, işlem sayısı, alış/satış baskısı ═══ -->
       <div class="coin-detail-strip" id="coinDetail-${coin}">
@@ -5202,8 +5286,12 @@ function renderCoinPanels() {
         <div class="pm"><div class="pm-label">Bu Coin K/Z</div><div class="pm-value" id="coinPnl-${coin}">—</div></div>
         <div class="pm"><div class="pm-label">İşlem Sayısı</div><div class="pm-value" id="coinTrades-${coin}">0</div></div>
       </div>
+      </div><!-- /coin-panel-body -->
     `;
     grid.appendChild(panel);
+
+    // v49.1: kaydedilmiş kapalı/açık tercihini uygula
+    if (cpCollapsedState[coin]) panel.classList.add('collapsed');
 
     // Panel yeniden oluşturulduğunda ▶/⏹ butonu, coin'in GERÇEK bot durumuyla
     // (renderCoinPanels grid'i tamamen sıfırlasa da botRunning hafızada kalıcı) eşleşmeli
@@ -6323,6 +6411,7 @@ function renderPositionCard(coin, state, currentPrice) {
       if (manBuyBtn) manBuyBtn.disabled = false;
       const tradeModeCd = document.getElementById('tradeMode') ? document.getElementById('tradeMode').value : 'spot';
       if (manSellBtn) manSellBtn.disabled = (tradeModeCd !== 'futures_sim');
+      updateCoinPanelSummary(coin, { hasPos: false, emptyText: '🧊 Manuel soğuma aktif', canShort: tradeModeCd === 'futures_sim' }); // v49.1
       renderDashboardSummary();
       return;
     }
@@ -6334,6 +6423,7 @@ function renderPositionCard(coin, state, currentPrice) {
     if (manBuyBtn) manBuyBtn.disabled = false;
     // Futures modunda SAT butonu short açmak için aktif kalır
     if (manSellBtn) manSellBtn.disabled = (tradeMode !== 'futures_sim');
+    updateCoinPanelSummary(coin, { hasPos: false, canShort: tradeMode === 'futures_sim' }); // v49.1
     renderDashboardSummary();
     return;
   }
@@ -6457,6 +6547,18 @@ function renderPositionCard(coin, state, currentPrice) {
     <div style="font-size:9.5px;color:var(--muted);margin-top:6px;text-align:center">${pos.atrBased ? '📐 SL/TP bu coin\'in giriş anındaki ATR\'sine göre ayarlandı · ' : ''}SL/TP her zaman aktif, bekleme sadece gösterge çıkışını etkiler${leverage>1?' · Likidasyon: -%'+(95/leverage).toFixed(0)+' fiyat hareketi':''}</div>
     ${buildEntryReasonHtml(pos)}
   `;
+  // v49.1: kapalı panel özet satırını canlı besle
+  updateCoinPanelSummary(coin, {
+    hasPos: true,
+    sideLabel: dir === 'short' ? '🔻 SHORT' + (leverage>1?' '+leverage+'x':'') : '🟢 LONG' + (leverage>1?' '+leverage+'x':''),
+    sideColor: dir === 'short' ? 'var(--red)' : 'var(--green)',
+    entry: formatPrice(pos.entryPrice),
+    tp: (takeProfit*100).toFixed(1),
+    sl: (stopLoss*100).toFixed(1),
+    pctStr: (change >= 0 ? '+' : '') + (leveragedChange*100).toFixed(2) + '%',
+    usdStr: (pnlUsd >= 0 ? '+' : '') + pnlUsd.toFixed(2) + '$',
+    pnlColor: pnlColor
+  });
   drawPosSparkline(coin, pos, stopLoss, takeProfit);
   renderDashboardSummary();
 }
