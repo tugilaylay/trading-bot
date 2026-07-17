@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.6 GRAFİK SADECE COİNLER SAYFASINDA</title>
+<title>TUGAY × QUANT · v49.7 BRİFİNG+NABIZ+LEADERBOARD ANALİZE TAŞINDI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1316,7 +1316,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.6 🏠</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.7 📊</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1646,8 +1646,10 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       </div>
     </div>
     <canvas class="ds-mini-chart" id="miniEquityChart"></canvas>
+  </div>
 
-
+  <!-- v49.7: En Kârlı Coinler — bağımsız kart (Analiz'e taşınır) -->
+  <div class="dashboard-summary" id="leaderboardCard">
     <div class="ds-leaderboard-title">🏆 En Kârlı Coinler</div>
     <div id="dsLeaderboardList" class="ds-leaderboard-list">
       <div style="text-align:center;color:var(--muted);font-size:11px;padding:10px;">Henüz kapanmış işlem yok</div>
@@ -2798,6 +2800,8 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: ANALİZ ═══ -->
   <div class="qt-tab-panel" data-tab="analytics" id="tabPanel-analytics">
+  <!-- v49.7: Sabah Brifingi + Piyasa Nabzı + En Kârlı Coinler buraya taşınır (JS ile) -->
+  <div id="analyticsMoveTarget"></div>
   <details class="setup-card acc-card" id="backtestCompareDetails" data-accid="backtest">
     <summary>
       <span class="card-title" style="margin:0;flex:1;">
@@ -3200,6 +3204,8 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       } else if (tabName === 'analytics') {
         if (typeof drawChart === 'function') drawChart();
         if (typeof renderCorrelationMatrix === 'function') renderCorrelationMatrix(); // v41.8
+        if (typeof fetchMarketPulse === 'function') fetchMarketPulse(); // v49.7 — Piyasa Nabzı artık burada
+        if (typeof renderDailyBriefing === 'function') renderDailyBriefing(); // v49.7 — Sabah Brifingi burada
       }
     } catch (e) { /* grafik hatası sekmeyi etkilemesin */ }
   };
@@ -5364,7 +5370,20 @@ function initRiskFilter() {
   applyRiskFilter();
 }
 
-// ═══ v49.5: Prototip stili sade ANA ÖZET besleyicisi ═══
+// ═══ v49.7: Sabah Brifingi + Piyasa Nabzı + En Kârlı Coinler'i Analiz sekmesine taşı ═══
+// DOM taşıma (appendChild) — elementler AYNI kalır, ID'ler AYNI kalır, sadece konum değişir.
+// Onları besleyen tüm fonksiyonlar (renderDailyBriefing, fetchMarketPulse, updateLeaderboard)
+// hiç değişmeden çalışmaya devam eder. Motora sıfır dokunuş.
+function relocateAnalyticsBlocks() {
+  const target = document.getElementById('analyticsMoveTarget');
+  if (!target) return;
+  ['v46BriefCard', 'marketPulseCard', 'leaderboardCard'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.parentElement !== target) target.appendChild(el);
+  });
+}
+
+
 // Mevcut canlı state'ten (coinStates, hero rozetleri) okur, prototip görünümünü çizer.
 // Hiçbir motor fonksiyonunu değiştirmez — sadece ek bir görsel katman.
 function toggleHomeDetails() {
@@ -12209,6 +12228,7 @@ window.addEventListener('load', () => {
   try { applyLogFilter(); } catch(e) {} // v48.7: kayıtlı "Sadece Kritik" tercihini ilk yüklemede uygula
   try { initRiskFilter(); } catch(e) {} // v49.3: risk kategori/mod filtresini uygula
   try { renderHomeSummary(); } catch(e) {} // v49.5: ana özeti ilk yüklemede çiz
+  try { relocateAnalyticsBlocks(); } catch(e) {} // v49.7: brifing/nabız/leaderboard → Analiz
   runInputClampSweep(); // v41.9.3: eski/bozuk kayıtlı değerleri (örn. Breakeven=45) sayfa açılır açılmaz düzelt
   applyRecommendedRiskDefaults(); // v38.1: tek seferlik önerilen risk ayarları
   applyV40RiskUpgrade();          // v40: tek seferlik otopilot-çağı risk yükseltmesi
