@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.12 GRAFİK ZAMAN DİLİMİ SEÇİCİ</title>
+<title>TUGAY × QUANT · v50.0 ASİMETRİ PAKETİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.12 ⏱️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.0 ⚖️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1467,6 +1467,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
         <span style="white-space:nowrap;">📉 Ort. Kayıp: <b id="expAvgLoss" style="color:var(--red)">—</b></span>
         <span style="white-space:nowrap;">⚖️ Gerçekleşen R:R: <b id="expRR">—</b></span>
         <span style="white-space:nowrap;">🎯 İşlem Başı Beklenti: <b id="expPerTrade">—</b></span>
+        <span style="white-space:nowrap;" title="v50.0 R-Çarpanı Defteri: her işlem, giriş anındaki riske (1R = SL mesafesi × miktar) bölünerek normalize edilir. +0.30R = işlem başına riskin %30'u kazanılıyor demek.">📐 R-Beklenti: <b id="expRMulti">—</b></span>
       </div>
       <div id="expVerdict" style="font-size:10px;color:var(--muted);text-align:center;margin-top:5px;"></div>
     </div>
@@ -2226,6 +2227,88 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <details class="risk-info">
           <summary>ℹ️ Açıklama</summary>
           <div class="ri-body">Senin "kârda elle kapatma" davranışının otomatiği. Kaldıraçlı kâr her <b>Basamak</b> katına ulaştığında (%1, %2, %3…) bir <b>kâr tabanı</b> kilitlenir: bir önceki basamak + kilitlenen pay. Örnek (varsayılan): kâr +%1'e dokunur → taban <b>+%0.6</b>. +%2'ye dokunur → taban <b>+%1.6</b>. Fiyat tabana geri düşerse pozisyon <b>O KÂRLA</b> kapanır — asla başa başa veya zarara dönmez. İz Süren Stop'tan farkı: trailing'in garantili tabanı sadece başa baştı; merdivenin tabanı <b>gerçek kâr</b>. Teyit Turu açıksa merdiven kapanışı da aynı ardışık tick teyidini kullanır (anlık iğnelere kanmaz). Trailing ile birlikte çalışır — hangisi önce tetiklenirse.</div>
+        </details>
+
+      <div class="acc-divider"></div>
+
+      <!-- ══ v50.0 ASİMETRİ PAKETİ ══ Kâr Merdiveni'nin ayna görüntüleri: zarar tarafı da
+           artık yönetiliyor. Kök teşhis: kazananlar merdiven/trailing ile +%0.6-1.6'da kilitlenirken
+           kaybedenler SL'e kadar TAM boy koşuyordu → gerçekleşen R:R tersine dönüyordu. ══ -->
+
+      <!-- ── v50.0: 🔻 Kayıp Merdiveni (MAE Akıllı Stop) ── -->
+      <div class="card-title">
+        <span>🔻 Kayıp Merdiveni (MAE Akıllı Stop)</span>
+        <span class="optional-badge" style="background:rgba(196,58,47,0.18);color:var(--red);border-color:rgba(196,58,47,0.4);">v50.0 — Zarara erken makas</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="maeStopToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Kazanan MAE Yüzdeliği (%)</label>
+          <input type="number" id="maeStopPercentile" value="80" min="50" max="95" step="5" />
+        </div>
+        <div class="form-group">
+          <label>Güvenlik Çarpanı</label>
+          <input type="number" id="maeStopMult" value="1.15" min="1" max="2" step="0.05" />
+        </div>
+        <div class="form-group">
+          <label>Min. Kazanan İşlem (öğrenme)</label>
+          <input type="number" id="maeStopMinTrades" value="10" min="5" max="50" step="1" />
+        </div>
+      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Kâr Merdiveni'nin ayna görüntüsü — ama zarar tarafında. Bot, geçmişte <b>kazançla biten</b> işlemlerin pozisyon boyunca gördüğü en derin geçici zararı (MAE — Maximum Adverse Excursion) öğrenir. Kazananların %80'i (yüzdelik ayarı) hiç -%1.0'den derine inmediyse, -%1.15'e (× güvenlik çarpanı) düşen bir pozisyonun kazanan olma ihtimali istatistiksel olarak çökmüş demektir — SL'i (-%2) beklemeden kapanır. Ortalama kaybı SL mesafesinin yaklaşık yarısına indirir; beklentiyi tek başına pozitife çevirebilecek en güçlü kaldıraç budur. Öğrenme için yeterli veri yoksa (Min. Kazanan İşlem) sessizce devre dışı kalır — asla tahminle kesmez. Eşik hiçbir zaman gidiş-dönüş maliyetinin 2.5 katından dar, SL'den geniş olamaz. Teyit Turu açıksa aynı ardışık tick teyidi burada da geçerlidir (anlık iğne kesmez).</div>
+        </details>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v50.0: ✂️ Kısmi Zarar Kesme ── -->
+      <div class="card-title">
+        <span>✂️ Kısmi Zarar Kesme</span>
+        <span class="optional-badge" style="background:rgba(196,58,47,0.18);color:var(--red);border-color:rgba(196,58,47,0.4);">v50.0 — Kısmi TP'nin simetriği</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="partialLossToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tetik: SL mesafesinin %'si</label>
+          <input type="number" id="partialLossAtPct" value="50" min="30" max="80" step="5" />
+        </div>
+        <div class="form-group">
+          <label>Kapatılacak oran %</label>
+          <input type="number" id="partialLossClosePct" value="50" min="20" max="80" step="5" />
+        </div>
+      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Kısmi TP zaten var: kâr TP'nin yarısına gelince pozisyonun yarısı kapanıyor. Bunun zarar tarafındaki simetriği ise YOKTU — kaybeden pozisyon SL'e kadar tam boy koşuyordu. Artık zarar SL mesafesinin %50'sine (tetik ayarı) ulaştığında pozisyonun %50'si (oran ayarı) kapanır; kalan yarı toparlanma şansını SL'e kadar korur. Sonuç: tam SL yenen işlemin gerçek kaybı ~%75'e iner, toparlanıp kâra dönen işlemde ise küçük bir sigorta maliyeti ödenmiş olur. Kuyruk riskini (kepçe) doğrudan küçültür. Pozisyon başına bir kez tetiklenir; kayıt işlem geçmişine "✂️ Kısmi Zarar" olarak düşer.</div>
+        </details>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v50.0: ⚖️ Asimetri Bekçisi ── -->
+      <div class="card-title">
+        <span>⚖️ Asimetri Bekçisi (Adaptif K/Z Dengesi)</span>
+        <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v50.0 — Kendini kalibre eder</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="asymGuardToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>İzleme Penceresi (son N işlem)</label>
+          <input type="number" id="asymGuardWindow" value="20" min="10" max="50" step="5" />
+        </div>
+      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Son N işlemin <b>ortalama kazanç / ortalama kayıp</b> oranını canlı izler. Oran 1'in altına düşerse (kaşık-kepçe alarmı) bot kendini otomatik kalibre eder: <b>1)</b> Kâr Merdiveni basamağı ×1.5 genişler — kazananlar erken kilitlenmez, nefes alır. <b>2)</b> Aktif SL ×0.75 sıkılaşır — kaybedenlere daha az yol verilir. Oran tekrar 1'in üzerine çıkınca her şey normale döner. Her geçiş log'a yazılır. Bu bir kontrolcüdür: sen ayara dokunmadan sistem, gerçekleşen asimetriye göre kendi çıkış geometrisini büker.</div>
         </details>
 
       <div class="acc-divider"></div>
@@ -3930,7 +4013,11 @@ const SETTINGS_FIELD_IDS = [
   // v45.0: akıllı filtreler + arena
   'cvdFilterToggle', 'crowdFilterToggle', 'flowGateToggle', 'arenaToggle',
   // v45.2: 🧬 Evrim Motoru
-  'evoIndicatorsToggle', 'evoMinTrades', 'evoWinFloor', 'evoRiskToggle'
+  'evoIndicatorsToggle', 'evoMinTrades', 'evoWinFloor', 'evoRiskToggle',
+  // v50.0: Asimetri Paketi — Kayıp Merdiveni (MAE), Kısmi Zarar, Asimetri Bekçisi
+  'maeStopToggle', 'maeStopPercentile', 'maeStopMult', 'maeStopMinTrades',
+  'partialLossToggle', 'partialLossAtPct', 'partialLossClosePct',
+  'asymGuardToggle', 'asymGuardWindow'
 ];
 
 // ───────── v38.1: Önerilen Risk Ayarları (tek seferlik migrasyon) ─────────
@@ -4162,6 +4249,13 @@ const INPUT_CLAMP_RULES = {
   fgThreshold:           { min: 5,    max: 50,   def: 25,   label: 'Fear & Greed Eşiği' },
   fundingThreshold:      { min: 0.01, max: 0.3,  def: 0.05, label: 'Funding Rate Eşiği' },
   trailingConfirmTicks:  { min: 1,    max: 10,   def: 2,    label: 'İz Süren Kapanış Teyit Tick' },
+  // v50.0: Asimetri Paketi alanları — mobil klavye HTML max'ı delemesin
+  maeStopPercentile:     { min: 50,   max: 95,   def: 80,   label: 'MAE Yüzdeliği' },
+  maeStopMult:           { min: 1,    max: 2,    def: 1.15, label: 'MAE Güvenlik Çarpanı' },
+  maeStopMinTrades:      { min: 5,    max: 50,   def: 10,   label: 'MAE Min. Kazanan İşlem' },
+  partialLossAtPct:      { min: 30,   max: 80,   def: 50,   label: 'Kısmi Zarar Tetik Oranı' },
+  partialLossClosePct:   { min: 20,   max: 80,   def: 50,   label: 'Kısmi Zarar Kapatma Oranı' },
+  asymGuardWindow:       { min: 10,   max: 50,   def: 20,   label: 'Asimetri Bekçisi Penceresi' },
   exitConfirmTicks:      { min: 2,    max: 10,   def: 2,    label: 'Çıkış Sinyali Teyit Tick' },
   entryConfirmTicks:     { min: 2,    max: 10,   def: 2,    label: 'Giriş Sinyali Teyit Tick' },
   // v41.9.3: "45 Breakeven", "4 USDT Günlük Limit" gibi anlamsız değerlere karşı ek kilitler
@@ -7404,6 +7498,49 @@ function buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin) {
   };
 }
 
+// ═════════ v50.0 ASİMETRİ PAKETİ — yardımcı fonksiyonlar ═════════
+// 🔻 Kayıp Merdiveni (MAE Akıllı Stop): Kazançla biten işlemlerin pozisyon boyunca gördüğü
+// en derin geçici zarar (MAE) dağılımından bir "erken makas" eşiği öğrenir. Kazananların
+// P%'i bu derinliğe hiç inmediyse, oraya inen pozisyonun kurtulma ihtimali istatistiksel
+// olarak çökmüştür — SL beklenmez. Veri yetersizse null döner (asla tahminle kesmez).
+function computeMaeStopThreshold(coin, leverage) {
+  try {
+    const rel = globalTradeHistory.filter(t => t.pnl >= 0 && typeof t.maeLc === 'number' && t.maeLc < 0);
+    const minN = Math.min(Math.max(parseInt(document.getElementById('maeStopMinTrades')?.value) || 10, 5), 50);
+    if (rel.length < minN) return null;
+    const maes = rel.map(t => Math.abs(t.maeLc)).sort((a, b) => a - b);
+    const pct = Math.min(Math.max(parseInt(document.getElementById('maeStopPercentile')?.value) || 80, 50), 95) / 100;
+    const idx = Math.min(Math.floor(pct * maes.length), maes.length - 1);
+    const mult = Math.min(Math.max(parseFloat(document.getElementById('maeStopMult')?.value) || 1.15, 1), 2);
+    const th = maes[idx] * mult;
+    // Taban: gidiş-dönüş maliyetinin 2.5 katından dar olamaz (gürültüyle kesmesin)
+    const costLev = (typeof estimateRoundTripCostLevPct === 'function'
+      ? estimateRoundTripCostLevPct(coin, leverage || 1) : 0.3) / 100;
+    return Math.max(th, costLev * 2.5);
+  } catch (e) { return null; }
+}
+
+// ⚖️ Asimetri Bekçisi: son N işlemin ortKazanç/ortKayıp oranını izler. Oran < 1 ise
+// (kaşık-kepçe alarmı) merdiven basamağını genişletir (kazanana nefes) ve SL'i sıkılaştırır
+// (kaybedene daha az yol). Oran düzelince otomatik normale döner.
+let _asymGuardWasActive = false;
+function asymGuardStatus() {
+  const off = { active: false, stepMult: 1, slMult: 1, ratio: null };
+  try {
+    if (!document.getElementById('asymGuardToggle')?.checked) return off;
+    const N = Math.min(Math.max(parseInt(document.getElementById('asymGuardWindow')?.value) || 20, 10), 50);
+    const recent = globalTradeHistory.slice(-N);
+    if (recent.length < Math.max(8, Math.floor(N / 2))) return off;
+    const w = recent.filter(t => t.pnl >= 0), l = recent.filter(t => t.pnl < 0);
+    if (!w.length || !l.length) return off;
+    const aw = w.reduce((sum, t) => sum + t.pnl, 0) / w.length;
+    const al = Math.abs(l.reduce((sum, t) => sum + t.pnl, 0) / l.length);
+    const ratio = al > 0 ? aw / al : null;
+    if (ratio !== null && ratio < 1) return { active: true, stepMult: 1.5, slMult: 0.75, ratio };
+    return { ...off, ratio };
+  } catch (e) { return off; }
+}
+
 function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction, leverage, holdMs, reasonCategory, entryRegime, entrySignals, autopilot, extra) {
   globalTradeCount++;
   globalTotalPnl += pnl;
@@ -7440,7 +7577,7 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
   // kaotik harekete saniyeler içinde geri giriyordu. Artık trailing/breakeven de ZARARLA
   // kapanırsa soğumayı tetikler. TP, manuel ve sinyal kapanışları (bunlar zaten kâr/karar
   // amaçlı, kaos belirtisi değil) hâlâ soğuma başlatmaz.
-  const CHAOS_LOSS_REASONS = ['sl', 'liquidation', 'trailing', 'breakeven', 'ratchet', 'time']; // v46.3: Zaman Stopu ve Kâr Merdiveni zararı da artık soğutur
+  const CHAOS_LOSS_REASONS = ['sl', 'liquidation', 'trailing', 'breakeven', 'ratchet', 'time', 'mae']; // v46.3 + v50.0: MAE stop zararı da soğutur (Kısmi Zarar hariç — nihai kapanış zaten sayar)
   if (pnl < 0 && CHAOS_LOSS_REASONS.includes(reasonCategory) && document.getElementById('lossCooldownToggle')?.checked) {
     setLossCooldown(coin);
     const mins = parseFloat(document.getElementById('lossCooldownMin')?.value) || 45;
@@ -7473,7 +7610,8 @@ function addTrade(coin, exitPrice, amount, pnl, confirms, entryPrice, direction,
 const REASON_LABELS_SHORT = {
   sl: '🔴 SL', tp: '🎯 TP', trailing: '📉 İz Süren',
   breakeven: '🛡️ Breakeven', liquidation: '💥 Likidasyon',
-  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman', ratchet: '🪜 Kâr Kilidi'
+  signal: '🔁 Sinyal', manual: '👆 Manuel', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman', ratchet: '🪜 Kâr Kilidi',
+  mae: '🔻 MAE', partial_sl: '✂️ Kısmi Zarar'
 };
 function renderTradeTable() {
   const body = document.getElementById('tradeBody');
@@ -7605,7 +7743,8 @@ function formatDuration(ms) {
 const REASON_LABELS = {
   sl: '🔴 Stop-Loss', tp: '🎯 Take-Profit', trailing: '📉 İz Süren Stop',
   liquidation: '💥 Likidasyon', signal: '🔁 Gösterge Sinyali',
-  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman Stopu', ratchet: '🪜 Kâr Merdiveni'
+  manual: '👆 Manuel Kapatma', partial_tp: '🎯 Kısmi TP', time: '⌛ Zaman Stopu', ratchet: '🪜 Kâr Merdiveni',
+  mae: '🔻 Kayıp Merdiveni (MAE)', partial_sl: '✂️ Kısmi Zarar'
 };
 const REGIME_LABELS = {
   sideways: '◆ Yatay/Kararsız', uptrend: '▲ Yükseliş Trendi',
@@ -8718,7 +8857,7 @@ async function manualBuy(coin) {
   }
 
   if (typeof v40FundsOk === 'function' && !v40FundsOk(tradeAmount, coin)) { alert('💰 Kasa: kullanılabilir bakiye yetersiz. Önce para ekle veya pozisyon kapat.'); return; } // v40
-  state.openPosition = { direction: 'long', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime };
+  state.openPosition = { direction: 'long', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss };
   const atrTxt = slTp.atrBased ? ` | SL/TP (ATR): -%${(slTp.stopLoss*100).toFixed(2)} / +%${(slTp.takeProfit*100).toFixed(2)}` : '';
   log(`👆 MANUEL LONG${leverage>1?' '+leverage+'x':''} | Giriş: ${formatPrice(price)} | Kullanıcı tarafından açıldı${atrTxt}`, 'buy', coin);
   flashPanel(coin, 'buy');
@@ -8785,7 +8924,7 @@ async function manualSell(coin) {
     }
 
     if (typeof v40FundsOk === 'function' && !v40FundsOk(tradeAmount, coin)) { alert('💰 Kasa: kullanılabilir bakiye yetersiz. Önce para ekle veya pozisyon kapat.'); return; } // v40
-    state.openPosition = { direction: 'short', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime };
+    state.openPosition = { direction: 'short', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss };
     const atrTxt = slTp.atrBased ? ` | SL/TP (ATR): -%${(slTp.stopLoss*100).toFixed(2)} / +%${(slTp.takeProfit*100).toFixed(2)}` : '';
     log(`👆 MANUEL SHORT ${leverage}x | Giriş: ${formatPrice(price)} | Kullanıcı tarafından açıldı${atrTxt}`, 'sell', coin);
     flashPanel(coin, 'sell');
@@ -10305,6 +10444,26 @@ function updateHeroBadges() {
         eP.textContent = (expectancy >= 0 ? '+' : '') + expectancy.toFixed(2) + ' $';
         eP.style.color = expectancy >= 0 ? 'var(--green)' : 'var(--red)';
       }
+      // ── v50.0: 📐 R-Çarpanı Defteri ──
+      // Her işlem giriş anındaki riskine (1R = SL mesafesi × miktar) normalize edilir.
+      // $ bazlı beklenti pozisyon boyutuyla şişer/söner; R bazlı beklenti sistemin GERÇEK
+      // kalitesini gösterir. Eski işlemler için riskUsd yoksa slPct×amount ile tahmin edilir.
+      const eRM = document.getElementById('expRMulti');
+      if (eRM) {
+        const rVals = globalTradeHistory.map(t => {
+          const risk = (typeof t.riskUsd === 'number' && t.riskUsd > 0) ? t.riskUsd
+            : ((typeof t.slPct === 'number' && t.slPct > 0 && t.amount > 0) ? t.amount * t.slPct : null);
+          return (risk && risk > 0) ? t.pnl / risk : null;
+        }).filter(v => v !== null && isFinite(v));
+        if (rVals.length >= 5) {
+          const avgR = rVals.reduce((a, b) => a + b, 0) / rVals.length;
+          eRM.textContent = (avgR >= 0 ? '+' : '') + avgR.toFixed(2) + 'R (' + rVals.length + ' işlem)';
+          eRM.style.color = avgR >= 0 ? 'var(--green)' : 'var(--red)';
+          eRM.title = 'İşlem başına ortalama R-çarpanı. +0.25R üstü sağlıklı sistemdir; negatifse boyuttan bağımsız olarak sistem para kaybediyor demektir.';
+        } else {
+          eRM.textContent = '—';
+        }
+      }
       if (eV) {
         if (expectancy >= 0.5) eV.textContent = '✅ Sistem pozitif beklentide — her işlem istatistiksel olarak para kazandırıyor. Boyut büyütme bu bölgede düşünülebilir.';
         else if (expectancy >= 0) eV.textContent = '🌤️ Başa baş bölgesi — sistem zarar üretmiyor ama henüz kazanmıyor. Kazananlara daha çok yol ver (Kâr Merdiveni/Trailing eşiği).';
@@ -10776,7 +10935,7 @@ async function coinTickInner(coin, state) {
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
       if (!mathGateOk(coin, 'long', slTp, leverage)) return;
-      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv };
+      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const lvTxt = leverage > 1 ? ` ${leverage}x` : '';
@@ -10808,7 +10967,7 @@ async function coinTickInner(coin, state) {
       if (flowConfluenceBlocked(coin, 'short')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
-      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv };
+      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
@@ -10834,6 +10993,11 @@ async function coinTickInner(coin, state) {
     if (!pos.pnlHist) pos.pnlHist = [];
     pos.pnlHist.push(+(leveragedChange * 100).toFixed(3));
     if (pos.pnlHist.length > 150) pos.pnlHist.shift();
+
+    // v50.0: MAE/MFE takibi — bu pozisyonun gördüğü en derin zarar ve en yüksek kâr
+    // (kaldıraçlı, kesir). Kapanışta işlem kaydına yazılır; Kayıp Merdiveni bundan öğrenir.
+    if (pos.maeLc === undefined || leveragedChange < pos.maeLc) pos.maeLc = leveragedChange;
+    if (pos.mfeLc === undefined || leveragedChange > pos.mfeLc) pos.mfeLc = leveragedChange;
 
     const newCandleFormed = lastCandleCloseTime > pos.entryCandleCloseTime;
     const minHoldMs = getMinHoldMs();
@@ -10964,10 +11128,24 @@ async function coinTickInner(coin, state) {
     // Kullanıcı bu yüzden kârda elle kapatıyordu (Otopsi: Manuel %93 / İz Süren %10 / SL %0).
     // Merdiven: kaldıraçlı kârın gördüğü en yüksek nokta izlenir; her tam basamakta taban
     // yükselir ve ASLA geri inmez. Fiyat tabana dönerse pozisyon o kârla kapanır.
+    // ───────── v50.0: ⚖️ Asimetri Bekçisi ─────────
+    // Son N işlemin gerçekleşen K/Z dengesine göre çıkış geometrisini büker: dengesizlikte
+    // merdiven basamağı ×1.5 (kazanan nefes alır), aktif SL ×0.75 (kaybeden kısa kesilir).
+    const asymG = (typeof asymGuardStatus === 'function') ? asymGuardStatus() : { active: false, stepMult: 1, slMult: 1, ratio: null };
+    if (asymG.active !== _asymGuardWasActive) {
+      if (asymG.active) {
+        log(`⚖️ [Asimetri Bekçisi] AKTİF — son işlemlerde ort. kazanç / ort. kayıp = ${asymG.ratio.toFixed(2)} (< 1). Merdiven basamağı ×1.5 genişletildi, aktif SL ×0.75 sıkılaştırıldı. Denge düzelince otomatik normale döner.`, 'warn');
+      } else {
+        log(`⚖️ [Asimetri Bekçisi] Devre dışı — K/Z dengesi düzeldi${asymG.ratio !== null ? ' (oran: ' + asymG.ratio.toFixed(2) + ')' : ''}. Merdiven ve SL normal ayarlarına döndü.`, 'system');
+      }
+      _asymGuardWasActive = asymG.active;
+    }
+
     const ratchetOn = document.getElementById('ratchetToggle')?.checked;
     let hitRatchet = false;
     if (ratchetOn && !liquidated) {
-      const rStep = Math.max((parseFloat(document.getElementById('ratchetStepPct')?.value) || 1.0) / 100, 0.002);
+      // v50.0: Asimetri Bekçisi aktifse basamak genişler — kazanan erken kilitlenmez
+      const rStep = Math.max(((parseFloat(document.getElementById('ratchetStepPct')?.value) || 1.0) / 100) * (asymG.stepMult || 1), 0.002);
       const rLock = Math.min(Math.max((parseFloat(document.getElementById('ratchetLockRatio')?.value) || 60) / 100, 0.1), 0.95);
       if (pos.peakLc === undefined || leveragedChange > pos.peakLc) pos.peakLc = leveragedChange;
       // v47.0: maliyet farkındalığı — taban, yuvarlak-tur maliyetinin en az 2 katı olmadan
@@ -11006,13 +11184,37 @@ async function coinTickInner(coin, state) {
     const effStopLoss   = (pos.stopLossPct   !== undefined && pos.stopLossPct   !== null) ? pos.stopLossPct   : stopLoss;
     const effTakeProfit = (pos.takeProfitPct !== undefined && pos.takeProfitPct !== null) ? pos.takeProfitPct : takeProfit;
 
-    const hitStopLoss   = leveragedChange <= -effStopLoss;
+    // v50.0: Asimetri Bekçisi aktifse AKTİF SL sıkılaşır (×0.75). Pozisyonun kayıtlı
+    // stopLossPct'ine DOKUNULMAZ — sadece bu tick'teki kontrol eşiği bükülür; bekçi
+    // kapanınca sonraki tick'te orijinal SL kendiliğinden geri gelir.
+    const effStopLossAdj = asymG.active ? effStopLoss * asymG.slMult : effStopLoss;
+
+    const hitStopLoss   = leveragedChange <= -effStopLossAdj;
     const hitTakeProfit = leveragedChange >= effTakeProfit;
+
+    // ───────── v50.0: 🔻 Kayıp Merdiveni (MAE Akıllı Stop) ─────────
+    // Kazananların MAE dağılımından öğrenilen eşik: kazanan işlemlerin P%'i bu derinliğe
+    // hiç inmediyse, inen pozisyon SL'i beklemeden kesilir. Eşik SL'den DAR olmalı ki
+    // anlamı olsun; değilse (veri az / SL zaten dar) sessizce devre dışı. Trailing'in
+    // Teyit Turu buradaki kapanışa da uygulanır — tek iğneyle kesmez.
+    let hitMaeStop = false;
+    let maeThUsed = null;
+    if (document.getElementById('maeStopToggle')?.checked && !liquidated && !hitStopLoss) {
+      const maeTh = (typeof computeMaeStopThreshold === 'function') ? computeMaeStopThreshold(coin, pos.leverage || 1) : null;
+      if (maeTh !== null && maeTh < effStopLossAdj * 0.95) {
+        maeThUsed = maeTh;
+        const rawHitMae = leveragedChange <= -maeTh;
+        if (rawHitMae) { pos.maeStreak = (pos.maeStreak || 0) + 1; } else { pos.maeStreak = 0; }
+        const mReq = (document.getElementById('trailingConfirmToggle')?.checked)
+          ? (parseInt(document.getElementById('trailingConfirmTicks')?.value) || 2) : 1;
+        hitMaeStop = rawHitMae && pos.maeStreak >= mReq;
+      }
+    }
 
     // SL/TP yakınlık uyarısı — SL'ye %70 yaklaşıldıysa uyar
     const slWarningThreshold = 0.70;
-    if (!hitStopLoss && leveragedChange <= -(effStopLoss * slWarningThreshold) && !coinStates[coin]._slWarnedAt) {
-      const slDistPct = (effStopLoss + leveragedChange) / effStopLoss * 100;
+    if (!hitStopLoss && leveragedChange <= -(effStopLossAdj * slWarningThreshold) && !coinStates[coin]._slWarnedAt) {
+      const slDistPct = (effStopLossAdj + leveragedChange) / effStopLossAdj * 100;
       log('\u26a0\ufe0f [SL Uyari] ' + coin + ' SL bolgesi yakin! Zarar: ' + (leveragedChange*100).toFixed(2) + '%', 'warn', coin);
       coinStates[coin]._slWarnedAt = Date.now();
     }
@@ -11070,6 +11272,31 @@ async function coinTickInner(coin, state) {
       pos.partialTaken = true;
     }
 
+    // ───────── v50.0: ✂️ Kısmi Zarar Kesme ─────────
+    // Kısmi TP'nin zarar tarafındaki simetriği: zarar SL mesafesinin X%'ine ulaşınca
+    // pozisyonun Y%'si kapanır; kalan yarı toparlanma şansını SL'e kadar korur. Tam SL
+    // yenen işlemin gerçek kaybını küçültür (kepçeyi kısaltır). Pozisyon başına 1 kez.
+    const partialLossOn = document.getElementById('partialLossToggle')?.checked;
+    if (partialLossOn && !pos.partialLossTaken && !liquidated && !hitStopLoss && !hitMaeStop && pos.amount > 0) {
+      const rawAt = parseFloat(document.getElementById('partialLossAtPct')?.value) || 50;
+      const atRatio = Math.min(Math.max(rawAt, 30), 80) / 100;
+      if (leveragedChange <= -(effStopLossAdj * atRatio)) {
+        const rawCut = parseFloat(document.getElementById('partialLossClosePct')?.value) || 50;
+        const cutPct = Math.min(Math.max(rawCut, 20), 80) / 100;
+        const cutAmount = pos.amount * cutPct;
+        const grossCutPnl = cutAmount * leveragedChange;
+        const { netPnl: cutPnl, cost: cutCost } = calculateNetPnl(grossCutPnl, cutAmount, pos.leverage || 1, coin);
+
+        addTrade(coin, price, cutAmount, cutPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'partial_sl', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { maeLc: pos.maeLc ?? null, riskUsd: (pos.riskUsd != null ? pos.riskUsd * cutPct : null) });
+        log(`✂️ KISMİ ZARAR KESİLDİ (%${(cutPct*100).toFixed(0)}) | ${coin} ${dir==='long'?'LONG':'SHORT'} | Zarar SL mesafesinin %${(atRatio*100).toFixed(0)}'ine ulaştı (%${(leveragedChange*100).toFixed(2)}). Net: ${cutPnl.toFixed(2)}$ — kalan %${((1-cutPct)*100).toFixed(0)} toparlanma şansını SL'e kadar koruyor.`, 'sell', coin);
+        sendTelegramMessage(`✂️ <b>${coin} Kısmi Zarar Kesildi</b> (%${(cutPct*100).toFixed(0)})\nZarar: %${(leveragedChange*100).toFixed(2)} · Net: ${cutPnl.toFixed(2)} USDT\nKalan pozisyon SL'e kadar devam ediyor.`);
+
+        pos.amount = pos.amount - cutAmount;
+        if (pos.riskUsd != null) pos.riskUsd = pos.riskUsd * (1 - cutPct); // kalan riski küçült
+        pos.partialLossTaken = true;
+      }
+    }
+
     // ───────── v41: Runner Modu (Kademeli TP) ─────────
     // TP hedefine ulaşıldığında pozisyonun tamamı yerine tp2Pct%'si kapatılır; kalan "runner"
     // trailing stop ile trendde kalır. GÜVENLİK ŞARTI: trailing stop açık olmalı — yoksa
@@ -11117,7 +11344,7 @@ async function coinTickInner(coin, state) {
       }
     }
 
-    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit || hitTimeStop || hitRatchet;
+    const shouldClose = liquidated || hitStopLoss || hitBreakevenSL || effHitTakeProfit || hitExitSignal || hitTrailingStop || emergencyExit || hitTimeStop || hitRatchet || hitMaeStop; // v50.0: MAE stop eklendi
 
     if (shouldClose) {
       // 🛡️ Guard: pos.amount negatife düşmüşse (partial TP %100+ bug artığı) 0'a sabitle.
@@ -11150,14 +11377,15 @@ async function coinTickInner(coin, state) {
       else if (hitTrailingStop) { reason = `İz Süren Stop (en iyi: ${pos.bestPrice.toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitBreakevenSL)  { reason = '🛡️ Breakeven Stop (giriş fiyatı koruması)'; reasonCategory = 'breakeven'; }
       else if (emergencyExit)   { reason = '🚨 Acil Çıkış (Max Zarar Cap)'; reasonCategory = 'sl'; }
-      else if (hitStopLoss)     { reason = 'Stop-Loss'; reasonCategory = 'sl'; }
+      else if (hitStopLoss)     { reason = asymG.active ? `Stop-Loss (⚖️ Bekçi sıkılaştırması: -%${(effStopLossAdj*100).toFixed(2)})` : 'Stop-Loss'; reasonCategory = 'sl'; }
+      else if (hitMaeStop)      { reason = `🔻 Kayıp Merdiveni (MAE stop: -%${(maeThUsed*100).toFixed(2)} — kazananlar bu derinliğe inmez)`; reasonCategory = 'mae'; }
       else if (effHitTakeProfit) { reason = 'Take-Profit'; reasonCategory = 'tp'; }
       else if (hitTimeStop)     { reason = '⌛ Zaman Stopu (pozisyon yürümedi)'; reasonCategory = 'time'; }
       else { reason = `${dir === 'long' ? sellCount : buyCount}/${activeList.length} onay`; reasonCategory = 'signal'; }
 
       const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
       const lvTxt = (pos.leverage || 1) > 1 ? ` ${pos.leverage}x` : '';
-      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
+      addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), reasonCategory, pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m'), maeLc: pos.maeLc ?? null, mfeLc: pos.mfeLc ?? null, riskUsd: pos.riskUsd ?? null });
       log(`${pnl >= 0 ? '✅' : '🔴'} ${dirLabel}${lvTxt} KAPANDI (${reason}) | ${formatPrice(pos.entryPrice)} → ${formatPrice(price)} | Brüt: ${grossPnl >= 0 ? '+' : ''}${grossPnl.toFixed(2)}$ · Komisyon/Kayma: -${cost.toFixed(2)}$ · Net: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}$`, pnl >= 0 ? 'buy' : 'sell', coin);
       flashPanel(coin, pnl >= 0 ? 'buy' : 'sell');
       sendTelegramMessage(`${pnl >= 0 ? '✅' : '🔴'} <b>${coin} ${dirLabel}${lvTxt} KAPANDI</b>\nSebep: ${reason}\nGiriş: ${formatPrice(pos.entryPrice)} → Çıkış: ${formatPrice(price)}\nNet K/Z: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT (Komisyon/Kayma: -${cost.toFixed(2)})`);
