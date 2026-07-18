@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.8 ANALİZ + RİSK PROTOTİP GÖRÜNÜMÜ</title>
+<title>TUGAY × QUANT · v49.9 ŞİMDİ SATSAN NET (KOMİSYON DAHİL)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1337,7 +1337,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.8 📊</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.9 💵</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -5508,6 +5508,16 @@ function renderHomeSummary() {
     const change = dir === 'short' ? (pos.entryPrice - price) / pos.entryPrice : (price - pos.entryPrice) / pos.entryPrice;
     const levChange = change * lev;
     const pnlUsd = pos.amount * change * lev;
+    // v49.9: komisyon+kayma dahil "şimdi satarsan" net
+    let netNow = pnlUsd, costNow = 0;
+    try {
+      if (typeof estimateRoundTripCostLevPct === 'function') {
+        const costPct = estimateRoundTripCostLevPct(coin, lev) / 100; // kaldıraçlı yüzde → oran
+        costNow = pos.amount * costPct;
+        netNow = pnlUsd - costNow;
+      }
+    } catch(e) {}
+    const netColor = netNow >= 0 ? 'var(--green)' : 'var(--red)';
     const sl = (pos.stopLossPct != null) ? pos.stopLossPct : 0.02;
     const tp = (pos.takeProfitPct != null) ? pos.takeProfitPct : 0.05;
     const range = sl + tp || 1;
@@ -5519,6 +5529,7 @@ function renderHomeSummary() {
       <div class="home-pos-mid">
         <div class="home-pos-bar"><div class="home-pos-bar-fill" style="left:0;width:${prog}%;background:${fillColor}"></div></div>
         <div class="home-pos-meta">Giriş ${formatPrice(pos.entryPrice)} · TP +%${(tp*100).toFixed(1)} · SL -%${(sl*100).toFixed(1)}</div>
+        <div class="home-pos-meta" style="color:${netColor};margin-top:2px;">⚡ Şimdi satsan: <b>${netNow>=0?'+':''}${netNow.toFixed(2)} USDT</b> <span style="opacity:0.6">(kom. dahil)</span></div>
       </div>
       <div class="home-pos-pnl"><div class="p1" style="color:${pnlColor}">${levChange>=0?'+':''}${(levChange*100).toFixed(2)}%</div><div class="p2">${pnlUsd>=0?'+':''}${pnlUsd.toFixed(2)}$</div></div>
     </div>`;
@@ -5551,7 +5562,11 @@ function updateCoinPanelSummary(coin, data) {
   const pnlEl = document.getElementById('cpSumPnl-' + coin);
   const qSell = document.getElementById('cpQSell-' + coin);
   if (data && data.hasPos) {
-    if (lineEl) lineEl.innerHTML = `<b style="color:${data.sideColor}">${data.sideLabel}</b> · Giriş ${data.entry} · TP +%${data.tp} · SL -%${data.sl}`;
+    // v49.9: "şimdi satarsan komisyon dahil" net değerini kapalı kartta da göster
+    const netStr = (typeof data.netNow === 'number')
+      ? `<span style="color:${data.netColor||data.pnlColor}">⚡ Şimdi satsan: <b>${data.netNow>=0?'+':''}${data.netNow.toFixed(2)} USDT</b></span> <span style="opacity:0.6">(kom. dahil)</span>`
+      : '';
+    if (lineEl) lineEl.innerHTML = `<b style="color:${data.sideColor}">${data.sideLabel}</b> · Giriş ${data.entry} · TP +%${data.tp} · SL -%${data.sl}` + (netStr ? `<br>${netStr}` : '');
     if (pnlEl) pnlEl.innerHTML = `<div class="p1" style="color:${data.pnlColor}">${data.pctStr}</div><div class="p2">${data.usdStr}</div>`;
     if (qSell) qSell.disabled = false;
   } else {
@@ -6943,7 +6958,10 @@ function renderPositionCard(coin, state, currentPrice) {
     sl: (stopLoss*100).toFixed(1),
     pctStr: (change >= 0 ? '+' : '') + (leveragedChange*100).toFixed(2) + '%',
     usdStr: (pnlUsd >= 0 ? '+' : '') + pnlUsd.toFixed(2) + '$',
-    pnlColor: pnlColor
+    pnlColor: pnlColor,
+    netNow: netNow,           // v49.9: komisyon dahil şimdi satarsan net
+    netColor: netColor,
+    costNow: costNow
   });
   drawPosSparkline(coin, pos, stopLoss, takeProfit);
   renderDashboardSummary();
