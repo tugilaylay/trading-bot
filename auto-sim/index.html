@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.11 CANLI AKIŞ SADELEŞTİRİLDİ (4 COİN)</title>
+<title>TUGAY × QUANT · v49.12 GRAFİK ZAMAN DİLİMİ SEÇİCİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1174,6 +1174,16 @@
   }
   .qt-chart-price.up { color: var(--green); }
   .qt-chart-price.down { color: var(--red); }
+  /* v49.12: Ana grafik zaman dilimi seçici — coin butonlarıyla aynı dil, accent vurgulu */
+  .qt-chart-tfs { display: flex; gap: 4px; flex-basis: 100%; margin-top: 2px; }
+  .qt-tfbtn {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 3px 10px; cursor: pointer; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--muted); border-radius: 2px;
+    text-transform: uppercase; transition: all 0.15s ease;
+  }
+  .qt-tfbtn:hover { border-color: var(--accent); color: var(--text); }
+  .qt-tfbtn.active { background: var(--accent); color: var(--chip-ink); border-color: var(--accent); }
   .qt-chart-canvas-wrap { padding: 8px 6px 6px; }
   #qtHeroChart { display: block; width: 100%; height: 230px; }
   @media (max-width: 720px) { #qtHeroChart { height: 170px; } }
@@ -1345,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.11 ⚡</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.12 ⏱️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1418,7 +1428,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
   <!-- ══════════ CANLI ANA GRAFİK — sürekli yaşayan mum grafiği ══════════ -->
   <div class="qt-chart-wrap">
     <div class="qt-chart-head">
-      <span class="qt-chart-title">■ <span id="qtChartSym">BTC</span>/USDT · 1DK · CANLI</span>
+      <span class="qt-chart-title">■ <span id="qtChartSym">BTC</span>/USDT · <span id="qtChartTf">1DK</span> · CANLI</span>
       <div class="qt-chart-coins" id="qtChartCoins">
         <button class="qt-cbtn active" data-sym="BTCUSDT" data-name="BTC">BTC</button>
         <button class="qt-cbtn" data-sym="ETHUSDT" data-name="ETH">ETH</button>
@@ -1426,6 +1436,13 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
         <button class="qt-cbtn" data-sym="BNBUSDT" data-name="BNB">BNB</button>
       </div>
       <span class="qt-chart-price" id="qtChartPrice">—</span>
+      <div class="qt-chart-tfs" id="qtChartTfs">
+        <button class="qt-tfbtn active" data-iv="1m"  data-label="1DK">1dk</button>
+        <button class="qt-tfbtn" data-iv="5m"  data-label="5DK">5dk</button>
+        <button class="qt-tfbtn" data-iv="15m" data-label="15DK">15dk</button>
+        <button class="qt-tfbtn" data-iv="1h"  data-label="1S">1s</button>
+        <button class="qt-tfbtn" data-iv="4h"  data-label="4S">4s</button>
+      </div>
     </div>
     <div class="qt-chart-canvas-wrap">
       <canvas id="qtHeroChart"></canvas>
@@ -12584,9 +12601,20 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
     const symEl = document.getElementById('qtChartSym');
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let symbol = 'BTCUSDT', candles = [], lastPrice = 0, dispPrice = 0;
+    let symbol = 'BTCUSDT', interval = '1m', candles = [], lastPrice = 0, dispPrice = 0;
     let flashDir = 0, flashT = 0, t0 = performance.now();
     let klineTimer = null, priceTimer = null, rafId = null;
+
+    // v49.12: Seçilen zaman dilimine göre alt etikette gösterilecek toplam pencere süresi
+    // (80 mum × mum süresi). Ör. 5dk × 80 = 400 dk ≈ 6.7 saat gibi okunaklı bir metin üretir.
+    const TF_MINUTES = { '1m': 1, '5m': 5, '15m': 15, '1h': 60, '4h': 240 };
+    function tfWindowLabel(){
+      const total = (TF_MINUTES[interval] || 1) * 80; // dakika
+      if (total < 90) return 'SON ' + total + ' DK';
+      const hrs = total / 60;
+      if (hrs < 48) return 'SON ' + (Number.isInteger(hrs) ? hrs : hrs.toFixed(1)) + ' SAAT';
+      return 'SON ' + Math.round(hrs / 24) + ' GÜN';
+    }
 
     function hexToRgba(hex, a){
       const h = hex.trim().replace('#','');
@@ -12614,7 +12642,7 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
 
     async function fetchKlines(){
       try {
-        const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1m&limit=80`);
+        const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=80`);
         const d = await r.json();
         if (Array.isArray(d)) {
           candles = d.map(k => ({ t:+k[0], o:+k[1], h:+k[2], l:+k[3], c:+k[4] }));
@@ -12734,7 +12762,7 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
       // alt zaman etiketi
       ctx.fillStyle = MUTED; ctx.font = '500 8px IBM Plex Mono, monospace'; ctx.textAlign = 'right';
       const lt = new Date(candles[n-1].t);
-      ctx.fillText('SON 80 DK · ' + String(lt.getHours()).padStart(2,'0') + ':' + String(lt.getMinutes()).padStart(2,'0'), padL + plotW, H - 5);
+      ctx.fillText(tfWindowLabel() + ' · ' + String(lt.getHours()).padStart(2,'0') + ':' + String(lt.getMinutes()).padStart(2,'0'), padL + plotW, H - 5);
       ctx.textAlign = 'left';
     }
 
@@ -12773,6 +12801,20 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
         b.classList.add('active');
         symbol = b.dataset.sym; candles = []; lastPrice = dispPrice = 0; flashDir = 0;
         if (symEl) symEl.textContent = b.dataset.name;
+        fetchKlines(); fetchPrice();
+      });
+    });
+
+    // v49.12: zaman dilimi değiştirme butonları (1dk / 5dk / 15dk / 1s / 4s)
+    const tfEl = document.getElementById('qtChartTf');
+    document.querySelectorAll('.qt-tfbtn').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.dataset.iv === interval) return;
+        document.querySelectorAll('.qt-tfbtn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        interval = b.dataset.iv;
+        if (tfEl) tfEl.textContent = b.dataset.label;
+        candles = []; // eski mumları temizle ki yeni zaman dilimi taze çizilsin
         fetchKlines(); fetchPrice();
       });
     });
