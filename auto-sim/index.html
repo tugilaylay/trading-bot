@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v49.9 ŞİMDİ SATSAN NET (KOMİSYON DAHİL)</title>
+<title>TUGAY × QUANT · v49.11 CANLI AKIŞ SADELEŞTİRİLDİ (4 COİN)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -23,6 +23,9 @@
     --border: #c3b8a1;
     --accent: #0b7d72;
     --accent2: #6a48e8;
+    --accent-rgb: 11,125,114;
+    --green-rgb: 15,111,79;
+    --red-rgb: 177,61,61;
     --btc-color: #8C5200;
     --eth-color: #35499E;
     --green: #0f6f4f;
@@ -47,6 +50,9 @@
     --border: #263041;
     --accent: #4fd1c5;
     --accent2: #a78bfa;
+    --accent-rgb: 79,209,197;
+    --green-rgb: 52,211,153;
+    --red-rgb: 248,113,113;
     --btc-color: #E0932E;
     --eth-color: #7C93E8;
     --green: #34d399;
@@ -152,9 +158,9 @@
     padding: 28px 20px 20px;
     text-align: center;
     background:
-      radial-gradient(ellipse 100% 180px at 50% 0%, rgba(184,134,11,0.07) 0%, transparent 100%),
-      linear-gradient(180deg, rgba(184,134,11,0.02) 0%, transparent 60%);
-    border-bottom: 1px solid rgba(184,134,11,0.08);
+      radial-gradient(ellipse 100% 180px at 50% 0%, rgba(var(--accent-rgb),0.07) 0%, transparent 100%),
+      linear-gradient(180deg, rgba(var(--accent-rgb),0.02) 0%, transparent 60%);
+    border-bottom: 1px solid rgba(var(--accent-rgb),0.08);
     position: relative;
     overflow: hidden; /* v45.0: aurora perdesi dışarı taşmasın */
   }
@@ -163,7 +169,7 @@
     position: absolute;
     top: 0; left: 50%; transform: translateX(-50%);
     width: 1px; height: 40px;
-    background: linear-gradient(180deg, rgba(184,134,11,0.6), transparent);
+    background: linear-gradient(180deg, rgba(var(--accent-rgb),0.6), transparent);
   }
 
   /* v45.0: Aurora — hero'nun arkasında yavaşça nefes alan renk perdesi */
@@ -418,7 +424,7 @@
     padding: 11px 13px; color: var(--text); font-family: var(--mono); font-size: 13px;
     outline: none; transition: border-color 0.2s; width: 100%;
   }
-  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(184,134,11,0.08); }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.08); }
   input[type="password"] { letter-spacing: 2px; }
   select option { background: var(--surface2); }
 
@@ -429,14 +435,14 @@
     cursor: pointer; transition: all 0.2s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .btn-start { background: linear-gradient(135deg, #0E7C4A, #00b368); color: #021b10; }
-  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(14,124,74,0.3); }
+  .btn-start { background: linear-gradient(135deg, var(--green), #00b368); color: #021b10; }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(var(--green-rgb),0.3); }
   .btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
   .btn-stop { background: rgba(196,58,47,0.1); color: var(--red); border: 1px solid rgba(196,58,47,0.3); }
   .btn-stop:hover { background: rgba(196,58,47,0.18); }
   .btn-stop:disabled { opacity: 0.3; cursor: not-allowed; }
   .btn-backtest { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #04111a; }
-  .btn-compare { background: linear-gradient(135deg, #C98A04, #C43A2F); color: #1a0404; }
+  .btn-compare { background: linear-gradient(135deg, var(--accent2), var(--red)); color: #fff; }
   .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .compare-table th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .compare-table td { padding: 10px 12px; border-bottom: 1px solid rgba(35,45,66,0.5); font-family: var(--mono); font-size: 12px; }
@@ -463,7 +469,7 @@
   .btn-apply-signal { background: rgba(14,124,74,0.15); color: var(--green); border: 1px solid rgba(14,124,74,0.4); border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--font); }
   .btn-apply-signal:hover { background: rgba(14,124,74,0.25); }
   .btn-clear { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); flex: 0 0 auto; padding: 13px 16px; }
-  .btn-toggle-all { background: var(--surface2); color: var(--accent); border: 1px solid rgba(184,134,11,0.3); flex: 0 0 auto; padding: 9px 14px; font-size: 11px; }
+  .btn-toggle-all { background: var(--surface2); color: var(--accent); border: 1px solid rgba(var(--accent-rgb),0.3); flex: 0 0 auto; padding: 9px 14px; font-size: 11px; }
 
   /* v43.9: "Şimdi Tara" artık gri bir kutu değil — dikkat çeksin diye ayrı bir kimlik */
   .btn-scan-hero {
@@ -489,7 +495,7 @@
     background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
     padding: 10px 12px; cursor: pointer; transition: all 0.2s; user-select: none;
   }
-  .ind-select-item.active { border-color: var(--accent); background: rgba(184,134,11,0.07); }
+  .ind-select-item.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.07); }
   .ind-select-item input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
   .ind-select-item .ind-select-label { font-size: 12px; font-weight: 600; }
   .ind-select-item .ind-select-sub { font-size: 9px; color: var(--muted); display: block; }
@@ -511,7 +517,7 @@
     font-family: var(--mono); font-size: 8.5px; font-weight: 700; padding: 1px 6px;
     border-radius: 999px; margin-left: 6px; vertical-align: middle; white-space: nowrap;
   }
-  .ind-tier-badge.t1 { background: rgba(184,134,11,0.16); color: var(--accent); border: 1px solid rgba(184,134,11,0.4); }
+  .ind-tier-badge.t1 { background: rgba(var(--accent-rgb),0.16); color: var(--accent); border: 1px solid rgba(var(--accent-rgb),0.4); }
   .ind-tier-badge.t2 { background: rgba(14,124,74,0.12); color: var(--green); border: 1px solid rgba(14,124,74,0.35); }
   .ind-tier-badge.t3 { background: rgba(120,120,120,0.12); color: var(--muted); border: 1px solid var(--border); }
   .ind-stars { font-size: 9px; letter-spacing: 1px; margin-left: 5px; vertical-align: middle; }
@@ -521,7 +527,7 @@
   /* Set Sağlığı paneli */
   .set-health {
     margin-top: 12px; border: 1px solid var(--border); border-radius: 14px;
-    padding: 13px 15px; background: linear-gradient(90deg, rgba(184,134,11,0.05), rgba(91,63,168,0.05));
+    padding: 13px 15px; background: linear-gradient(90deg, rgba(var(--accent-rgb),0.05), rgba(91,63,168,0.05));
     font-size: 11px; line-height: 1.7; text-align: left;
   }
   .set-health .sh-title { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
@@ -683,6 +689,28 @@
   .acc-card:not([open]) { padding-bottom: 4px; }
   .acc-card:not([open]) > summary { margin-bottom: 0; }
   .acc-divider { height: 1px; background: var(--border); margin: 18px 0; }
+  /* v49.10: Risk yönetimi açıklamaları — dokununca açılan mini accordion (sayfa uzunluğunu kısaltır) */
+  .risk-info { margin-top: 8px; }
+  .risk-info > summary {
+    list-style: none; cursor: pointer; user-select: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 700; color: var(--accent);
+    padding: 5px 10px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    transition: background 0.15s ease;
+  }
+  .risk-info > summary:hover { background: var(--surface3); }
+  .risk-info > summary::marker { content: ''; }
+  .risk-info > summary::-webkit-details-marker { display: none; }
+  .risk-info > summary::after { content: '▶'; font-size: 8px; color: var(--muted); transition: transform 0.2s ease; }
+  .risk-info[open] > summary::after { transform: rotate(90deg); }
+  .risk-info[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .risk-info .ri-body {
+    font-size: 11px; color: var(--muted); line-height: 1.6;
+    padding: 10px 12px; margin: 0; background: var(--surface2);
+    border: 1px solid var(--border); border-top: none;
+    border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+  }
   .btn-manual {
     flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid;
     font-family: var(--font); font-size: 11.5px; font-weight: 700; cursor: pointer;
@@ -917,8 +945,8 @@
     .coin-panel.live { animation: livePulseShadow 2.4s ease-in-out infinite; }
   }
   @keyframes livePulseShadow {
-    0%, 100% { box-shadow: 0 0 18px rgba(184,134,11,0.25), 0 0 34px rgba(91,63,168,0.15); }
-    50%       { box-shadow: 0 0 30px rgba(184,134,11,0.5),  0 0 60px rgba(91,63,168,0.3); }
+    0%, 100% { box-shadow: 0 0 18px rgba(var(--accent-rgb),0.25), 0 0 34px rgba(91,63,168,0.15); }
+    50%       { box-shadow: 0 0 30px rgba(var(--accent-rgb),0.5),  0 0 60px rgba(91,63,168,0.3); }
   }
 
   /* 💚❤️ Fiyat tik animasyonu — her güncellemede yön rengiyle yanıp söner */
@@ -979,7 +1007,7 @@
     transition: all 0.25s ease;
   }
   .ind-preset-btn small { display: block; font-weight: 400; font-size: 10px; color: var(--muted); margin-top: 3px; }
-  .ind-preset-btn:hover { border-color: var(--accent); box-shadow: 0 0 16px rgba(184,134,11,0.2); transform: translateY(-1px); }
+  .ind-preset-btn:hover { border-color: var(--accent); box-shadow: 0 0 16px rgba(var(--accent-rgb),0.2); transform: translateY(-1px); }
   .ind-preset-btn.star {
     background: linear-gradient(135deg, rgba(14,124,74,0.16), rgba(91,63,168,0.14));
     border-color: rgba(14,124,74,0.5);
@@ -1005,7 +1033,7 @@
   .system-strip {
     display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
     padding: 12px 16px; margin-bottom: 18px; border-radius: 14px;
-    background: linear-gradient(90deg, rgba(184,134,11,0.05), rgba(91,63,168,0.06));
+    background: linear-gradient(90deg, rgba(var(--accent-rgb),0.05), rgba(91,63,168,0.06));
     border: 1px solid var(--border); font-family: var(--mono); font-size: 11.5px;
   }
   .sys-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; background: rgba(23,23,15,0.05); color: var(--text); }
@@ -1028,7 +1056,7 @@
      ═══════════════════════════════════════════════════════════ */
 
   body { padding: 14px; -webkit-font-smoothing: antialiased; }
-  ::selection { background: rgba(184,134,11,0.28); }
+  ::selection { background: rgba(var(--accent-rgb),0.28); }
   .container { max-width: 1180px; }
 
   /* Köşeleri düzleştir — terminal keskinliği */
@@ -1218,26 +1246,6 @@
   }
   .hero-pnl-wrap.qt-flash { animation: qtFilled 1.6s ease-out; }
 
-  /* ── Butonlar: mürekkep damgası ── */
-  .btn, .btn-toggle-all, button {
-    font-family: var(--mono) !important;
-    text-transform: uppercase; letter-spacing: 0.08em;
-  }
-  .btn { border: 1px solid var(--text) !important; font-weight: 700 !important; }
-  .btn-start { background: var(--green) !important; color: var(--chip-ink) !important; }
-  .btn-start:hover:not(:disabled) { background: #0A6B3E !important; transform: none !important; }
-  .btn-stop { background: var(--surface) !important; color: var(--red) !important; border-color: var(--red) !important; }
-  .btn:disabled { opacity: 0.35; border-color: var(--border) !important; }
-  .btn-backtest, .btn-compare {
-    background: var(--surface) !important; color: var(--text) !important;
-    border-color: var(--text) !important;
-  }
-  .btn-backtest:hover, .btn-compare:hover { background: var(--surface3) !important; }
-  .btn-toggle-all {
-    background: var(--surface2) !important; color: var(--text) !important;
-    border: 1px solid var(--border) !important; border-radius: 2px !important;
-  }
-
   /* ── Form elemanları ── */
   input, select, textarea {
     background: var(--input-bg) !important; color: var(--text) !important;
@@ -1337,7 +1345,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.9 💵</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v49.11 ⚡</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1824,47 +1832,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <input type="checkbox" onchange="toggleCoin('BNB', this.checked)">
         <span class="dot" style="background:#A67C00"></span> BNB/USDT
       </label>
-      <div style="width:100%;margin:8px 0 4px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">— Yüksek Hacimli Altcoinler —</div>
-      <label class="coin-tab" id="tabSUI">
-        <input type="checkbox" onchange="toggleCoin('SUI', this.checked)">
-        <span class="dot" style="background:#4da2ff"></span> SUI/USDT
-      </label>
-      <label class="coin-tab" id="tabAPT">
-        <input type="checkbox" onchange="toggleCoin('APT', this.checked)">
-        <span class="dot" style="background:#00c9a7"></span> APT/USDT
-      </label>
-      <label class="coin-tab" id="tabARB">
-        <input type="checkbox" onchange="toggleCoin('ARB', this.checked)">
-        <span class="dot" style="background:#28a0f0"></span> ARB/USDT
-      </label>
-      <label class="coin-tab" id="tabOP">
-        <input type="checkbox" onchange="toggleCoin('OP', this.checked)">
-        <span class="dot" style="background:#ff0420"></span> OP/USDT
-      </label>
-      <label class="coin-tab" id="tabINJ">
-        <input type="checkbox" onchange="toggleCoin('INJ', this.checked)">
-        <span class="dot" style="background:#00b2ff"></span> INJ/USDT
-      </label>
-      <label class="coin-tab" id="tabTIA">
-        <input type="checkbox" onchange="toggleCoin('TIA', this.checked)">
-        <span class="dot" style="background:#5B3FA8"></span> TIA/USDT
-      </label>
-      <label class="coin-tab" id="tabATOM">
-        <input type="checkbox" onchange="toggleCoin('ATOM', this.checked)">
-        <span class="dot" style="background:#6f7390"></span> ATOM/USDT
-      </label>
-      <label class="coin-tab" id="tabUNI">
-        <input type="checkbox" onchange="toggleCoin('UNI', this.checked)">
-        <span class="dot" style="background:#ff007a"></span> UNI/USDT
-      </label>
-      <label class="coin-tab" id="tabTON">
-        <input type="checkbox" onchange="toggleCoin('TON', this.checked)">
-        <span class="dot" style="background:#0098ea"></span> TON/USDT
-      </label>
-      <label class="coin-tab" id="tabJUP">
-        <input type="checkbox" onchange="toggleCoin('JUP', this.checked)">
-        <span class="dot" style="background:#c7b199"></span> JUP/USDT
-      </label>
     </div>
     </div>
   </details>
@@ -2040,10 +2007,13 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span style="font-size:12px;"><b>Risk Oto-Ayar:</b> Kayıp serisinde riski kıs (defans), kazanç serisinde baseline'a geri dön — asla baseline üstüne çıkmaz</span>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        <b>Gösterge Evrimi:</b> Bir gösterge, açılan pozisyonla aynı yönde oy kullandığında o işlemin karnesine yazılır. En az <b>Min. İşlem</b> kadar veri biriken bir göstergenin kazanma oranı <b>tabanın altına</b> düşer ve net PnL katkısı negatifse, gösterge <b>24 saat kızağa</b> alınır ve yerine aynı aileden, aktif setle <b>çakışmayan en yüksek yıldızlı</b> aday geçer. Tur başına en fazla 1 değişiklik yapılır (istikrar için).<br>
-        <b>Risk Oto-Ayar:</b> <b>3 ardışık kayıpta</b> → işlem miktarı %25 kısılır, kaldıraç 1 kademe düşer, min onay 1 kademe sıkılaşır. <b>3 ardışık kazançta</b> → değerler kademeli olarak senin baseline ayarlarına geri döner. Devre Kesici'nin yumuşak kardeşi: botu durdurmaz, küçültür.
-      </div>
+      <details class="risk-info">
+        <summary>ℹ️ Açıklama</summary>
+        <div class="ri-body">
+          <b>Gösterge Evrimi:</b> Bir gösterge, açılan pozisyonla aynı yönde oy kullandığında o işlemin karnesine yazılır. En az <b>Min. İşlem</b> kadar veri biriken bir göstergenin kazanma oranı <b>tabanın altına</b> düşer ve net PnL katkısı negatifse, gösterge <b>24 saat kızağa</b> alınır ve yerine aynı aileden, aktif setle <b>çakışmayan en yüksek yıldızlı</b> aday geçer. Tur başına en fazla 1 değişiklik yapılır (istikrar için).<br>
+          <b>Risk Oto-Ayar:</b> <b>3 ardışık kayıpta</b> → işlem miktarı %25 kısılır, kaldıraç 1 kademe düşer, min onay 1 kademe sıkılaşır. <b>3 ardışık kazançta</b> → değerler kademeli olarak senin baseline ayarlarına geri döner. Devre Kesici'nin yumuşak kardeşi: botu durdurmaz, küçültür.
+        </div>
+      </details>
       <div id="evoStatusBox" style="margin-top:12px;"></div>
 
       <div class="acc-divider"></div>
@@ -2055,6 +2025,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
             <option value="0.34">~1/3 (Çok Sık İşlem)</option>
             <option value="0.5">Yarısı (Dengeli)</option>
             <option value="0.6" selected>%60 (Seçici) ✅ Standart</option>
+            <option value="0.7">%70 (Daha Seçici)</option>
             <option value="0.75">%75 (Çok Seçici)</option>
             <option value="1.0">Tamamı (En Katı)</option>
           </select>
@@ -2159,7 +2130,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="atrTrailingRefPct" value="0.5" min="0.1" max="3" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Açıkken: her coin'in kendi ATR/Fiyat oranı, yukarıdaki Aktivasyon Eşiği ve Takip Mesafesi'ni <b>otomatik ölçekler</b> (0.6x–3x arası). PEPE gibi doğası gereği oynak bir coinde eşikler genişler (normal gürültü "kâr" sanılıp armed olmaz); BTC gibi sakin coinde davranış hemen hemen sabit kalır. Referans oynaklık, "normal" kabul edilen ATR/Fiyat yüzdesidir — bir coin bunun 2 katı oynaksa eşikler de ~2 katına çıkar.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Açıkken: her coin'in kendi ATR/Fiyat oranı, yukarıdaki Aktivasyon Eşiği ve Takip Mesafesi'ni <b>otomatik ölçekler</b> (0.6x–3x arası). PEPE gibi doğası gereği oynak bir coinde eşikler genişler (normal gürültü "kâr" sanılıp armed olmaz); BTC gibi sakin coinde davranış hemen hemen sabit kalır. Referans oynaklık, "normal" kabul edilen ATR/Fiyat yüzdesidir — bir coin bunun 2 katı oynaksa eşikler de ~2 katına çıkar.</div>
+        </details>
       <div class="form-grid" style="margin-top:10px;">
         <div class="form-group">
           <label style="display:flex;align-items:center;gap:6px;">
@@ -2172,8 +2146,14 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="trailingConfirmTicks" value="2" min="1" max="10" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Açıkken: İz Süren Stop'un kapanış tetiği (mesafe VEYA başa-baş tabanı), tek bir anlık tikte değil, <b>art arda N tick boyunca kesintisiz</b> sürerse kapanışı gerçekleştirir. Bu bir zaman kilidi DEĞİLDİR — coin isterse birkaç saniyede, isterse dakikalarca sürede çıkabilir; tek şart anlık titremeyle değil gerçek bir dönüşle kapanmasıdır. Sinyal çıkışındaki "Gürültü Filtresi" ile aynı mantık, trailing'e uygulanmış hali.</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Pozisyon kâra geçtikçe stop seviyesi arkasından gelir ve kazancın bir kısmını kilitler — Aktivasyon Eşiği kadar gerçek kâr oluşmadan devreye girmez.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Açıkken: İz Süren Stop'un kapanış tetiği (mesafe VEYA başa-baş tabanı), tek bir anlık tikte değil, <b>art arda N tick boyunca kesintisiz</b> sürerse kapanışı gerçekleştirir. Bu bir zaman kilidi DEĞİLDİR — coin isterse birkaç saniyede, isterse dakikalarca sürede çıkabilir; tek şart anlık titremeyle değil gerçek bir dönüşle kapanmasıdır. Sinyal çıkışındaki "Gürültü Filtresi" ile aynı mantık, trailing'e uygulanmış hali.</div>
+        </details>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Pozisyon kâra geçtikçe stop seviyesi arkasından gelir ve kazancın bir kısmını kilitler — Aktivasyon Eşiği kadar gerçek kâr oluşmadan devreye girmez.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2200,7 +2180,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="mathGateMinRR" value="1.5" min="0.5" max="5" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Her giriş öncesi iki soru sorar: <b>1)</b> TP hedefi, komisyon+kayma maliyetinin en az bu katı mı? Değilse işlem kazansa bile borsaya çalışır. <b>2)</b> Ödül/Risk yeterli mi? 1.5 oranında %40 kazanma bile kârlıdır; altında matematik kaybeder. Sığ coinlerde kayma otomatik yüksek hesaplanır — kapı onları doğal olarak eler.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Her giriş öncesi iki soru sorar: <b>1)</b> TP hedefi, komisyon+kayma maliyetinin en az bu katı mı? Değilse işlem kazansa bile borsaya çalışır. <b>2)</b> Ödül/Risk yeterli mi? 1.5 oranında %40 kazanma bile kârlıdır; altında matematik kaybeder. Sığ coinlerde kayma otomatik yüksek hesaplanır — kapı onları doğal olarak eler.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2223,7 +2206,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="ratchetLockRatio" value="60" min="10" max="95" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Senin "kârda elle kapatma" davranışının otomatiği. Kaldıraçlı kâr her <b>Basamak</b> katına ulaştığında (%1, %2, %3…) bir <b>kâr tabanı</b> kilitlenir: bir önceki basamak + kilitlenen pay. Örnek (varsayılan): kâr +%1'e dokunur → taban <b>+%0.6</b>. +%2'ye dokunur → taban <b>+%1.6</b>. Fiyat tabana geri düşerse pozisyon <b>O KÂRLA</b> kapanır — asla başa başa veya zarara dönmez. İz Süren Stop'tan farkı: trailing'in garantili tabanı sadece başa baştı; merdivenin tabanı <b>gerçek kâr</b>. Teyit Turu açıksa merdiven kapanışı da aynı ardışık tick teyidini kullanır (anlık iğnelere kanmaz). Trailing ile birlikte çalışır — hangisi önce tetiklenirse.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Senin "kârda elle kapatma" davranışının otomatiği. Kaldıraçlı kâr her <b>Basamak</b> katına ulaştığında (%1, %2, %3…) bir <b>kâr tabanı</b> kilitlenir: bir önceki basamak + kilitlenen pay. Örnek (varsayılan): kâr +%1'e dokunur → taban <b>+%0.6</b>. +%2'ye dokunur → taban <b>+%1.6</b>. Fiyat tabana geri düşerse pozisyon <b>O KÂRLA</b> kapanır — asla başa başa veya zarara dönmez. İz Süren Stop'tan farkı: trailing'in garantili tabanı sadece başa baştı; merdivenin tabanı <b>gerçek kâr</b>. Teyit Turu açıksa merdiven kapanışı da aynı ardışık tick teyidini kullanır (anlık iğnelere kanmaz). Trailing ile birlikte çalışır — hangisi önce tetiklenirse.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2242,7 +2228,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="tp2Pct" value="60" min="30" max="90" step="10" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">TP'ye ulaşınca pozisyonun belirttiğin yüzdesi kapatılıp kâr garantilenir, kalan "runner" kısım İz Süren Stop ile trendde koşmaya devam eder (İz Süren Stop açık olmalı).</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">TP'ye ulaşınca pozisyonun belirttiğin yüzdesi kapatılıp kâr garantilenir, kalan "runner" kısım İz Süren Stop ile trendde koşmaya devam eder (İz Süren Stop açık olmalı).</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2255,7 +2244,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Son 50 işlemdeki istatistiksel üstünlüğe (yarım Kelly) göre pozisyon boyutu 0.5x–1.5x arası otomatik ölçeklenir; en az 10 kapanmış işlem gerekir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Son 50 işlemdeki istatistiksel üstünlüğe (yarım Kelly) göre pozisyon boyutu 0.5x–1.5x arası otomatik ölçeklenir; en az 10 kapanmış işlem gerekir.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2268,7 +2260,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Kâr eğrisi kendi 10 işlemlik ortalamasının altına inince (soğuk dönem) yeni pozisyonlar yarı boyutla açılır, eğri toparlanınca normale döner.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Kâr eğrisi kendi 10 işlemlik ortalamasının altına inince (soğuk dönem) yeni pozisyonlar yarı boyutla açılır, eğri toparlanınca normale döner.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2287,7 +2282,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="timeStopCandles" value="12" min="2" max="100" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirtilen mum sayısı boyunca ne TP'ye ne SL'e giden ve hâlâ başa baş altındaki pozisyon otomatik kapatılır — kârdaki pozisyona asla dokunmaz.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Belirtilen mum sayısı boyunca ne TP'ye ne SL'e giden ve hâlâ başa baş altındaki pozisyon otomatik kapatılır — kârdaki pozisyona asla dokunmaz.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2300,7 +2298,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Gerçek para son 60 saniyede net satıyorsa LONG, net alıyorsa SHORT açılmaz — göstergelerden bağımsız emir akışı (CVD) teyidi.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Gerçek para son 60 saniyede net satıyorsa LONG, net alıyorsa SHORT açılmaz — göstergelerden bağımsız emir akışı (CVD) teyidi.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2312,7 +2313,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">L/S oranı aşırı uçtaysa (≥3 veya ≤0.33) kalabalıkla aynı yöne girilmez — squeeze koruması.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">L/S oranı aşırı uçtaysa (≥3 veya ≤0.33) kalabalıkla aynı yöne girilmez — squeeze koruması.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2324,7 +2328,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Göstergeler geçmişi anlatır, akış şu anı: bot girişten önce CVD (gerçek alış/satış), OI değişimi ve L/S oranını tek skorda birleştirir — alıcılar net sahadayken SHORT, satıcılar sahadayken LONG açılmaz; eşiği bot kanıt ağırlığıyla kendisi belirler, veri yoksa karışmaz.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Göstergeler geçmişi anlatır, akış şu anı: bot girişten önce CVD (gerçek alış/satış), OI değişimi ve L/S oranını tek skorda birleştirir — alıcılar net sahadayken SHORT, satıcılar sahadayken LONG açılmaz; eşiği bot kanıt ağırlığıyla kendisi belirler, veri yoksa karışmaz.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2336,7 +2343,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Her gerçek girişte iki gölge strateji aynı pozisyonu sanal kopyalar ve kendi çıkış kurallarıyla yönetir — sonuçlar Analiz → Strateji Arenası'nda birikir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Her gerçek girişte iki gölge strateji aynı pozisyonu sanal kopyalar ve kendi çıkış kurallarıyla yönetir — sonuçlar Analiz → Strateji Arenası'nda birikir.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2372,7 +2382,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="perCoinLossLimitPct" value="20" min="5" max="300" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Bugün limit kadar zarar eden coin tek başına durur, diğerleri çalışmaya devam eder.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Bugün limit kadar zarar eden coin tek başına durur, diğerleri çalışmaya devam eder.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2390,7 +2403,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="maxPositionsCount" value="2" min="1" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Aynı anda en fazla belirttiğin sayıda pozisyon açılabilir — coinler yüksek korelasyonlu olduğu için fazlası çeşitlendirme değil, aynı riskin tekrarıdır.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Aynı anda en fazla belirttiğin sayıda pozisyon açılabilir — coinler yüksek korelasyonlu olduğu için fazlası çeşitlendirme değil, aynı riskin tekrarıdır.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2415,7 +2431,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="btcCorrThreshold" value="3" step="0.5" min="0.5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">BTC son 4 saatte eşik kadar düşüyorsa hiçbir coinde LONG açılmaz — BTC düşerken altcoin LONG'u en sık zarar kaynağıdır.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">BTC son 4 saatte eşik kadar düşüyorsa hiçbir coinde LONG açılmaz — BTC düşerken altcoin LONG'u en sık zarar kaynağıdır.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2440,7 +2459,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="fgThreshold" value="25" step="5" min="5" max="50" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Fear &amp; Greed endeksi eşiğin altındayken (Aşırı Korku) LONG açılmaz; endeks 30 dk'da bir güncellenir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Fear &amp; Greed endeksi eşiğin altındayken (Aşırı Korku) LONG açılmaz; endeks 30 dk'da bir güncellenir.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2459,7 +2481,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="fundingThreshold" value="0.05" min="0.01" max="0.3" step="0.01" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Funding oranı +eşiğin üstündeyse yeni LONG, -eşiğin altındaysa yeni SHORT engellenir — kalabalığın tersinde durma koruması.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Funding oranı +eşiğin üstündeyse yeni LONG, -eşiğin altındaysa yeni SHORT engellenir — kalabalığın tersinde durma koruması.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2478,7 +2503,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="circuitBreakerCount" value="4" min="2" max="15" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirttiğin sayıda üst üste kayıpta bot tüm coinlerde otomatik durur, ekranda uyarır ve Telegram'a haber verir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Belirttiğin sayıda üst üste kayıpta bot tüm coinlerde otomatik durur, ekranda uyarır ve Telegram'a haber verir.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2497,7 +2525,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="lossCooldownMin" value="45" min="10" max="240" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">SL/likidasyonla zararlı kapanan coin belirttiğin süre boyunca yeni pozisyona kapatılır — aynı kaotik harekete hemen geri girme ("revenge trade") döngüsünü kırar.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">SL/likidasyonla zararlı kapanan coin belirttiğin süre boyunca yeni pozisyona kapatılır — aynı kaotik harekete hemen geri girme ("revenge trade") döngüsünü kırar.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2512,7 +2543,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="manualCooldownMin" value="45" min="10" max="240" step="5" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Elle kapattığın coinde belirttiğin süre boyunca otomatik pozisyon açılmaz; süre dolunca kendiliğinden kalkar.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Elle kapattığın coinde belirttiğin süre boyunca otomatik pozisyon açılmaz; süre dolunca kendiliğinden kalkar.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2535,7 +2569,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="time" id="tradingHoursEnd" value="23:00" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Belirttiğin saat aralığı dışında yeni pozisyon açılmaz (açık pozisyonlar normal yönetilir) — düşük likidite saatlerinde iğneler artar.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Belirttiğin saat aralığı dışında yeni pozisyon açılmaz (açık pozisyonlar normal yönetilir) — düşük likidite saatlerinde iğneler artar.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2553,7 +2590,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="slippagePct" value="0.02" min="0" max="0.5" step="0.01" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Komisyon + kayma her işlemde K/Z'dan otomatik düşülür; kayma coin'in 24s hacmine göre otomatik ölçeklenir (BTC ×1, sığ coin ×5'e kadar).</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Komisyon + kayma her işlemde K/Z'dan otomatik düşülür; kayma coin'in 24s hacmine göre otomatik ölçeklenir (BTC ×1, sığ coin ×5'e kadar).</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2571,7 +2611,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="atrReferencePct" value="1.5" min="0.1" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">İşlem miktarı her coin'in oynaklığına (ATR) göre 0.3x–2x arası otomatik ölçeklenir — amaç her coin'de benzer dolar riski taşımak.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">İşlem miktarı her coin'in oynaklığına (ATR) göre 0.3x–2x arası otomatik ölçeklenir — amaç her coin'de benzer dolar riski taşımak.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2593,9 +2636,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="atrTpMultiplier" value="2.5" min="1" max="6" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        Her pozisyonun SL/TP'si giriş anındaki ATR'ye göre hesaplanır ve kapanana kadar sabit kalır — önerilen SL=1.5×ATR, TP=2.5×ATR (güvenlik kilidi aşırı değerleri otomatik düzeltir).
-      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Her pozisyonun SL/TP'si giriş anındaki ATR'ye göre hesaplanır ve kapanana kadar sabit kalır — önerilen SL=1.5×ATR, TP=2.5×ATR (güvenlik kilidi aşırı değerleri otomatik düzeltir).</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2617,9 +2661,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="exhaustionAtrMult" value="1.5" min="0.5" max="5" step="0.1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        Fiyat son N mumun dibine/tepesine emniyet mesafesinden yakınsa veya EMA20'den aşırı kopmuşsa o yönde giriş reddedilir — dipten SHORT, tepeden LONG açılmaz; her ret nedeniyle Red Defteri'ne yazılır.
-      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Fiyat son N mumun dibine/tepesine emniyet mesafesinden yakınsa veya EMA20'den aşırı kopmuşsa o yönde giriş reddedilir — dipten SHORT, tepeden LONG açılmaz; her ret nedeniyle Red Defteri'ne yazılır.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2637,9 +2682,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="maxLevLossPct" value="3" min="2" max="30" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
-        Kaldıraçlı zarar bu değere ulaşırsa pozisyon yeni mum beklenmeden anında kapatılır — ATR SL'den bağımsız kritik güvenlik ağı.
-      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Kaldıraçlı zarar bu değere ulaşırsa pozisyon yeni mum beklenmeden anında kapatılır — ATR SL'den bağımsız kritik güvenlik ağı.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2723,7 +2769,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="entryConfirmTicks" value="2" min="2" max="10" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Giriş sinyalinin art arda belirttiğin sayıda tick sürmesi gerekir — anlık sıçramada değil, süregelen eğilimde girersin.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Giriş sinyalinin art arda belirttiğin sayıda tick sürmesi gerekir — anlık sıçramada değil, süregelen eğilimde girersin.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2741,7 +2790,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <input type="number" id="exitConfirmTicks" value="2" min="2" step="1" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Ters sinyalin art arda belirttiğin sayıda tick sürmesi gerekir — tek seferlik gösterge sıçramasıyla erken çıkış önlenir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Ters sinyalin art arda belirttiğin sayıda tick sürmesi gerekir — tek seferlik gösterge sıçramasıyla erken çıkış önlenir.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2762,7 +2814,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="btn-row" style="margin-top:8px;">
         <button class="btn btn-toggle-all" style="flex:1" onclick="playTradeFeedback('buy'); playTradeFeedback('sell');">🔊 Test Et</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Pozisyon açılış/kapanışlarında bip + titreşim verir (titreşim iOS Safari'de desteklenmez, sadece Android'de çalışır).</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Pozisyon açılış/kapanışlarında bip + titreşim verir (titreşim iOS Safari'de desteklenmez, sadece Android'de çalışır).</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2775,7 +2830,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">Sekme arka plandayken bile işlem bildirimleri işletim sistemi bildirimi olarak gösterilir; ilk açışta tarayıcı izin ister.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">Sekme arka plandayken bile işlem bildirimleri işletim sistemi bildirimi olarak gösterilir; ilk açışta tarayıcı izin ister.</div>
+        </details>
 
       <div class="acc-divider"></div>
 
@@ -2808,7 +2866,10 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">İşlemler Telegram'a anlık bildirim olarak gider (sekme açık olmalı); haftalık rapor açıksa Pazar akşamı haftanın özeti gönderilir.</div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body">İşlemler Telegram'a anlık bildirim olarak gider (sekme açık olmalı); haftalık rapor açıksa Pazar akşamı haftanın özeti gönderilir.</div>
+        </details>
       </details>
       <!-- ═══ /Bildirimler ═══ -->
 
@@ -2821,6 +2882,19 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
   <!-- ═══ v41.2 SEKME PANELİ: ANALİZ ═══ -->
   <div class="qt-tab-panel" data-tab="analytics" id="tabPanel-analytics">
+
+  <!-- ═══ v49.10: 🚦 RED DEFTERİ — kapılar ne kazandırıyor? (Analiz sayfasının en üstüne taşındı) ═══ -->
+  <details class="setup-card acc-card" data-accid="v46rej" open>
+    <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <span style="font-weight:800;">🚦 Red Defteri — Kapılar Ne Kazandırıyor?</span>
+      <span style="font-size:10px;color:var(--muted);" id="v46RejCount">0 kayıt</span>
+    </summary>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0;">Her engellenen sinyal buraya işlenir. 30 dk sonra fiyat kontrol edilir: giriş yapılsaydı ne olurdu? Böylece her filtrenin <b>gerçek değeri</b> ölçülür — kaçınılan zarar mı, kaçırılan kâr mı? Ölçemediğini optimize edemezsin.</div>
+    <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
+    <div class="ra-section-title">Son Redler</div>
+    <div id="v46RejRecent" style="font-family:var(--mono);font-size:10.5px;line-height:1.7;"></div>
+    <button class="btn-toggle-all" style="width:100%;padding:9px;margin-top:10px;font-size:11px;" onclick="if(confirm('Red Defteri tamamen silinsin mi?')){v46Rej.items=[];v46RejSave();renderRejectionLedger();}">🗑️ Defteri Temizle</button>
+  </details>
 
   <!-- ═══ v49.8: Prototip stili ANALİZ özeti — canlı veriden ═══ -->
   <div class="an-eyebrow">Performans özeti</div>
@@ -2867,16 +2941,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
             <option value="ETH">ETH/USDT</option>
             <option value="SOL">SOL/USDT</option>
             <option value="BNB">BNB/USDT</option>
-            <option value="SUI">SUI/USDT</option>
-            <option value="APT">APT/USDT</option>
-            <option value="ARB">ARB/USDT</option>
-            <option value="OP">OP/USDT</option>
-            <option value="INJ">INJ/USDT</option>
-            <option value="TIA">TIA/USDT</option>
-            <option value="ATOM">ATOM/USDT</option>
-            <option value="UNI">UNI/USDT</option>
-            <option value="TON">TON/USDT</option>
-            <option value="JUP">JUP/USDT</option>
           </select>
         </div>
         <div class="form-group">
@@ -2895,8 +2959,11 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     <!-- Strateji Optimizer -->
     <div class="setup-card" style="margin-top:18px;border-color:rgba(91,63,168,0.35);">
       <div class="card-title" style="color:var(--accent2);">🎯 Strateji Optimizer</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        10 hazır kombinasyon × 3 ADX eşiği × 3 Min Onay% = <b>90 parametre seti</b> otomatik test edilir. Komisyon + kayma dahil, gerçek Binance verisiyle. Skora göre sıralı tablo + tavsiye.
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">
+        Ne işe yarar: seçtiğin coin için <b>10 hazır gösterge kombinasyonu × 3 ADX eşiği × 3 Min Onay%</b> = <b>90 parametre seti</b>, gerçek Binance verisiyle (komisyon + kayma dahil) otomatik test edilir. Sonunda en yüksek skorlu 20 set tablo halinde sıralanır ve en iyisi ayrıca özetlenir.
+      </div>
+      <div style="font-size:11px;color:var(--accent);margin-bottom:14px;line-height:1.6;background:rgba(106,72,232,0.08);border:1px solid rgba(106,72,232,0.25);border-radius:8px;padding:8px 10px;">
+        💡 Sonuç tablosundaki her satırda <b>✅ Bu Ayarları Uygula</b> butonu var — tıklayınca o kombinasyonun göstergeleri, ADX eşiği ve Min Onay% değeri Ayarlar sekmesine otomatik yazılır. Elle kopyalamana gerek yok.
       </div>
       <div class="form-grid" style="margin-bottom:14px;">
         <div class="form-group">
@@ -2906,16 +2973,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
             <option value="ETH">ETH/USDT</option>
             <option value="SOL">SOL/USDT</option>
             <option value="BNB">BNB/USDT</option>
-            <option value="SUI">SUI/USDT</option>
-            <option value="APT">APT/USDT</option>
-            <option value="ARB">ARB/USDT</option>
-            <option value="OP">OP/USDT</option>
-            <option value="INJ">INJ/USDT</option>
-            <option value="TIA">TIA/USDT</option>
-            <option value="ATOM">ATOM/USDT</option>
-            <option value="UNI">UNI/USDT</option>
-            <option value="TON">TON/USDT</option>
-            <option value="JUP">JUP/USDT</option>
           </select>
         </div>
       </div>
@@ -3038,7 +3095,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">
         ⬇️ Yedek İndir (.json)
       </button>
-      <button onclick="document.getElementById('backupFileInput').click()" style="background:rgba(184,134,11,0.12);color:var(--accent);border:1px solid rgba(184,134,11,0.35);
+      <button onclick="document.getElementById('backupFileInput').click()" style="background:rgba(var(--accent-rgb),0.12);color:var(--accent);border:1px solid rgba(var(--accent-rgb),0.35);
           border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">
         ⬆️ Yedekten Geri Yükle
       </button>
@@ -3095,18 +3152,6 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       📌 Bu bir tavsiye değil, sadece bir <b>kontrol listesidir</b> — nihai karar her zaman senin. Ben ne yatırım danışmanıyım ne de finansal tavsiye verebilirim; bu sadece botun kendi geçmiş verisine dayanan objektif bir özet.
     </div>
   </div>
-  <!-- ═══ v46.0: 🚦 RED DEFTERİ — kapılar ne kazandırıyor? ═══ -->
-  <details class="setup-card acc-card" data-accid="v46rej" open>
-    <summary style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
-      <span style="font-weight:800;">🚦 Red Defteri — Kapılar Ne Kazandırıyor?</span>
-      <span style="font-size:10px;color:var(--muted);" id="v46RejCount">0 kayıt</span>
-    </summary>
-    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0;">Her engellenen sinyal buraya işlenir. 30 dk sonra fiyat kontrol edilir: giriş yapılsaydı ne olurdu? Böylece her filtrenin <b>gerçek değeri</b> ölçülür — kaçınılan zarar mı, kaçırılan kâr mı? Ölçemediğini optimize edemezsin.</div>
-    <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
-    <div class="ra-section-title">Son Redler</div>
-    <div id="v46RejRecent" style="font-family:var(--mono);font-size:10.5px;line-height:1.7;"></div>
-    <button class="btn-toggle-all" style="width:100%;padding:9px;margin-top:10px;font-size:11px;" onclick="if(confirm('Red Defteri tamamen silinsin mi?')){v46Rej.items=[];v46RejSave();renderRejectionLedger();}">🗑️ Defteri Temizle</button>
-  </details>
 
   <!-- ═══ v46.0: 🗓️ SAAT×GÜN ISI HARİTASI ═══ -->
   <details class="setup-card acc-card" data-accid="v46heat" open>
@@ -3267,6 +3312,23 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 // Para kazandıran ayarlar: ADX≥25 filtresi, 1:3 TP/SL, max 2 pozisyon, 2 saat min tutma
 // ═══════════════════════════════════════════════
 
+// v49.10: Grafik renklerini CSS temasından okuyan yardımcılar — kağıt/gece
+// modu geçişinde mum/eğri renklerinin de teması takip etmesi için (önceden
+// bazı grafikler #0E7C4A/#C43A2F gibi sabit renklere kilitliydi, gece
+// modunda "neon" hissi bozuluyordu).
+function qtVar(name, fallback) {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  } catch(e) { return fallback; }
+}
+function qtRGBA(rgbVarName, alpha, fallbackRgb) {
+  return `rgba(${qtVar(rgbVarName, fallbackRgb)},${alpha})`;
+}
+function qtPnlColor(isPositive) {
+  return isPositive ? qtVar('--green', '#0E7C4A') : qtVar('--red', '#C43A2F');
+}
+
 // Mum süresine göre dengeli minimum tutma süresi (gösterge bazlı çıkış için).
 function getMinHoldMs() {
   const iv = document.getElementById('interval').value;
@@ -3280,17 +3342,10 @@ const COIN_CONFIG = {
   ETH:  { symbol: 'ETHUSDT',  name: 'ETH/USDT',  color: '#3F5BC7', short: 'E'  },
   SOL:  { symbol: 'SOLUSDT',  name: 'SOL/USDT',  color: '#6D3FC7', short: 'S'  },
   BNB:  { symbol: 'BNBUSDT',  name: 'BNB/USDT',  color: '#A67C00', short: 'N'  },
-  // ── Yüksek Hacimli Gerçek Proje Altcoinler (v36.6) ──
-  SUI:  { symbol: 'SUIUSDT',  name: 'SUI/USDT',  color: '#4da2ff', short: 'SU' },
-  APT:  { symbol: 'APTUSDT',  name: 'APT/USDT',  color: '#00c9a7', short: 'AP' },
-  ARB:  { symbol: 'ARBUSDT',  name: 'ARB/USDT',  color: '#28a0f0', short: 'AR' },
-  OP:   { symbol: 'OPUSDT',   name: 'OP/USDT',   color: '#ff0420', short: 'OP' },
-  INJ:  { symbol: 'INJUSDT',  name: 'INJ/USDT',  color: '#00b2ff', short: 'IN' },
-  TIA:  { symbol: 'TIAUSDT',  name: 'TIA/USDT',  color: '#5B3FA8', short: 'TI' },
-  ATOM: { symbol: 'ATOMUSDT', name: 'ATOM/USDT', color: '#6f7390', short: 'AT' },
-  UNI:  { symbol: 'UNIUSDT',  name: 'UNI/USDT',  color: '#ff007a', short: 'UN' },
-  TON:  { symbol: 'TONUSDT',  name: 'TON/USDT',  color: '#0098ea', short: 'TO' },
-  JUP:  { symbol: 'JUPUSDT',  name: 'JUP/USDT',  color: '#c7b199', short: 'JU' },
+  // v49.11: Yüksek hacimli altcoinler (SUI/APT/ARB/OP/INJ/TIA/ATOM/UNI/TON/JUP)
+  // canlı WebSocket akışından çıkarıldı — kullanılmıyorlardı, boşuna fiyat çekiyorlardı.
+  // Tarama listesinde (SCANNER_COINS) hâlâ mevcutlar; biri gerektiğinde (eski açık
+  // pozisyon veya tarama ile ekleme) COIN_CONFIG kendini oradan otomatik onarır.
 };
 
 // ───────── Çok Coinli Tarama Listesi (15 popüler coin) ─────────
@@ -7488,9 +7543,9 @@ function drawChart() {
   ctx.setLineDash([]);
 
   const lastPnl = values[values.length-1];
-  const lineColor = lastPnl >= 0 ? '#0E7C4A' : '#C43A2F';
+  const lineColor = qtPnlColor(lastPnl >= 0);
   const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, lastPnl >= 0 ? 'rgba(14,124,74,0.25)' : 'rgba(196,58,47,0.25)');
+  grad.addColorStop(0, lastPnl >= 0 ? qtRGBA('--green-rgb', 0.25, '14,124,74') : qtRGBA('--red-rgb', 0.25, '196,58,47'));
   grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   ctx.beginPath();
@@ -8438,9 +8493,9 @@ function drawMiniEquityChart() {
   }));
 
   const lastPnl = values[values.length - 1];
-  const lineColor = lastPnl >= 0 ? '#0E7C4A' : '#C43A2F';
+  const lineColor = qtPnlColor(lastPnl >= 0);
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, lastPnl >= 0 ? 'rgba(14,124,74,0.3)' : 'rgba(196,58,47,0.3)');
+  grad.addColorStop(0, lastPnl >= 0 ? qtRGBA('--green-rgb', 0.3, '14,124,74') : qtRGBA('--red-rgb', 0.3, '196,58,47'));
   grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   ctx.beginPath();
@@ -8483,9 +8538,9 @@ function drawCoinSparkline(coin, data) {
   }));
 
   const up = data[data.length - 1] >= data[0];
-  const color = up ? '#0E7C4A' : '#C43A2F';
+  const color = qtPnlColor(up);
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, up ? 'rgba(14,124,74,0.22)' : 'rgba(196,58,47,0.22)');
+  grad.addColorStop(0, up ? qtRGBA('--green-rgb', 0.22, '14,124,74') : qtRGBA('--red-rgb', 0.22, '196,58,47'));
   grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   ctx.beginPath();
@@ -8564,7 +8619,7 @@ function drawCoinLiveChart(coin, klines, livePrice, state) {
     const o = parseFloat(k[1]), hi = parseFloat(k[2]), lo = parseFloat(k[3]), c = parseFloat(k[4]);
     const up = c >= o;
     const x = i * cw + cw / 2;
-    const col = up ? '#0E7C4A' : '#C43A2F';
+    const col = qtPnlColor(up);
     // Fitil
     ctx.strokeStyle = col; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x, yOf(hi)); ctx.lineTo(x, yOf(lo)); ctx.stroke();
@@ -8587,22 +8642,22 @@ function drawCoinLiveChart(coin, klines, livePrice, state) {
     ctx.fillText(label, plotW + 3, y + 3);
   }
   if (pos) {
-    levelLine(tpP,    '#0E7C4A', '🎯TP');
-    levelLine(entryP, '#C98A04', '▶GİR');
-    levelLine(slP,    '#C43A2F', '🛑SL');
+    levelLine(tpP,    qtVar('--green', '#0E7C4A'), '🎯TP');
+    levelLine(entryP, qtVar('--accent2', '#C98A04'), '▶GİR');
+    levelLine(slP,    qtVar('--red', '#C43A2F'), '🛑SL');
   }
 
   // Canlı fiyat çizgisi + nabız noktası (zamanla yumuşak nabız — tick'ler zaten sık geliyor)
   const lp = livePrice || parseFloat(view[view.length - 1][4]);
   const lpy = yOf(lp);
   const prevClose = parseFloat(view[view.length - 1][1]);
-  const lpCol = lp >= prevClose ? '#B8860B' : '#ff8fa0';
-  ctx.strokeStyle = 'rgba(184,134,11,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+  const lpCol = lp >= prevClose ? qtVar('--accent', '#B8860B') : qtVar('--red', '#ff8fa0');
+  ctx.strokeStyle = qtRGBA('--accent-rgb', 0.35, '184,134,11'); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
   ctx.beginPath(); ctx.moveTo(0, lpy); ctx.lineTo(plotW, lpy); ctx.stroke();
   ctx.setLineDash([]);
   const pulse = 3 + 1.6 * Math.abs(Math.sin(Date.now() / 450));
   ctx.beginPath(); ctx.arc(plotW - 4, lpy, pulse + 3, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(184,134,11,0.15)'; ctx.fill();
+  ctx.fillStyle = qtRGBA('--accent-rgb', 0.15, '184,134,11'); ctx.fill();
   ctx.beginPath(); ctx.arc(plotW - 4, lpy, pulse, 0, Math.PI * 2);
   ctx.fillStyle = lpCol; ctx.shadowColor = lpCol; ctx.shadowBlur = 10; ctx.fill();
   ctx.shadowBlur = 0;
@@ -10103,8 +10158,8 @@ function drawGlobalEquityChart() {
 
   const finalVal = equityData[equityData.length - 1];
   const isPositive = finalVal >= 0;
-  const mainColor  = isPositive ? '#0E7C4A' : '#C43A2F';
-  const glowAlpha  = isPositive ? 'rgba(14,124,74,' : 'rgba(196,58,47,';
+  const mainColor  = qtPnlColor(isPositive);
+  const glowAlpha  = isPositive ? `rgba(${qtVar('--green-rgb','14,124,74')},` : `rgba(${qtVar('--red-rgb','196,58,47')},`;
 
   // Arka plan
   ctx.fillStyle = 'rgba(247,244,234,0)';
@@ -11676,7 +11731,7 @@ function drawEquitySvg(equityCurve, width = 220, height = 44) {
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
   const finalVal = equityCurve[equityCurve.length - 1];
-  const lineColor = finalVal >= 0 ? '#0E7C4A' : '#C43A2F';
+  const lineColor = qtPnlColor(finalVal >= 0);
   // Sıfır çizgisi (başlangıç seviyesi)
   const zeroY = height - pad - ((0 - min) / range) * (height - pad * 2);
   const zeroLine = (zeroY >= 0 && zeroY <= height)
@@ -12063,6 +12118,9 @@ async function runBacktestAll() {
 // ───────── Strateji Optimizer (Parametre Tarama) ─────────
 // Tüm hazır kombinasyonları × ADX eşiğini × minConfirmPct'yi test eder.
 // DOM'a dokunmaz — overrides parametresi ile simulateStrategy'ye temiz şekilde geçer.
+// v49.10: Optimizer sonuçlarını "Uygula" butonları için tutan hafıza
+let optimizerLastResults = [];
+
 async function runOptimizer() {
   const coin = document.getElementById('optimizerCoin').value;
   const cfg = COIN_CONFIG[coin];
@@ -12123,6 +12181,7 @@ async function runOptimizer() {
     // Skora göre sırala (yüksekten düşüğe)
     results.sort((a, b) => b.strategyScore - a.strategyScore);
     const top = results.slice(0, 20);
+    optimizerLastResults = top; // v49.10: "Bu Ayarları Uygula" butonları için sakla
 
     let html = `
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">
@@ -12141,6 +12200,7 @@ async function runOptimizer() {
           <th>P.Factor</th>
           <th>MaxDD%</th>
           <th>⭐ Skor</th>
+          <th></th>
         </tr></thead>
         <tbody>`;
 
@@ -12161,6 +12221,7 @@ async function runOptimizer() {
         <td style="color:${pfColor}">${r.profitFactor.toFixed(2)}x</td>
         <td style="color:${ddColor}">%${r.maxDrawdownPct.toFixed(1)}</td>
         <td style="color:${scoreColor};font-weight:700;">${r.strategyScore.toFixed(3)}</td>
+        <td><button class="btn-toggle-all" style="padding:5px 8px;font-size:10px;white-space:nowrap;" onclick="applyOptimizerRow(${i})">✅ Uygula</button></td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -12175,6 +12236,7 @@ async function runOptimizer() {
         <b>${best.combo}</b> · ADX Min: <b>${best.adxMin}</b> · Min Onay: <b>%${(best.minConfirmPct*100).toFixed(0)}</b><br>
         ${best.trades} işlem · %${best.winRate.toFixed(1)} kazanma · <span style="color:${best.totalPnl>=0?'var(--green)':'var(--red)'}">${best.totalPnl>=0?'+':''}${best.totalPnl.toFixed(2)} $</span> · PF: ${best.profitFactor.toFixed(2)}x · MaxDD: %${best.maxDrawdownPct.toFixed(1)}<br>
         <span style="color:var(--muted);font-size:11px;">Göstergeler: ${best.indicators.map(id=>INDICATOR_DEFS[id]?.name||id).join(' + ')}</span>
+        <button class="btn btn-toggle-all" style="width:100%;margin-top:10px;" onclick="applyOptimizerRow(0)">✅ Bu Stratejiyi Ayarlara Uygula</button>
       </div>`;
     } else {
       html += `<div style="margin-top:14px;padding:14px;background:rgba(196,58,47,0.08);border:1px solid rgba(196,58,47,0.3);border-radius:12px;font-size:12px;">
@@ -12195,6 +12257,33 @@ async function runOptimizer() {
     content.innerHTML = `<div style="color:var(--red);padding:20px;">⚠️ Optimizer hatası: ${e.message}</div>`;
     log('⚠️ Optimizer hatası: ' + e.message, 'warn');
   }
+}
+
+// v49.10: Optimizer tablosundaki "✅ Uygula" — seçilen kombinasyonun göstergelerini,
+// ADX eşiğini ve Min Onay%'ini canlı ayarlara yazar (Ayarlar + Risk sekmeleri).
+function applyOptimizerRow(idx) {
+  const r = optimizerLastResults && optimizerLastResults[idx];
+  if (!r) { log('⚠️ Optimizer sonucu bulunamadı — önce Optimizer\'ı çalıştır.', 'warn'); return; }
+
+  INDICATOR_ORDER.forEach(id => { activeIndicators[id] = r.indicators.includes(id); });
+
+  const minEl = document.getElementById('minConfirmPct');
+  if (minEl) minEl.value = String(r.minConfirmPct);
+
+  const adxToggle = document.getElementById('adxMinFilterToggle');
+  if (adxToggle) adxToggle.checked = true;
+  const adxEl = document.getElementById('adxMinValue');
+  if (adxEl) adxEl.value = r.adxMin;
+
+  saveIndicatorPrefs();
+  saveSettings();
+  renderIndicatorSelector();
+  renderCoinPanels();
+
+  const indNames = r.indicators.map(id => INDICATOR_DEFS[id]?.name || id).join(' + ');
+  log(`🎯 Optimizer stratejisi uygulandı: ${r.combo} (${indNames}) · ADX≥${r.adxMin} · Min Onay %${(r.minConfirmPct*100).toFixed(0)}`, 'system');
+
+  try { qtSwitchTab('settings'); } catch(e) {}
 }
 
 // ───────── Canlı Fiyat Şeridi (Ticker Tape) ─────────
