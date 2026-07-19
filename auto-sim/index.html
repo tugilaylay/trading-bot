@@ -2840,13 +2840,47 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
             <option value="soft">🪶 Yumuşak — Sadece ağırlık azalt</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>🔭 HTF Rejim Bekçisi (4h ile doğrula)</label>
+          <select id="htfRegimeSanityToggle">
+            <option value="on" selected>✅ Açık — 4h onaylamazsa rejim düşürülür</option>
+            <option value="off">❌ Kapalı — sadece seçili TF'e bak</option>
+          </select>
+        </div>
       </div>
       <details class="risk-info">
         <summary>ℹ️ Açıklama</summary>
         <div class="ri-body">
           <b>🎯 Katı (yeni mimari):</b> Önce piyasa rejimi belirlenir, sonra SADECE o rejime uygun aile oy kullanır. Trendde osilatörler (RSI, StochRSI, CCI, WillR, Boll, MFI) <b>tamamen susar</b> — "ucuzladı, al" diyip düşen bıçağı tutturamazlar; "düşen coine long" hatasının kökü budur. Yatayda trend göstergeleri (Supertrend, Ichimoku, MA Cross, PSAR, EMA Trend, MACD, ADX, Keltner, Donchian) <b>tamamen susar</b> — sahte kırılım kovalatamazlar. Hacim/akış/formasyon ailesi (Hacim, OBV, CMF, VWAP, Uyuşmazlıklar, Mum Formasyonu) her rejimde konuşur. Onay eşiği de konuşan göstergelere göre yeniden hesaplanır — bot kilitlenmez.<br>
-          <b>🪶 Yumuşak (eski davranış):</b> kimse susmaz, sadece uygun olmayanların sesi kısılır (0.5x / 0.7x).
+          <b>🪶 Yumuşak (eski davranış):</b> kimse susmaz, sadece uygun olmayanların sesi kısılır (0.5x / 0.7x).<br>
+          <b>🔭 HTF Rejim Bekçisi (v50.6):</b> 19.07 otopsisinin bulgusu — rejim dedektörü sadece seçili zaman dilimine (örn. 5m) bakıyordu; günlük düşüşün içindeki 5 dakikalık tepki zıplaması "yükseliş trendi" sayılıp osilatörleri susturuyor ve zıplamanın tepesinden LONG açtırıyordu. Artık 5m "uptrend" derken 4h ayı ise rejim <b>yatay'a düşürülür</b> (LONG lehine susturma iptal olur); 5m "downtrend" derken 4h boğa ise aynı şekilde. 4h verisi önbelleklidir, ekstra yük getirmez; veri yoksa karışmaz.
         </div>
+      </details>
+
+      <div class="acc-divider"></div>
+
+      <!-- ── v50.6: 🤝 Mutabakat Tabanı + BEKLE Cezası ── -->
+      <div class="card-title">
+        <span>🤝 Mutabakat Tabanı</span>
+        <span class="optional-badge" style="background:rgba(80,200,120,0.2);color:var(--green);border-color:rgba(80,200,120,0.4);">v50.6 — Otopsi Madde 4</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="consensusFloorToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Min. mutabakat % (oy verenlerin)</label>
+          <input type="number" id="consensusFloorPct" value="60" min="40" max="100" step="5" />
+        </div>
+        <div class="form-group">
+          <label>BEKLE cezası (0=yok, 1=tam itiraz)</label>
+          <input type="number" id="holdPenaltyFactor" value="0.5" min="0" max="1" step="0.1" />
+        </div>
+      </div>
+      <details class="risk-info">
+        <summary>ℹ️ Açıklama</summary>
+        <div class="ri-body">19.07 BTC vakası: 3 gösterge AL, 3 gösterge BEKLE dedi ve skor formülü bunu %57'lik "güçlü sinyal" saydı — çünkü BEKLE hiçbir şeye mal olmuyordu. İki düzeltme birden:<br><b>🤝 Mutabakat Tabanı:</b> Ağırlıklı skor eşiği geçse bile, o rejimde <b>konuşabilen</b> göstergelerin en az %60'ı (ayar) fiilen sinyal yönünde oy vermeden pozisyon açılmaz. "3 AL + 3 BEKLE" = %50 mutabakat → red.<br><b>➖ BEKLE Cezası:</b> BEKLE diyen her göstergenin ağırlığının bir kısmı (varsayılan yarısı) skordan <b>düşülür</b> — kararsızlık artık nötr değil, itiraz. 0.5 cezayla 19.07 BTC girişinin skoru %57'den %32'ye düşerdi ve hiç açılmazdı. Her iki kural canlı bot, Pilot ve backtest'te aynı şekilde uygulanır — backtest sonuçların gerçek davranışla tutarlı kalır.</div>
       </details>
 
       <div class="acc-divider"></div>
@@ -3043,7 +3077,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     </div>
     <details class="risk-info">
       <summary>ℹ️ Açıklama</summary>
-      <div class="ri-body">Defter artık sadece rapor değil, <b>hakim</b>. Bir kapının uyanışından bu yana biriken <b>taze kanıtı</b> (en az 6 değerlendirilmiş red) net olarak <b>−2%'nin altındaysa</b> — yani kaçırdığı kâr, kaçındığı zarardan belirgin fazlaysa — o kapı <b>24 saat uyutulur</b>, veto edemez. Ertesi gün kendiliğinden uyanır ve sıfırdan kanıt toplar (eski kayıtlar hükümde kullanılmaz). Uyuyan kapılar tabloda 💤 ile görünür.<br><b>Uyutulabilen 13 kapı:</b> Tükenme, Mum, Trend Gate, MTF, Funding, BTC Korelasyon, Fear&amp;Greed, Yatay Piyasa, CVD Akış, Akış Uzlaşı, Kalabalık, ADX Filtresi, Erken Radar.<br><b>🎚️ Matematik Kapısı özel muamele görür:</b> uyutulmaz — kapatmak "24 saat maliyet matematiğine bakma" demek olurdu. Onun yerine termostat gibi <b>kademeli ayarlanır</b>: fırsat yiyorsa değerleri bir kademe gevşetilir (maliyet çarpanı −0.5, min R:R −0.1), gevşemişken yeniden korumaya başlarsa baseline'ına döndürülür, kaşık-kepçe bozulursa (ort. kazanç &lt; ort. kaybın yarısı) bir kademe sıkılaştırılır. Ayarları elle değiştirirsen yeni değerlerin otomatik baseline olur. Termostat durumu tabloda 🎚️ ile görünür.<br><b>Bilinçli istisna:</b> Poz. Limiti asla uyumaz — o bir sinyal kapısı değil, portföy risk tavanıdır.</div>
+      <div class="ri-body">Defter artık sadece rapor değil, <b>hakim</b>. Bir kapının uyanışından bu yana biriken <b>taze kanıtı</b> (en az 6 değerlendirilmiş red) net olarak <b>−2%'nin altındaysa</b> — yani kaçırdığı kâr, kaçındığı zarardan belirgin fazlaysa — o kapı <b>24 saat uyutulur</b>, veto edemez. Ertesi gün kendiliğinden uyanır ve sıfırdan kanıt toplar (eski kayıtlar hükümde kullanılmaz). Uyuyan kapılar tabloda 💤 ile görünür.<br><b>Uyutulabilen 14 kapı:</b> Tükenme, Mum, Trend Gate, MTF, Funding, BTC Korelasyon, Fear&amp;Greed, Yatay Piyasa, CVD Akış, Akış Uzlaşı, Kalabalık, ADX Filtresi, Erken Radar, Mutabakat Tabanı (v50.6).<br><b>🎚️ Matematik Kapısı özel muamele görür:</b> uyutulmaz — kapatmak "24 saat maliyet matematiğine bakma" demek olurdu. Onun yerine termostat gibi <b>kademeli ayarlanır</b>: fırsat yiyorsa değerleri bir kademe gevşetilir (maliyet çarpanı −0.5, min R:R −0.1), gevşemişken yeniden korumaya başlarsa baseline'ına döndürülür, kaşık-kepçe bozulursa (ort. kazanç &lt; ort. kaybın yarısı) bir kademe sıkılaştırılır. Ayarları elle değiştirirsen yeni değerlerin otomatik baseline olur. Termostat durumu tabloda 🎚️ ile görünür.<br><b>Bilinçli istisna:</b> Poz. Limiti asla uyumaz — o bir sinyal kapısı değil, portföy risk tavanıdır.</div>
     </details>
     <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
     <div class="ra-section-title">Son Redler</div>
@@ -4074,6 +4108,8 @@ const SETTINGS_FIELD_IDS = [
   // v50.0: Asimetri Paketi — Kayıp Merdiveni (MAE), Kısmi Zarar, Asimetri Bekçisi
   'maeStopToggle', 'maeStopPercentile', 'maeStopMult', 'maeStopMinTrades',
   'partialLossToggle', 'partialLossAtPct', 'partialLossClosePct',
+  // v50.5/v50.6: Kısmi Zarar sıkılaştırma + Mutabakat Tabanı + BEKLE Cezası + HTF Rejim Bekçisi
+  'partialLossTightenPct', 'consensusFloorToggle', 'consensusFloorPct', 'holdPenaltyFactor', 'htfRegimeSanityToggle',
   'asymGuardToggle', 'asymGuardWindow'
 ];
 
@@ -4723,6 +4759,76 @@ function regimeWeightFactor(id, regime) {
 // Geriye uyumluluk için eski isimler korunuyor (soft modun referans listeleri)
 const TREND_INDICATORS = REGIME_TREND_FAMILY;
 const MOMENTUM_INDICATORS = REGIME_OSC_FAMILY;
+
+// ───────── v50.6: 🤝 MUTABAKAT TABANI + ➖ BEKLE CEZASI + 🔭 HTF REJİM BEKÇİSİ ─────────
+// 19.07 otopsisinin üç yapısal açığına karşı üç savunma. Hepsi merkezi — canlı bot,
+// Pilot (scoreSymbol) ve backtest aynı fonksiyonları kullanır ki davranış tutarlı kalsın.
+
+function getHoldPenaltyFactor() {
+  const v = parseFloat(document.getElementById('holdPenaltyFactor')?.value);
+  return isNaN(v) ? 0.5 : Math.min(Math.max(v, 0), 1);
+}
+
+// BEKLE diyen göstergelerin (rejim+tier) ağırlık toplamını döner — skordan düşülecek ceza tabanı.
+// regimeFilterOn=false ise rejim katsayısı 1 kabul edilir (canlı botla aynı mantık).
+function calcHoldWeight(rawSignals, regime, regimeFilterOn) {
+  let holdW = 0;
+  Object.keys(rawSignals).forEach(id => {
+    if (rawSignals[id] !== 'hold') return;
+    const f = regimeFilterOn ? regimeWeightFactor(id, regime) : 1;
+    holdW += getIndicatorWeight(id) * f;
+  });
+  return holdW;
+}
+
+// Mutabakat kontrolü: o rejimde KONUŞABİLEN (ağırlığı > 0) göstergelerin yüzde kaçı
+// fiilen istenen yönde oy verdi? Skor eşiğinden bağımsız ikinci bir kapıdır.
+// Dönen: { ok, agree, voters, pct } — voters 0 ise (kimse konuşamıyor) ok=false.
+function consensusCheck(rawSignals, regime, regimeFilterOn, dir) {
+  if (!document.getElementById('consensusFloorToggle')?.checked) return { ok: true, agree: 0, voters: 0, pct: 100 };
+  try { if (window.isGateAsleep && isGateAsleep('Mutabakat Tabanı')) return { ok: true, agree: 0, voters: 0, pct: 100 }; } catch(e){} // Karne Hakimi uyutabilir
+  const want = dir === 'long' ? 'buy' : 'sell';
+  const floorPct = Math.min(Math.max(parseFloat(document.getElementById('consensusFloorPct')?.value) || 60, 40), 100);
+  let voters = 0, agree = 0;
+  Object.keys(rawSignals).forEach(id => {
+    const f = regimeFilterOn ? regimeWeightFactor(id, regime) : 1;
+    if (f <= 0) return; // bu rejimde susturulmuş — oy hakkı yok, paydaya girmez
+    voters++;
+    if (rawSignals[id] === want) agree++;
+  });
+  if (voters === 0) return { ok: false, agree: 0, voters: 0, pct: 0 };
+  const pct = agree / voters * 100;
+  return { ok: pct >= floorPct, agree, voters, pct: Math.round(pct), floorPct };
+}
+
+// 🔭 HTF Rejim Bekçisi: 4h EMA9/21 yönü önbelleklenir; seçili TF'in rejim kararı 4h ile
+// çelişiyorsa rejim 'sideways'e DÜŞÜRÜLÜR (asla yükseltilmez — bekçi sadece frendir).
+// Veri yoksa/eskiyse karışmaz. refreshHtfTrend arka planda tazeler (getMTFKlines zaten cache'li).
+const htfTrendCache = {}; // symbol → { trend: 'bull'|'bear', ts }
+async function refreshHtfTrend(symbol) {
+  try {
+    const cached = htfTrendCache[symbol];
+    if (cached && (Date.now() - cached.ts) < 10 * 60 * 1000) return cached.trend;
+    const kl = await getMTFKlines(symbol, '4h');
+    if (!kl) return null;
+    const trend = getMTFTrend(kl);
+    htfTrendCache[symbol] = { trend, ts: Date.now() };
+    return trend;
+  } catch(e) { return null; }
+}
+function applyHtfRegimeSanity(symbol, regimeInfo) {
+  if ((document.getElementById('htfRegimeSanityToggle')?.value || 'on') !== 'on') return regimeInfo;
+  const cached = symbol ? htfTrendCache[symbol] : null;
+  if (!cached || (Date.now() - cached.ts) > 30 * 60 * 1000) return regimeInfo; // veri yok/bayat → hüküm yok
+  if (regimeInfo.regime === 'uptrend' && cached.trend === 'bear') {
+    return { ...regimeInfo, regime: 'sideways', label: '◆ Yatay (5m yükseliş, 4h AYI — 🔭 düşürüldü)', htfDowngraded: true };
+  }
+  if (regimeInfo.regime === 'downtrend' && cached.trend === 'bull') {
+    return { ...regimeInfo, regime: 'sideways', label: '◆ Yatay (5m düşüş, 4h BOĞA — 🔭 düşürüldü)', htfDowngraded: true };
+  }
+  return regimeInfo;
+}
+
 
 function applyRegimeWeighting(signals, regime) {
   // signals: { id: 'buy'|'sell'|'hold' } şeklinde bir obje
@@ -5577,6 +5683,7 @@ const RISK_SECTION_MAP = {
   'CVD Akış':             ['giris', false],
   'Kalabalık Filtresi':   ['giris', false],
   'Akış Uzlaşı':          ['giris', true],
+  'Mutabakat Tabanı':     ['giris', true],
   'Strateji Arenası':     ['giris', false],
   'Toplam Günlük Zarar':  ['koruma', true],
   'Coin Bazlı Zarar':     ['koruma', false],
@@ -10969,7 +11076,13 @@ async function coinTickInner(coin, state) {
   const minConfirm = getMinConfirmCount();
 
   const regimeFilterOn = document.getElementById('regimeFilterToggle') && document.getElementById('regimeFilterToggle').checked;
-  const regimeInfo = detectMarketRegime(ctx);
+  let regimeInfo = detectMarketRegime(ctx);
+  // v50.6: 🔭 HTF Rejim Bekçisi — 4h yönü arka planda tazelenir (cache'li, ucuz),
+  // seçili TF'in trend kararı 4h ile çelişiyorsa rejim yatay'a düşürülür.
+  try {
+    const sym = COIN_CONFIG[coin]?.symbol;
+    if (sym) { refreshHtfTrend(sym); regimeInfo = applyHtfRegimeSanity(sym, regimeInfo); }
+  } catch(e) {}
   const regimeEl = document.getElementById('regime-' + coin);
   if (regimeEl) {
     regimeEl.textContent = regimeInfo.label;
@@ -11039,6 +11152,18 @@ async function coinTickInner(coin, state) {
     const f = regimeFilterOn ? regimeWeightFactor(id, regimeInfo.regime) : 1;
     return sum + getIndicatorWeight(id) * f;
   }, 0);
+
+  // v50.6: ➖ BEKLE Cezası — kararsız göstergeler artık nötr değil, itiraz. BEKLE diyenlerin
+  // (rejim+tier) ağırlığının bir kısmı HER İKİ yönün skorundan düşülür. 19.07 BTC vakasında
+  // (3 AL + 3 BEKLE) skor %57'den %32'ye inerdi ve giriş hiç açılmazdı.
+  const holdPen = getHoldPenaltyFactor();
+  if (holdPen > 0) {
+    const holdW = calcHoldWeight(rawSignals, regimeInfo.regime, regimeFilterOn);
+    if (holdW > 0) {
+      buyCount  = Math.max(0, buyCount  - holdPen * holdW);
+      sellCount = Math.max(0, sellCount - holdPen * holdW);
+    }
+  }
   const minConfirmPct = parseFloat(document.getElementById('minConfirmPct').value) || 0.6;
   // Güvenlik: bu rejimde konuşabilen hiç gösterge kalmadıysa (ör. sadece osilatör seçilmiş
   // + trend rejimi + katı mod) eşik sonsuz olur → sıfır skorla pozisyon açılması imkânsızlaşır.
@@ -11149,6 +11274,11 @@ async function coinTickInner(coin, state) {
     } else if (buyCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('long', klines, atr))) {
       log(`🕯️ [Mum Kalkanı] ${coin} LONG engellendi — ${state._candleReason}.`, 'warn', coin);
     try{recordRejection(coin,'long','Mum Kalkanı');}catch(e){}
+    } else if (buyCount >= weightedMinConfirm && (state._consL = consensusCheck(rawSignals, regimeInfo.regime, regimeFilterOn, 'long')) && !state._consL.ok) {
+      // v50.6: 🤝 Mutabakat Tabanı — skor eşiği geçildi ama konuşabilen göstergelerin
+      // yeterli yüzdesi fiilen AL demedi ("3 AL + 3 BEKLE" tuzağı)
+      log(`🤝 [Mutabakat Tabanı] ${coin} LONG engellendi — skor yeterli ama mutabakat %${state._consL.pct} (${state._consL.agree}/${state._consL.voters} gösterge AL, taban %${state._consL.floorPct}). Kararsız çoğunlukla pozisyon açılmaz.`, 'warn', coin);
+    try{recordRejection(coin,'long','Mutabakat Tabanı');}catch(e){}
     } else if (buyCount >= weightedMinConfirm && !entryConfirmed('long', state, buyCount, weightedMinConfirm)) {
       // v46.4: sinyal var, filtreler temiz ama giriş teyit turu henüz tamamlanmadı — bekleniyor
       log(`⏳ [Giriş Onayı] ${coin} LONG sinyali (skor:${buyCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.long||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
@@ -11167,6 +11297,7 @@ async function coinTickInner(coin, state) {
       // Artık sadece gerçekten veri varken "geçti" diyoruz; yoksa rozet hiç eklenmiyor.
       const trendGateReallyOn = document.getElementById('trendGateToggle')?.checked && rawSignals.hasOwnProperty('ematrend');
       const passedGatesL = trendGateReallyOn ? ['Skor ✓', 'Trend Gate ✓'] : ['Skor ✓'];
+      if (document.getElementById('consensusFloorToggle')?.checked) passedGatesL.push('Mutabakat ✓');
       if (mtfOn) passedGatesL.push('MTF ✓');
       if (document.getElementById('cvdFilterToggle')?.checked) passedGatesL.push('CVD Akış ✓');
       if (document.getElementById('crowdFilterToggle')?.checked) passedGatesL.push('Kalabalık ✓');
@@ -11199,6 +11330,10 @@ async function coinTickInner(coin, state) {
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('short', klines, atr))) {
       log(`🕯️ [Mum Kalkanı] ${coin} SHORT engellendi — ${state._candleReason}.`, 'warn', coin);
     try{recordRejection(coin,'short','Mum Kalkanı');}catch(e){}
+    } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && (state._consS = consensusCheck(rawSignals, regimeInfo.regime, regimeFilterOn, 'short')) && !state._consS.ok) {
+      // v50.6: 🤝 Mutabakat Tabanı (SHORT tarafı)
+      log(`🤝 [Mutabakat Tabanı] ${coin} SHORT engellendi — skor yeterli ama mutabakat %${state._consS.pct} (${state._consS.agree}/${state._consS.voters} gösterge SAT, taban %${state._consS.floorPct}). Kararsız çoğunlukla pozisyon açılmaz.`, 'warn', coin);
+    try{recordRejection(coin,'short','Mutabakat Tabanı');}catch(e){}
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && !entryConfirmed('short', state, sellCount, weightedMinConfirm)) {
       log(`⏳ [Giriş Onayı] ${coin} SHORT sinyali (skor:${sellCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.short||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
@@ -11212,6 +11347,7 @@ async function coinTickInner(coin, state) {
       // v50.4: geçilen giriş kapılarının kanıtı — v50.5: Trend Gate rozeti sadece gerçekten değerlendirildiyse
       const trendGateReallyOnS = document.getElementById('trendGateToggle')?.checked && rawSignals.hasOwnProperty('ematrend');
       const passedGatesS = trendGateReallyOnS ? ['Skor ✓', 'Trend Gate ✓'] : ['Skor ✓'];
+      if (document.getElementById('consensusFloorToggle')?.checked) passedGatesS.push('Mutabakat ✓');
       if (mtfOn) passedGatesS.push('MTF ✓');
       if (document.getElementById('cvdFilterToggle')?.checked) passedGatesS.push('CVD Akış ✓');
       if (document.getElementById('crowdFilterToggle')?.checked) passedGatesS.push('Kalabalık ✓');
@@ -12163,6 +12299,17 @@ function simulateStrategy(klines, indicatorList, minConfirm, tradeAmount, stopLo
       if (rawSignals[id] === 'buy') buyScore += w;
       else if (rawSignals[id] === 'sell') sellScore += w;
     });
+    // v50.6: ➖ BEKLE Cezası — backtest de canlı botla aynı kuralı uygular ki sonuçlar
+    // gerçek davranışı yansıtsın (rejim filtresi backtest'te yok, ceza rejimsiz hesaplanır).
+    const btHoldPen = getHoldPenaltyFactor();
+    if (btHoldPen > 0) {
+      let btHoldW = 0;
+      indicatorList.forEach(id => { if (rawSignals[id] === 'hold') btHoldW += getIndicatorWeight(id); });
+      if (btHoldW > 0) {
+        buyScore  = Math.max(0, buyScore  - btHoldPen * btHoldW);
+        sellScore = Math.max(0, sellScore - btHoldPen * btHoldW);
+      }
+    }
 
     // ATR ile SL/TP hesapla
     const atr = calcATR(highs, lows, closes, 14);
@@ -13562,7 +13709,11 @@ async function scoreSymbol(symbol){
     rawSignals[id] = res.signal;
     rawValues[id] = res.value;
   });
-  const regimeInfo = detectMarketRegime(ctx);
+  const regimeInfoRaw = detectMarketRegime(ctx);
+  // v50.6: 🔭 HTF Rejim Bekçisi — Pilot da 4h ile çelişen 5m rejim kararını düşürür.
+  // scoreSymbol zaten async; refresh cache'li (10dk + getMTFKlines kendi cache'i), ucuz.
+  let regimeInfo = regimeInfoRaw;
+  try { await refreshHtfTrend(symbol); regimeInfo = applyHtfRegimeSanity(symbol, regimeInfoRaw); } catch(e) {}
   let buy = 0, sell = 0, total = 0;
   const weighted = applyRegimeWeighting(rawSignals, regimeInfo.regime);
   Object.keys(weighted).forEach(id => {
@@ -13573,7 +13724,18 @@ async function scoreSymbol(symbol){
     total += eff;
     if (signal === 'buy') buy += eff; else if (signal === 'sell') sell += eff;
   });
-  const netPct = total > 0 ? ((buy - sell) / total) * 100 : 0;
+  // v50.6: ➖ BEKLE Cezası — Pilot skorunda da kararsızlık itirazdır. Baskın yönün net
+  // avantajından BEKLE ağırlığının cezalı kısmı düşülür (işaret korunur, taraf değiştirmez).
+  let netAbs = Math.abs(buy - sell);
+  const holdPenAp = getHoldPenaltyFactor();
+  if (holdPenAp > 0) {
+    const holdW = calcHoldWeight(rawSignals, regimeInfo.regime, true);
+    netAbs = Math.max(0, netAbs - holdPenAp * holdW);
+  }
+  const netPct = total > 0 ? Math.sign(buy - sell) * (netAbs / total) * 100 : 0;
+  // v50.6: 🤝 Mutabakat verisi — hangi yön aday olursa olsun kontrol edilebilsin diye iki yönlü
+  const consLong  = consensusCheck(rawSignals, regimeInfo.regime, true, 'long');
+  const consShort = consensusCheck(rawSignals, regimeInfo.regime, true, 'short');
   let adx = null;
   try { adx = calcADX(highs, lows, closes).adx; } catch(e){}
   const closeTime = klines[klines.length-1][6];
@@ -13584,7 +13746,7 @@ async function scoreSymbol(symbol){
   const cgLookback = Math.max(parseInt(document.getElementById('apChaseGuardLookback')?.value) || 6, 2);
   const refIdx = Math.max(0, closes.length - 1 - cgLookback);
   const recentMovePct = closes[refIdx] ? (price - closes[refIdx]) / closes[refIdx] * 100 : 0;
-  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, rawValues, adx, closeTime, recentMovePct };
+  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, htfDowngraded: !!regimeInfo.htfDowngraded, consLong, consShort, rawSignals, rawValues, adx, closeTime, recentMovePct };
 }
 
 /* ───────────── 🧠 OTOPİLOT HAFIZASI (v43.1) ─────────────
@@ -13905,6 +14067,12 @@ async function apCycle(){
       let ok = !!dir && Math.abs(r.netPct) >= S.minScore;
       if (ok && typeof isTrendGateBlocked === 'function' && isTrendGateBlocked(dir, r.rawSignals)) ok = false;
       if (ok && adxFilterOn && r.adx != null && r.adx < adxMin) ok = false;
+      // v50.6: 🤝 Mutabakat Tabanı — Pilot adayları da skor eşiğinden bağımsız olarak
+      // konuşabilen göstergelerin fiilen aynı yönde oy verme oranını sağlamak zorunda.
+      if (ok) {
+        const cons = dir === 'long' ? r.consLong : r.consShort;
+        if (cons && !cons.ok) ok = false;
+      }
 
       const prev = ap.candidates[r.short];
       if (!ok) { if (prev) delete ap.candidates[r.short]; return; }
@@ -14094,7 +14262,9 @@ async function apCycle(){
       // fiilen kullanılan eşik 1'dir; kayda ham ayarı değil GERÇEK eşiği yaz.
       // v50.5: bu adaya kadar hangi kapılar gerçekten devredeydi ve geçildi — "Neden Açıldı?"
       // kartında Coin Botu'yla birebir aynı kanıt görünsün diye burada toplanıyor.
-      const passedGates = ['Skor ✓', 'Trend Gate ✓'];
+      const trendGateReallyOnAp = document.getElementById('trendGateToggle')?.checked && r.rawSignals && r.rawSignals.hasOwnProperty('ematrend');
+      const passedGates = trendGateReallyOnAp ? ['Skor ✓', 'Trend Gate ✓'] : ['Skor ✓'];
+      if (document.getElementById('consensusFloorToggle')?.checked) passedGates.push('Mutabakat ✓');
       if (adxFilterOn) passedGates.push('ADX Filtresi ✓');
       if (S.chaseGuardOn) passedGates.push('Kovalama Freni ✓');
       if (apMemorySettings().on) passedGates.push('Hafıza ✓');
