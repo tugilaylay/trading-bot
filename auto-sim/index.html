@@ -7117,6 +7117,12 @@ function renderPositionCard(coin, state, currentPrice) {
   if (manBuyBtn) manBuyBtn.disabled = true;
   if (manSellBtn) manSellBtn.disabled = false;
 
+  // v50.5 FIX: bu kart her fiyat tikinde (birkaç saniyede bir) innerHTML ile TAMAMEN
+  // yeniden yazılıyordu — kullanıcı "Neden Açıldı?" panelini açsa bile bir sonraki
+  // tikte <details> sıfırdan çiziliyor ve kapanıyordu ("kart anında kapanıyor" şikayeti).
+  // Yeniden yazmadan ÖNCE mevcut açık/kapalı durumunu oku, yazdıktan SONRA geri uygula.
+  const wasReasonOpen = !!el.querySelector('details')?.open;
+
   const dir = pos.direction || 'long';
   const leverage = pos.leverage || 1;
   const rawChange = (currentPrice - pos.entryPrice) / pos.entryPrice;
@@ -7234,6 +7240,11 @@ function renderPositionCard(coin, state, currentPrice) {
     <div style="font-size:9.5px;color:var(--muted);margin-top:6px;text-align:center">${pos.atrBased ? '📐 SL/TP bu coin\'in giriş anındaki ATR\'sine göre ayarlandı · ' : ''}SL/TP her zaman aktif, bekleme sadece gösterge çıkışını etkiler${leverage>1?' · Likidasyon: -%'+(95/leverage).toFixed(0)+' fiyat hareketi':''}</div>
     ${buildEntryReasonHtml(pos)}
   `;
+  // v50.5 FIX (devamı): panel az önce açıktıysa, yeni çizilen <details>'e geri uygula.
+  if (wasReasonOpen) {
+    const freshDetails = el.querySelector('details');
+    if (freshDetails) freshDetails.open = true;
+  }
   // v49.1: kapalı panel özet satırını canlı besle
   updateCoinPanelSummary(coin, {
     hasPos: true,
@@ -13518,9 +13529,11 @@ async function scoreSymbol(symbol){
   priceCache[symbol] = price;
   const ctx = { closes, highs, lows, klines, price };
   const rawSignals = {};
+  const rawValues = {}; // v50.5: Pilot otopilotu da "Neden Açıldı?" ve Desen Madenciliği için gösterge DEĞERLERİNİ saklasın
   activeList.forEach(id => {
-    let res; try { res = INDICATOR_DEFS[id].compute(ctx); } catch(e){ res = { signal:'hold' }; }
+    let res; try { res = INDICATOR_DEFS[id].compute(ctx); } catch(e){ res = { signal:'hold', value:'—' }; }
     rawSignals[id] = res.signal;
+    rawValues[id] = res.value;
   });
   const regimeInfo = detectMarketRegime(ctx);
   let buy = 0, sell = 0, total = 0;
@@ -13544,7 +13557,7 @@ async function scoreSymbol(symbol){
   const cgLookback = Math.max(parseInt(document.getElementById('apChaseGuardLookback')?.value) || 6, 2);
   const refIdx = Math.max(0, closes.length - 1 - cgLookback);
   const recentMovePct = closes[refIdx] ? (price - closes[refIdx]) / closes[refIdx] * 100 : 0;
-  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, adx, closeTime, recentMovePct };
+  return { symbol, price, netPct, buy, sell, regime: regimeInfo.regime, rawSignals, rawValues, adx, closeTime, recentMovePct };
 }
 
 /* ───────────── 🧠 OTOPİLOT HAFIZASI (v43.1) ─────────────
@@ -13621,6 +13634,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   // giriş veto edilir — "kalabalık ters yöne hazırlanırken" pozisyon açılmaz. Yön LEHİNEYSE
   // (≥+40 long'a) teyit notu düşülür; böylece hangi işlemlerin radar onaylı açıldığı
   // Red Defteri + log'dan istatistiksel olarak izlenebilir.
+  let radarAgreed = false;
   try {
     await fetchDepthLean(short); // emir defteri eğilimi (60 sn cache) — radar bileşeni 1
     const radState = coinStates[short] || {};
@@ -13635,7 +13649,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
         try { recordRejection(short, direction, 'Erken Radar'); } catch(e) {}
         return false;
       }
-      if (agrees) brain('🛰️ [Erken Radar ✓] ' + short + ' ' + direction.toUpperCase() + ' radar onaylı — öncü skor ' + (rad.score > 0 ? '+' : '') + rad.score + ' (' + (rad.parts || []).join(' · ') + '). Göstergeler + akış + öncüler aynı yönde.');
+      if (agrees) { radarAgreed = true; brain('🛰️ [Erken Radar ✓] ' + short + ' ' + direction.toUpperCase() + ' radar onaylı — öncü skor ' + (rad.score > 0 ? '+' : '') + rad.score + ' (' + (rad.parts || []).join(' · ') + '). Göstergeler + akış + öncüler aynı yönde.'); }
     }
   } catch(e) {}
   // 🎚️ Dinamik Kaldıraç: sakin coinde tavan kaldıraca yakın, oynak coinde otomatik düşer
@@ -13644,12 +13658,29 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
   if (!mathGateOk(short, direction, slTp, leverage)) { brain('🧮 [Matematik Kapısı] ' + short + ' — beklenen ödül, maliyet+risk matematiğini karşılamıyor, giriş atlandı.'); return false; } // v47.0
   const entryCandleCloseTime = klines ? klines[klines.length-1][6] : Date.now();
 
+  // v50.5: Pilot'ta (bu fonksiyonda) kontrol edilen kapıları da kanıta ekle — Tükenme/Mum/
+  // Matematik burada geçildi, Erken Radar onayı da varsa buraya kadar zaten hayatta kaldı.
+  // candidateChecks aşamasında toplanan (Skor/Trend Gate/CVD/Kalabalık/Akış Uzlaşı/MTF/...)
+  // liste scoreInfo.passedGates üzerinden geliyor — ikisi birleşince kart Coin Botu'yla
+  // birebir aynı "Neden Açıldı?" detayını gösterir.
+  const passedGates = [...(scoreInfo.passedGates || ['Skor ✓'])];
+  if (document.getElementById('exhaustionGuardToggle')?.checked) passedGates.push('Tükenme ✓');
+  if (document.getElementById('candleGuardToggle')?.checked) passedGates.push('Mum ✓');
+  if (radarAgreed) passedGates.push('Erken Radar ✓');
+  if (document.getElementById('mathGateToggle')?.checked) passedGates.push('Matematik ✓');
+  const entrySnapshot = buildEntrySnapshot(
+    scoreInfo.rawValues || {},
+    { regime: scoreInfo.regime },
+    atr, price, short,
+    { passedGates, score: +scoreInfo.netPct.toFixed(1), threshold: apSettings().minScore }
+  );
+
   state.openPosition = {
     direction, entryPrice: price, amount, leverage, confirms: scoreInfo.streak || 0,
     confirmCyclesRequired: scoreInfo.confirmCyclesRequired || 1,
     entryCandleCloseTime, openedAt: Date.now(), autopilot: true,
     stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased,
-    entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }
+    entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }, entrySnapshot
   };
   try { state.tradeCount++; } catch(e){}
   startCoinBot(short); // risk motoru (SL/TP/trailing/acil çıkış) devralır
@@ -14031,7 +14062,20 @@ async function apCycle(){
       }
       // v48.1 FIX: kartta "1/2" görünüp kafa karıştırmasın — Hızlı Kovalama açıkken
       // fiilen kullanılan eşik 1'dir; kayda ham ayarı değil GERÇEK eşiği yaz.
-      return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.fastEntryOn ? 1 : S.confirmCycles };
+      // v50.5: bu adaya kadar hangi kapılar gerçekten devredeydi ve geçildi — "Neden Açıldı?"
+      // kartında Coin Botu'yla birebir aynı kanıt görünsün diye burada toplanıyor.
+      const passedGates = ['Skor ✓', 'Trend Gate ✓'];
+      if (adxFilterOn) passedGates.push('ADX Filtresi ✓');
+      if (S.chaseGuardOn) passedGates.push('Kovalama Freni ✓');
+      if (apMemorySettings().on) passedGates.push('Hafıza ✓');
+      if (mtfOn) passedGates.push('MTF ✓');
+      if (fundingOn) passedGates.push('Funding ✓');
+      if (fgOn) passedGates.push('F&G ✓');
+      if (btcCorrOn) passedGates.push('BTC Korelasyon ✓');
+      if (document.getElementById('cvdFilterToggle')?.checked) passedGates.push('CVD Akış ✓');
+      if (document.getElementById('crowdFilterToggle')?.checked) passedGates.push('Kalabalık ✓');
+      if (document.getElementById('flowGateToggle')?.checked) passedGates.push('Akış Uzlaşı ✓');
+      return { ...r, short, direction: c.direction, streak: c.streak, confirmCyclesRequired: S.fastEntryOn ? 1 : S.confirmCycles, passedGates };
     }));
 
     const candidates = candidateChecks.filter(Boolean).sort((a,b) => Math.abs(b.netPct) - Math.abs(a.netPct));
