@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v50.2 REJİM ÖNCELİKLİ MİMARİ + KALKAN KARNESİ</title>
+<title>TUGAY × QUANT · v50.3 MATEMATİK KAPISI TERMOSTATI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.2 🧭</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.3 🎚️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2200,7 +2200,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       </div>
       <details class="risk-info">
           <summary>ℹ️ Açıklama</summary>
-          <div class="ri-body">Her giriş öncesi iki soru sorar: <b>1)</b> TP hedefi, komisyon+kayma maliyetinin en az bu katı mı? Değilse işlem kazansa bile borsaya çalışır. <b>2)</b> Ödül/Risk yeterli mi? 1.5 oranında %40 kazanma bile kârlıdır; altında matematik kaybeder. Sığ coinlerde kayma otomatik yüksek hesaplanır — kapı onları doğal olarak eler.</div>
+          <div class="ri-body">Her giriş öncesi iki soru sorar: <b>1)</b> TP hedefi, komisyon+kayma maliyetinin en az bu katı mı? Değilse işlem kazansa bile borsaya çalışır. <b>2)</b> Ödül/Risk yeterli mi? 1.5 oranında %40 kazanma bile kârlıdır; altında matematik kaybeder. Sığ coinlerde kayma otomatik yüksek hesaplanır — kapı onları doğal olarak eler.<br><b>🎚️ v50.3 Termostat:</b> Karne Hakimi açıksa bu iki değer otomatik ayarlanır — kapı Red Defteri'nde fırsat yiyorsa bir kademe gevşetilir, yeniden korumaya başlarsa senin baseline'ına döner, kaşık-kepçe bozulursa sıkılaştırılır. Elle değer girersen yeni girdiğin değerler baseline olur; her ayar değişikliği log'a düşer.</div>
         </details>
 
       <div class="acc-divider"></div>
@@ -3038,7 +3038,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
     </div>
     <details class="risk-info">
       <summary>ℹ️ Açıklama</summary>
-      <div class="ri-body">Defter artık sadece rapor değil, <b>hakim</b>. Bir kapının uyanışından bu yana biriken <b>taze kanıtı</b> (en az 6 değerlendirilmiş red) net olarak <b>−2%'nin altındaysa</b> — yani kaçırdığı kâr, kaçındığı zarardan belirgin fazlaysa — o kapı <b>24 saat uyutulur</b>, veto edemez. Ertesi gün kendiliğinden uyanır ve sıfırdan kanıt toplar (eski kayıtlar hükümde kullanılmaz). Uyuyan kapılar tabloda 💤 ile görünür. Ölçmeden eklenen her kalkan bir inançtır; ölçünce bilgi olur.</div>
+      <div class="ri-body">Defter artık sadece rapor değil, <b>hakim</b>. Bir kapının uyanışından bu yana biriken <b>taze kanıtı</b> (en az 6 değerlendirilmiş red) net olarak <b>−2%'nin altındaysa</b> — yani kaçırdığı kâr, kaçındığı zarardan belirgin fazlaysa — o kapı <b>24 saat uyutulur</b>, veto edemez. Ertesi gün kendiliğinden uyanır ve sıfırdan kanıt toplar (eski kayıtlar hükümde kullanılmaz). Uyuyan kapılar tabloda 💤 ile görünür.<br><b>Uyutulabilen 13 kapı:</b> Tükenme, Mum, Trend Gate, MTF, Funding, BTC Korelasyon, Fear&amp;Greed, Yatay Piyasa, CVD Akış, Akış Uzlaşı, Kalabalık, ADX Filtresi, Erken Radar.<br><b>🎚️ Matematik Kapısı özel muamele görür:</b> uyutulmaz — kapatmak "24 saat maliyet matematiğine bakma" demek olurdu. Onun yerine termostat gibi <b>kademeli ayarlanır</b>: fırsat yiyorsa değerleri bir kademe gevşetilir (maliyet çarpanı −0.5, min R:R −0.1), gevşemişken yeniden korumaya başlarsa baseline'ına döndürülür, kaşık-kepçe bozulursa (ort. kazanç &lt; ort. kaybın yarısı) bir kademe sıkılaştırılır. Ayarları elle değiştirirsen yeni değerlerin otomatik baseline olur. Termostat durumu tabloda 🎚️ ile görünür.<br><b>Bilinçli istisna:</b> Poz. Limiti asla uyumaz — o bir sinyal kapısı değil, portföy risk tavanıdır.</div>
     </details>
     <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
     <div class="ra-section-title">Son Redler</div>
@@ -6684,6 +6684,7 @@ setInterval(() => {
 // LONG sinyali + belirgin negatif akış (oran < -0.15) = yükseliş boş, engelle. Tersi SHORT için.
 function cvdEntryBlocked(coin, dir) {
   if (!document.getElementById('cvdFilterToggle')?.checked) return false;
+  try { if (window.isGateAsleep && isGateAsleep('CVD Akış')) return false; } catch(e){} // v50.3: karne uyuttu
   const st = getCvdStats(coin, 60);
   if (!st) return false; // veri yoksa engelleme — filtre ancak kanıtla çalışır
   const TH = 0.15;
@@ -6717,6 +6718,7 @@ function cvdEntryBlocked(coin, dir) {
 // Veri yoksa karışmaz — kanıt olmadan hüküm yok. Açık pozisyonlara asla dokunmaz.
 function flowConfluenceBlocked(coin, dir) {
   if (!document.getElementById('flowGateToggle')?.checked) return false;
+  try { if (window.isGateAsleep && isGateAsleep('Akış Uzlaşı')) return false; } catch(e){} // v50.3: karne uyuttu
   const st = (typeof getCvdStats === 'function') ? getCvdStats(coin, 120) : null;
   const pd = posDataCache[coin];
   let score = 0;
@@ -6825,6 +6827,7 @@ async function enrichScannerPositioning(symbols) {
 // Oran ≥ 3 → herkes long (long squeeze riski, LONG engellenir); ≤ 0.33 → tersi.
 function crowdEntryBlocked(coin, dir) {
   if (!document.getElementById('crowdFilterToggle')?.checked) return false;
+  try { if (window.isGateAsleep && isGateAsleep('Kalabalık')) return false; } catch(e){} // v50.3: karne uyuttu
   const ls = posDataCache[coin]?.lsRatio;
   if (ls === undefined || ls === null || isNaN(ls)) return false;
   if (dir === 'long' && ls >= 3.0) {
@@ -7402,6 +7405,9 @@ function estimateRoundTripCostLevPct(coin, leverage) {
 function mathGateOk(coin, dir, slTp, leverage) {
   const on = document.getElementById('mathGateToggle')?.checked;
   if (!on) return true;
+  // v50.3: Matematik Kapısı UYUTULMAZ — Karne Hakimi onu kapatmak yerine
+  // değerlerini kademeli ayarlar (v50MathGateAdapt): fırsat yiyorsa gevşetir,
+  // koruyorsa baseline'a döndürür, kaşık-kepçe bozulursa sıkılaştırır.
   try {
     const costLev = estimateRoundTripCostLevPct(coin, leverage);
     const minCostMult = Math.max(parseFloat(document.getElementById('mathGateCostMult')?.value) || 4, 1);
@@ -10938,7 +10944,8 @@ async function coinTickInner(coin, state) {
 
   let adxBlocked = false;
   const adxCheckToggle = document.getElementById('adxMinFilterToggle');
-  const adxMinFilterOn = !adxCheckToggle || adxCheckToggle.checked !== false;
+  let adxMinFilterOn = !adxCheckToggle || adxCheckToggle.checked !== false;
+  try { if (adxMinFilterOn && window.isGateAsleep && isGateAsleep('ADX Filtresi')) adxMinFilterOn = false; } catch(e){} // v50.3: karne uyuttu
   if (adxMinFilterOn) {
     try {
       const adxResult = calcADX(highs, lows, closes);
@@ -13571,7 +13578,7 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
     if (rad) {
       const opposes = (direction === 'long' && rad.score <= -40) || (direction === 'short' && rad.score >= 40);
       const agrees  = (direction === 'long' && rad.score >= 40) || (direction === 'short' && rad.score <= -40);
-      if (opposes) {
+      if (opposes && !(window.isGateAsleep && isGateAsleep('Erken Radar'))) { // v50.3: karne uyutabilir
         brain('🛰️ [Erken Radar VETO] ' + short + ' ' + direction.toUpperCase() + ' engellendi — öncü skor ' + (rad.score > 0 ? '+' : '') + rad.score + ' yönün aleyhine (' + (rad.parts || []).join(' · ') + '). Kalabalık ters yöne hazırlanıyor.');
         try { recordRejection(short, direction, 'Erken Radar'); } catch(e) {}
         return false;
@@ -14348,6 +14355,7 @@ function v46RejEvaluate(){
   });
   if (changed) { v46RejSave(); renderRejectionLedger(); }
   try { v50GateAutoSleep(); } catch(e){}
+  try { v50MathGateAdapt(); } catch(e){}
 }
 
 /* ═══ v50.2: 💤 KALKAN KARNESİ + OTOMATİK UYUTMA ═══
@@ -14390,6 +14398,7 @@ function v50GateAutoSleep(){
   const fresh = {};
   v46Rej.items.forEach(r => {
     if (r.pct === null || r.dir === 'both') return;
+    if (r.gate === 'Matematik Kapısı') return; // v50.3: uyutulmaz — adaptif ayarlanır (v50MathGateAdapt)
     const st = v50GateState[r.gate];
     if (st && st.sleepUntil && now < st.sleepUntil) return;      // zaten uyuyor
     if (st && st.wakeAt && r.ts <= st.wakeAt) return;            // eski kanıt — hükümde kullanma
@@ -14405,6 +14414,84 @@ function v50GateAutoSleep(){
       try { renderRejectionLedger(); } catch(e){}
     }
   });
+}
+
+/* ═══ v50.3: 🎚️ MATEMATİK KAPISI TERMOSTATI ═══
+   Matematik Kapısı ikili uyutulmaz — kapatmak "24 saat maliyet matematiğine bakma"
+   demek olurdu. Onun yerine Karne Hakimi değerlerini KADEMELİ ayarlar:
+   • Fırsat yiyorsa (≥6 taze kanıt, net ≤ −2%) → bir kademe GEVŞET
+     (maliyet çarpanı −0.5, min R:R −0.1; tabanlar: 2.0 / 1.2)
+   • Gevşemişken yeniden korumaya başladıysa (net ≥ +1%) → baseline'a doğru SIKILAŞTIR
+   • Kaşık-kepçe bozulmuşsa (son 10 işlem: toplam negatif + ort. kazanç < ort. kaybın
+     yarısı) → baseline'ın BİR kademe üstüne kadar sıkılaştırabilir (6 saat soğumalı)
+   Sen ayarları elle değiştirirsen, yeni değerlerin otomatik yeni baseline olur. */
+const SK_MATHADAPT = 'v50_mathAdapt';
+window.v50MathAdapt = { baseCost: null, baseRR: null, lastCost: null, lastRR: null, adjustAt: 0 };
+try { Object.assign(v50MathAdapt, JSON.parse(localStorage.getItem(SK_MATHADAPT) || '{}')); } catch(e){}
+function v50MathSave(){ try { localStorage.setItem(SK_MATHADAPT, JSON.stringify(v50MathAdapt)); } catch(e){} }
+
+function v50MathGateAdapt(){
+  const t = document.getElementById('gateAutoSleepToggle');
+  if (t && !t.checked) return; // Karne Hakimi kapalıysa termostat da durur
+  const costEl = document.getElementById('mathGateCostMult');
+  const rrEl = document.getElementById('mathGateMinRR');
+  if (!costEl || !rrEl) return;
+  const cur = { cost: parseFloat(costEl.value) || 4, rr: parseFloat(rrEl.value) || 1.5 };
+  const A = v50MathAdapt;
+  // İlk çalışma VEYA kullanıcı elle değiştirmiş → mevcut değerler yeni baseline
+  if (A.baseCost === null || A.lastCost === null || cur.cost !== A.lastCost || cur.rr !== A.lastRR) {
+    A.baseCost = cur.cost; A.baseRR = cur.rr;
+    A.lastCost = cur.cost; A.lastRR = cur.rr;
+    v50MathSave();
+  }
+  const now = Date.now();
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Son ayarlamadan bu yana biriken TAZE kanıt
+  let n = 0, net = 0;
+  v46Rej.items.forEach(r => {
+    if (r.gate !== 'Matematik Kapısı' || r.pct === null || r.dir === 'both') return;
+    if (r.ts <= (A.adjustAt || 0)) return;
+    n++; net += -r.pct;
+  });
+
+  let newCost = cur.cost, newRR = cur.rr, action = null;
+  if (n >= GATE_MIN_EVIDENCE && net <= GATE_NET_THRESHOLD) {
+    // Fırsat yiyor → GEVŞET (bir kademe)
+    newCost = clamp(+(cur.cost - 0.5).toFixed(1), 2.0, A.baseCost + 1);
+    newRR   = clamp(+(cur.rr  - 0.1).toFixed(2), 1.2, A.baseRR + 0.3);
+    if (newCost !== cur.cost || newRR !== cur.rr) action = 'GEVŞETİLDİ (fırsat yiyordu)';
+  } else if (n >= GATE_MIN_EVIDENCE && net >= 1 && (cur.cost < A.baseCost || cur.rr < A.baseRR)) {
+    // Gevşemişken yeniden koruyor → baseline'a doğru dön
+    newCost = clamp(+(cur.cost + 0.5).toFixed(1), 2.0, A.baseCost);
+    newRR   = clamp(+(cur.rr  + 0.1).toFixed(2), 1.2, A.baseRR);
+    if (newCost !== cur.cost || newRR !== cur.rr) action = 'SIKILAŞTIRILDI (baseline\'a dönüş)';
+  } else if (now - (A.adjustAt || 0) > 6 * 3600 * 1000) {
+    // Kaşık-kepçe kontrolü (6 saatte en fazla bir kez): kapı çok mu gevşek?
+    try {
+      const last = globalTradeHistory.filter(x => typeof x.pnl === 'number').slice(-10);
+      if (last.length >= 10) {
+        const wins = last.filter(x => x.pnl > 0), losses = last.filter(x => x.pnl < 0);
+        const avgW = wins.length ? wins.reduce((s,x)=>s+x.pnl,0)/wins.length : 0;
+        const avgL = losses.length ? Math.abs(losses.reduce((s,x)=>s+x.pnl,0)/losses.length) : 0;
+        const sum = last.reduce((s,x)=>s+x.pnl,0);
+        if (sum < 0 && avgL > 0 && avgW < avgL * 0.5 && cur.cost <= A.baseCost + 0.5 && cur.rr <= A.baseRR + 0.2) {
+          newCost = clamp(+(cur.cost + 0.5).toFixed(1), 2.0, A.baseCost + 1);
+          newRR   = clamp(+(cur.rr  + 0.1).toFixed(2), 1.2, A.baseRR + 0.3);
+          if (newCost !== cur.cost || newRR !== cur.rr) action = 'SIKILAŞTIRILDI (kaşık-kepçe bozuk: ort. kazanç ' + avgW.toFixed(2) + '$ < ort. kayıp ' + avgL.toFixed(2) + '$ yarısı)';
+        }
+      }
+    } catch(e){}
+  }
+
+  if (action) {
+    costEl.value = newCost; rrEl.value = newRR;
+    A.lastCost = newCost; A.lastRR = newRR; A.adjustAt = now;
+    v50MathSave();
+    try { saveSettings(); } catch(e){}
+    try { log(`🎚️ [Karne Hakimi] Matematik Kapısı ${action}: maliyet çarpanı ${cur.cost}→${newCost}, min R:R ${cur.rr}→${newRR}` + (n ? ` (${n} taze kanıt, net ${net.toFixed(1)}%)` : '') + `. Elle değiştirirsen yeni değerin baseline olur.`, 'system'); } catch(e){}
+    try { renderRejectionLedger(); } catch(e){}
+  }
 }
 
 window.renderRejectionLedger = function(){
@@ -14433,10 +14520,18 @@ window.renderRejectionLedger = function(){
   Object.entries(gates).sort((a,b)=>b[1].net-a[1].net).forEach(([g,s])=>{
     let verdict = s.evald < 3 ? '⏳' : (s.net > 1 ? '🛡️ koruyor' : (s.net < -1 ? '⚠️ fırsat yiyor' : '➖ nötr'));
     try {
-      const gs = window.v50GateState && v50GateState[g];
-      if (gs && gs.sleepUntil && Date.now() < gs.sleepUntil) {
-        const remH = Math.ceil((gs.sleepUntil - Date.now()) / 3600000);
-        verdict = `💤 uyuyor (${remH}s)`;
+      if (g === 'Matematik Kapısı') {
+        const A = window.v50MathAdapt;
+        if (A && A.baseCost !== null && A.lastCost !== null && (A.lastCost !== A.baseCost || A.lastRR !== A.baseRR)) {
+          const dirTxt = (A.lastCost < A.baseCost || A.lastRR < A.baseRR) ? 'gevşetildi' : 'sıkılaştırıldı';
+          verdict = `🎚️ ${dirTxt} (×${A.lastCost} / R:R ${A.lastRR})`;
+        }
+      } else {
+        const gs = window.v50GateState && v50GateState[g];
+        if (gs && gs.sleepUntil && Date.now() < gs.sleepUntil) {
+          const remH = Math.ceil((gs.sleepUntil - Date.now()) / 3600000);
+          verdict = `💤 uyuyor (${remH}s)`;
+        }
       }
     } catch(e){}
     const netC = s.net > 0.5 ? 'var(--green)' : (s.net < -0.5 ? 'var(--red)' : 'var(--muted)');
