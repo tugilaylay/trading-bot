@@ -6147,9 +6147,19 @@ function calcRSI(closes, period = 14) {
   return 100 - (100 / (1 + rs));
 }
 function calcEMA(closes, period) {
+  // v50.7 FIX: EMA tohumu closes[0] idi — EMA200 gibi uzun periyotlarda 250 mumluk veriyle
+  // ilk mumun ağırlığı ~%8 kalıyor ve TradingView/Binance değerlerinden sapıyordu (EMA Trend,
+  // MA Cross, MACD, Keltner, rejim dedektörü hepsi etkileniyordu). Standart yöntem: ilk
+  // `period` mumun SMA'sı tohum olur, EMA oradan akar — calcEMAArray zaten böyleydi.
   const k = 2 / (period + 1);
-  let ema = closes[0];
-  for (let i = 1; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k);
+  let ema, start;
+  if (closes.length >= period) {
+    ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+    start = period;
+  } else {
+    ema = closes[0]; start = 1; // veri kısaysa eski davranışa düş (en azından çalışsın)
+  }
+  for (let i = start; i < closes.length; i++) ema = closes[i] * k + ema * (1 - k);
   return ema;
 }
 
@@ -6234,11 +6244,18 @@ function detectDivergence(priceArr, indicatorArr, lookback = 5, recencyWindow = 
   const pD = findPeaksTroughs(pArr, lookback);
   const iD = findPeaksTroughs(iArr, lookback);
 
+  // v50.7 FIX: Gösterge tarafındaki eşik çarpımsaldı (×1.0015) — MACD serisi gibi SIFIR
+  // ETRAFINDA salınan ve negatife inen değerlerde çarpım eşiği ters çalışır (negatifte
+  // ×1.0015 değeri DAHA negatif yapar, eşik yön değiştirir) ve sıfıra yakın değerlerde
+  // anlamsızlaşır. Artık gösterge eşiği MUTLAK: pencerenin değer aralığının %0.5'i.
+  const iVals = iArr.filter(v => v !== null && v !== undefined && isFinite(v));
+  const iRange = iVals.length ? (Math.max(...iVals) - Math.min(...iVals)) : 0;
+  const iEps = iRange * 0.005;
   // Boğa uyuşmazlığı (bullish divergence)
   if (pD.troughs.length >= 2 && iD.troughs.length >= 2) {
     const p1 = pD.troughs.at(-2), p2 = pD.troughs.at(-1);
     const r1 = iD.troughs.at(-2), r2 = iD.troughs.at(-1);
-    if (p2.val < p1.val * 0.9985 && r2.val > r1.val * 1.0015) {
+    if (p2.val < p1.val * 0.9985 && r2.val > r1.val + iEps) {
       return { type: 'bullish', signal: 'buy', label: 'BOĞ.UYM' };
     }
   }
@@ -6246,7 +6263,7 @@ function detectDivergence(priceArr, indicatorArr, lookback = 5, recencyWindow = 
   if (pD.peaks.length >= 2 && iD.peaks.length >= 2) {
     const p1 = pD.peaks.at(-2), p2 = pD.peaks.at(-1);
     const r1 = iD.peaks.at(-2), r2 = iD.peaks.at(-1);
-    if (p2.val > p1.val * 1.0015 && r2.val < r1.val * 0.9985) {
+    if (p2.val > p1.val * 1.0015 && r2.val < r1.val - iEps) {
       return { type: 'bearish', signal: 'sell', label: 'AYI.UYM' };
     }
   }
@@ -10975,10 +10992,15 @@ async function coinTickInner(coin, state) {
   const price = await fetchPrice(cfg.symbol);
   if (!klines || !price || !Array.isArray(klines)) { log('⚠️ Veri alınamadı...', 'warn', coin); return; }
 
-  const closes = klines.map(k => parseFloat(k[4]));
-  const highs = klines.map(k => parseFloat(k[2]));
-  const lows = klines.map(k => parseFloat(k[3]));
-  const lastCandleCloseTime = klines[klines.length - 1][6];
+  // v50.7 FIX (repaint): Binance son mumu HENÜZ KAPANMAMIŞKEN döndürür. Pilot'un scoreSymbol'ü
+  // bunu v43'te düzeltmişti ama coin botu unutulmuştu — göstergeler mum içinde her tikte
+  // fikir değiştiriyordu (aynı mumda AL→BEKLE→AL). Artık SİNYALLER sadece kapanmış mumlarla
+  // hesaplanır; canlı fiyat, grafik ve SL/TP takibi ham veriyle çalışmaya devam eder.
+  const sigKlines = (klines.length && klines[klines.length - 1][6] > Date.now()) ? klines.slice(0, -1) : klines;
+  const closes = sigKlines.map(k => parseFloat(k[4]));
+  const highs = sigKlines.map(k => parseFloat(k[2]));
+  const lows = sigKlines.map(k => parseFloat(k[3]));
+  const lastCandleCloseTime = klines[klines.length - 1][6]; // ham: yeni-mum tespiti eskisi gibi çalışsın
 
   // Volatiliteye göre pozisyon boyutu (ATR) — toggle kapalıyken effectiveTradeAmount === tradeAmount
   const atr = calculateATR(highs, lows, closes, 14);
@@ -11071,7 +11093,7 @@ async function coinTickInner(coin, state) {
   state.lastKlines = klines;
   drawCoinLiveChart(coin, klines, price, state);
 
-  const ctx = { closes, highs, lows, klines, price };
+  const ctx = { closes, highs, lows, klines: sigKlines, price }; // v50.7: sinyaller kapanmış mumlardan
   const activeList = getActiveIndicatorList();
   const minConfirm = getMinConfirmCount();
 
@@ -11271,7 +11293,7 @@ async function coinTickInner(coin, state) {
     } else if (buyCount >= weightedMinConfirm && (state._exhaustReason = exhaustionEntryBlocked('long', highs, lows, closes, atr, price))) {
       log(`🛡️ [Tükenme Kalkanı] ${coin} LONG engellendi — ${state._exhaustReason}.`, 'warn', coin);
     try{recordRejection(coin,'long','Tükenme Kalkanı');}catch(e){}
-    } else if (buyCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('long', klines, atr))) {
+    } else if (buyCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('long', klines, atr))  /* v50.7: ham klines — fonksiyon forming-mum varsayımıyla yazılmış (n-2'yi okur) */) {
       log(`🕯️ [Mum Kalkanı] ${coin} LONG engellendi — ${state._candleReason}.`, 'warn', coin);
     try{recordRejection(coin,'long','Mum Kalkanı');}catch(e){}
     } else if (buyCount >= weightedMinConfirm && (state._consL = consensusCheck(rawSignals, regimeInfo.regime, regimeFilterOn, 'long')) && !state._consL.ok) {
@@ -13895,7 +13917,10 @@ async function forceClose(coin, reasonTxt, setCooldown){
   const raw = (price - pos.entryPrice) / pos.entryPrice;
   const change = dir === 'long' ? raw : -raw;
   const grossPnl = pos.amount * change * leverage;
-  const { netPnl: pnl } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
+  // v50.7 KRİTİK FIX: `cost` destructure edilmemişti — aşağıdaki addTrade'de tanımsız
+  // değişkene erişim ReferenceError fırlatıyor, işlem kaydedilmeden ve pozisyon
+  // temizlenmeden fonksiyon ölüyordu (rotasyon kapanışları sessizce başarısızdı).
+  const { netPnl: pnl, cost } = calculateNetPnl(grossPnl, pos.amount, leverage, coin);
   addTrade(coin, price, pos.amount, pnl, pos.confirms, pos.entryPrice, dir, leverage, Date.now() - (pos.openedAt || Date.now()), 'manual', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { cost: cost, snapshot: pos.entrySnapshot || null, slPct: pos.stopLossPct ?? null, tpPct: pos.takeProfitPct ?? null, trailingArmedAt: pos.trailingArmedAt || null, interval: pos.interval || (document.getElementById('interval')?.value || '5m') });
   try { log(reasonTxt + ' | ' + coin + ' ' + dir.toUpperCase() + ' kapatıldı | ' + formatPrice(pos.entryPrice) + ' → ' + formatPrice(price) + ' | Net: ' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$', pnl>=0?'buy':'sell', coin); } catch(e){}
   state.openPosition = null;
