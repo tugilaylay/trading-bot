@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v50.0 ASİMETRİ PAKETİ</title>
+<title>TUGAY × QUANT · v50.1 ASİMETRİ PAKETİ + MUM KALKANI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.0 ⚖️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.1 🕯️</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2769,6 +2769,31 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div class="acc-divider"></div>
 
       <div class="card-title">
+        <span>🕯️ Mum Formasyonu Kalkanı (Price Action)</span>
+        <span class="optional-badge" style="background:rgba(106,72,232,0.2);color:var(--accent2);border-color:rgba(106,72,232,0.4);">v50 — YENİ</span>
+        <label class="regime-toggle-switch">
+          <input type="checkbox" id="candleGuardToggle" checked>
+          <span class="regime-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Fitil/Gövde Hassasiyeti (× kat)</label>
+          <input type="number" id="candleWickMult" value="2.0" min="1.2" max="4" step="0.1" />
+        </div>
+        <div class="form-group">
+          <label>Min. Yutan Mum Gücü (× ATR)</label>
+          <input type="number" id="candleEngulfAtr" value="0.6" min="0.2" max="2" step="0.1" />
+        </div>
+      </div>
+      <details class="risk-info">
+          <summary>ℹ️ Açıklama</summary>
+          <div class="ri-body"><b>Botun tek okumadığı şey mumun kendi şekliydi — artık okuyor.</b> Son kapanan mum bir <b>dönüş sinyali</b> basıyorsa, o yöne giriş reddedilir: LONG öncesi <b>uzun üst fitilli red mumu / ayı yutan mumu (bearish engulfing)</b> görürse "tepeden alma" engellenir; SHORT öncesi <b>uzun alt fitilli çekiç / boğa yutan mumu</b> görürse "dipten satma" engellenir. "Long açtırıp short'a gidiyor" sorununun birebir panzehiri. Fitil hassasiyeti: fitil gövdenin kaç katı olursa red sayılacağı. Yutan gücü: yutan mumun en az kaç ATR büyüklükte olması gerektiği (küçük gürültü mumlarını elemek için).</div>
+        </details>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
         <span>🛑 Maksimum Kaldıraçlı Zarar Sınırı</span>
         <span class="optional-badge" style="background:rgba(255,60,60,0.2);color:#ff6b6b;border-color:rgba(255,60,60,0.4);">ÖNERİLEN AÇIK</span>
         <label class="regime-toggle-switch">
@@ -3988,6 +4013,8 @@ const SETTINGS_FIELD_IDS = [
   'atrSizingToggle', 'atrReferencePct', 'atrTpSlToggle', 'atrSlMultiplier', 'atrTpMultiplier',
   // v48.0: Tükenme Kalkanı (dip/tepe koruması)
   'exhaustionGuardToggle', 'exhaustionLookback', 'exhaustionAtrMult',
+  // v50.1: Mum Formasyonu Kalkanı (price action dönüş mumu koruması)
+  'candleGuardToggle', 'candleWickMult', 'candleEngulfAtr',
   'logCriticalOnlyToggle',
   'maxLevLossToggle', 'maxLevLossPct',
   'adxMinFilterToggle', 'adxMinValue', 'trendGateToggle', 'sidewaysBlockToggle',
@@ -4605,6 +4632,17 @@ INDICATOR_DEFS['DIV_MACD'] = {
     return { value: emoji, signal: div.signal, label: div.label };
   }
 };
+// v50.1: Mum Formasyonu (Price Action dönüş mumu) — fitil/yutan geometrisi
+INDICATOR_DEFS['candlerev'] = {
+  name: 'MUM FORMASYONU', sub: 'Price action dönüş mumu (fitil/yutan)',
+  tier: 1,
+  compute: (ctx) => {
+    if (!Array.isArray(ctx.klines) || ctx.klines.length < 4) return { value: '—', signal: 'hold', label: 'BEKLE' };
+    let atr = 0;
+    try { atr = calculateATR(ctx.highs, ctx.lows, ctx.closes, 14); } catch(e) {}
+    return calcCandleReversalSignal(ctx.klines, atr);
+  }
+};
 // Uzun/kısa dönem hareketli ortalama farkı + ADX trend gücü kullanarak
 // piyasanın yükseliş, düşüş veya yatay (kararsız) olduğunu tahmin eder.
 function detectMarketRegime(ctx) {
@@ -4645,6 +4683,7 @@ const INDICATOR_TIER_WEIGHTS = {
   // Tier 2 — Onay göstergeleri (1.0x)
   adx: 1.0, cmf: 1.0, obv: 1.0, vol: 1.0,
   vwap: 1.0, keltner: 1.0, donchian: 1.0, // v38.1: kurumsal referans + kanal kırılımları
+  candlerev: 1.0, // v50.1: price action dönüş mumu (onay göstergesi)
   // Tier 3 — Osilatörler / mean-reversion (0.5x)
   rsi: 0.5, stochrsi: 0.5, williamsr: 0.5, cci: 0.5, boll: 0.5, mfi: 0.5,
 };
@@ -4666,7 +4705,7 @@ function applyRegimeWeighting(signals, regime) {
   return weighted;
 }
 
-const INDICATOR_ORDER = ['rsi','macd','boll','vol','supertrend','ichimoku','adx','stochrsi','macross','obv','cci','williamsr','psar','cmf','ematrend','vwap','mfi','keltner','donchian','DIV_RSI','DIV_MACD'];
+const INDICATOR_ORDER = ['rsi','macd','boll','vol','supertrend','ichimoku','adx','stochrsi','macross','obv','cci','williamsr','psar','cmf','ematrend','vwap','mfi','keltner','donchian','DIV_RSI','DIV_MACD','candlerev'];
 
 // v35 Varsayılan göstergeler: EMA Trend + Supertrend + ADX
 // Bu üç gösterge birlikte trend yönünü, gücünü ve onayını sağlar.
@@ -9562,6 +9601,69 @@ function exhaustionEntryBlocked(direction, highs, lows, closes, atr, price) {
 // Düşüş trendinde LONG açmayı, yükseliş trendinde SHORT açmayı engeller.
 // EMA Trend göstergesi (EMA50 vs EMA200) baz alınır — bu en güvenilir uzun vadeli filtredir.
 // Kullanıcı isterse kapatabilir ama varsayılan AÇIK — trende karşı bahis %70+ oranında kaybeder.
+// ───────── v50.1: 🕯️ Mum Formasyonu Kalkanı (Price Action Dönüş Mumu) ─────────
+// Botun tüm göstergeleri SAYISALdı (RSI değeri, EMA farkı, hacim oranı...). Hiçbiri
+// mumun kendi GEOMETRİSİNİ okumuyordu. Oysa tepeler uzun üst fitilli red mumu, dipler
+// uzun alt fitilli çekiç basar. "Long açtırıp short'a gidiyor" şikayetinin birebir
+// sebebi buydu: sayılar "AL" derken kapanan mum "DÖNÜYORUM" diye bağırıyordu.
+function analyzeCandleShape(o, h, l, c) {
+  const range = h - l;
+  if (range <= 0) return null;
+  const body = Math.abs(c - o);
+  const upperWick = h - Math.max(o, c);
+  const lowerWick = Math.min(o, c) - l;
+  return { range, body, upperWick, lowerWick, bull: c >= o };
+}
+
+// Son KAPANAN mum(lar)da dönüş formasyonu arar — TOGGLE'DAN BAĞIMSIZ saf çekirdek.
+// direction 'long' ise AYI dönüş mumu, 'short' ise BOĞA dönüş mumu arar.
+function detectReversalPattern(direction, klines, atr) {
+  if (!Array.isArray(klines) || klines.length < 4) return null;
+  const wickMult   = Math.max(1.2, Math.min(4, parseFloat(document.getElementById('candleWickMult')?.value) || 2.0));
+  const engulfAtrX = Math.max(0.2, Math.min(2, parseFloat(document.getElementById('candleEngulfAtr')?.value) || 0.6));
+
+  // Oluşmakta olan son mum (klines[n-1]) hariç — o hâlâ değişebilir, yanıltır.
+  // Değerlendirilen mum = son KAPANAN mum (n-2), yutan için bir öncesi (n-3).
+  const n = klines.length;
+  const cur = klines[n - 2], prev = klines[n - 3];
+  const co = +cur[1], ch = +cur[2], cl = +cur[3], cc = +cur[4];
+  const po = +prev[1], pc = +prev[4];
+
+  const s = analyzeCandleShape(co, ch, cl, cc);
+  if (!s || s.body <= 0) return null; // doji/kararsızlık — tek başına engelleme yapmaz
+  const minEngulfBody = (atr && atr > 0) ? engulfAtrX * atr : s.range * 0.3;
+
+  if (direction === 'long') {
+    const bearEngulf = (pc >= po) && (cc < co) && (co >= pc) && (cc <= po) && (s.body >= minEngulfBody);
+    if (bearEngulf) return `son kapanan mum bir AYI YUTAN MUMU (bearish engulfing) — önceki yükselişi tamamen sildi. Tepeden LONG = kâr satışına yem olmak`;
+    const shootingStar = (s.upperWick >= wickMult * s.body) && (s.upperWick >= 0.5 * s.range) && (s.lowerWick <= 0.25 * s.range);
+    if (shootingStar) return `son kapanan mumda uzun ÜST FİTİL (${(s.upperWick / s.body).toFixed(1)}× gövde) — alıcılar tepede reddedildi (kayan yıldız). LONG girişi riskli`;
+  } else if (direction === 'short') {
+    const bullEngulf = (pc < po) && (cc >= co) && (co <= pc) && (cc >= po) && (s.body >= minEngulfBody);
+    if (bullEngulf) return `son kapanan mum bir BOĞA YUTAN MUMU (bullish engulfing) — önceki düşüşü tamamen sildi. Dipten SHORT = tepki yükselişine yem olmak`;
+    const hammer = (s.lowerWick >= wickMult * s.body) && (s.lowerWick >= 0.5 * s.range) && (s.upperWick <= 0.25 * s.range);
+    if (hammer) return `son kapanan mumda uzun ALT FİTİL (${(s.lowerWick / s.body).toFixed(1)}× gövde) — satıcılar dipte reddedildi (çekiç). SHORT girişi riskli`;
+  }
+  return null;
+}
+
+// Giriş VETO'su — sadece toggle açıkken devreye girer.
+function candleReversalBlocked(direction, klines, atr) {
+  const toggle = document.getElementById('candleGuardToggle');
+  if (!toggle || !toggle.checked) return null;
+  return detectReversalPattern(direction, klines, atr);
+}
+
+// Gösterge paneli için: son kapanan mumun dönüş sinyali (toggle'dan bağımsız gösterim).
+function calcCandleReversalSignal(klines, atr) {
+  if (!Array.isArray(klines) || klines.length < 4) return { signal: 'hold', label: 'BEKLE', value: '—' };
+  const bear = detectReversalPattern('long', klines, atr);
+  const bull = detectReversalPattern('short', klines, atr);
+  if (bear && !bull) return { signal: 'sell', label: '🔴 AYI DÖNÜŞ', value: '↘' };
+  if (bull && !bear) return { signal: 'buy',  label: '🟢 BOĞA DÖNÜŞ', value: '↗' };
+  return { signal: 'hold', label: 'NÖTR', value: '—' };
+}
+
 function isTrendGateBlocked(direction, rawSignals) {
   const toggle = document.getElementById('trendGateToggle');
   if (!toggle || !toggle.checked) return false;
@@ -10923,6 +11025,9 @@ async function coinTickInner(coin, state) {
     } else if (buyCount >= weightedMinConfirm && (state._exhaustReason = exhaustionEntryBlocked('long', highs, lows, closes, atr, price))) {
       log(`🛡️ [Tükenme Kalkanı] ${coin} LONG engellendi — ${state._exhaustReason}.`, 'warn', coin);
     try{recordRejection(coin,'long','Tükenme Kalkanı');}catch(e){}
+    } else if (buyCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('long', klines, atr))) {
+      log(`🕯️ [Mum Kalkanı] ${coin} LONG engellendi — ${state._candleReason}.`, 'warn', coin);
+    try{recordRejection(coin,'long','Mum Kalkanı');}catch(e){}
     } else if (buyCount >= weightedMinConfirm && !entryConfirmed('long', state, buyCount, weightedMinConfirm)) {
       // v46.4: sinyal var, filtreler temiz ama giriş teyit turu henüz tamamlanmadı — bekleniyor
       log(`⏳ [Giriş Onayı] ${coin} LONG sinyali (skor:${buyCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.long||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
@@ -10957,6 +11062,9 @@ async function coinTickInner(coin, state) {
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && (state._exhaustReason = exhaustionEntryBlocked('short', highs, lows, closes, atr, price))) {
       log(`🛡️ [Tükenme Kalkanı] ${coin} SHORT engellendi — ${state._exhaustReason}.`, 'warn', coin);
     try{recordRejection(coin,'short','Tükenme Kalkanı');}catch(e){}
+    } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && (state._candleReason = candleReversalBlocked('short', klines, atr))) {
+      log(`🕯️ [Mum Kalkanı] ${coin} SHORT engellendi — ${state._candleReason}.`, 'warn', coin);
+    try{recordRejection(coin,'short','Mum Kalkanı');}catch(e){}
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm && !entryConfirmed('short', state, sellCount, weightedMinConfirm)) {
       log(`⏳ [Giriş Onayı] ${coin} SHORT sinyali (skor:${sellCount.toFixed(1)}) teyit bekliyor (${state.entryStreak?.short||0}/${(parseInt(document.getElementById('entryConfirmTicks')?.value)||2)} tick).`, 'info', coin);
     } else if (tradeMode === 'futures_sim' && sellCount >= weightedMinConfirm) {
@@ -13348,6 +13456,15 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
     if (exhaustReason) {
       brain('🛡️ [Tükenme Kalkanı] ' + short + ' ' + direction.toUpperCase() + ' engellendi — ' + exhaustReason + '.');
       try { recordRejection(short, direction, 'Tükenme Kalkanı'); } catch(e) {}
+      return false;
+    }
+  } catch(e) {}
+  // v50.1: 🕯️ Mum Formasyonu Kalkanı — otopilotta da dönüş mumuna karşı giriş veto'su
+  try {
+    const candleReason = candleReversalBlocked(direction, klines, atr);
+    if (candleReason) {
+      brain('🕯️ [Mum Kalkanı] ' + short + ' ' + direction.toUpperCase() + ' engellendi — ' + candleReason + '.');
+      try { recordRejection(short, direction, 'Mum Kalkanı'); } catch(e) {}
       return false;
     }
   } catch(e) {}
