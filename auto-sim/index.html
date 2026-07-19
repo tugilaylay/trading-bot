@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v50.1 ASİMETRİ PAKETİ + MUM KALKANI</title>
+<title>TUGAY × QUANT · v50.2 REJİM ÖNCELİKLİ MİMARİ + KALKAN KARNESİ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.1 🕯️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.2 🧭</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -1428,7 +1428,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
   <!-- ══════════ CANLI ANA GRAFİK — sürekli yaşayan mum grafiği ══════════ -->
   <div class="qt-chart-wrap">
     <div class="qt-chart-head">
-      <span class="qt-chart-title">■ <span id="qtChartSym">BTC</span>/USDT · <span id="qtChartTf">1DK</span> · CANLI</span>
+      <span class="qt-chart-title">■ <span id="qtChartSym">BTC</span>/USDT · <span id="qtChartTf">15DK</span> · CANLI</span>
       <div class="qt-chart-coins" id="qtChartCoins">
         <button class="qt-cbtn active" data-sym="BTCUSDT" data-name="BTC">BTC</button>
         <button class="qt-cbtn" data-sym="ETHUSDT" data-name="ETH">ETH</button>
@@ -1437,9 +1437,9 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       </div>
       <span class="qt-chart-price" id="qtChartPrice">—</span>
       <div class="qt-chart-tfs" id="qtChartTfs">
-        <button class="qt-tfbtn active" data-iv="1m"  data-label="1DK">1dk</button>
+        <button class="qt-tfbtn" data-iv="1m"  data-label="1DK">1dk</button>
         <button class="qt-tfbtn" data-iv="5m"  data-label="5DK">5dk</button>
-        <button class="qt-tfbtn" data-iv="15m" data-label="15DK">15dk</button>
+        <button class="qt-tfbtn active" data-iv="15m" data-label="15DK">15dk</button>
         <button class="qt-tfbtn" data-iv="1h"  data-label="1S">1s</button>
         <button class="qt-tfbtn" data-iv="4h"  data-label="4S">4s</button>
       </div>
@@ -2821,15 +2821,28 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <div class="card-title">
         <span>🧭 Piyasa Rejimi Filtresi</span>
-        <span class="optional-badge">İSTEĞE BAĞLI</span>
+        <span class="optional-badge" style="background:rgba(80,200,120,0.2);color:var(--green);border-color:rgba(80,200,120,0.4);">v50.2 — REJİM ÖNCELİKLİ</span>
         <label class="regime-toggle-switch">
           <input type="checkbox" id="regimeFilterToggle" checked>
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
-      <div style="font-size:11.5px;color:var(--muted);line-height:1.6;">
-        Açıkken: piyasa <b style="color:var(--text)">yatay/kararsız</b> ise trend göstergelerinin (Supertrend, Ichimoku, MA Cross, ADX) etkisi yarıya düşer; piyasa <b style="color:var(--text)">trendli</b> ise momentum göstergelerinin (RSI, Stoch RSI) etkisi azalır. Amaç: yanlış sinyalleri azaltmak.
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Rejim Modu</label>
+          <select id="regimeMode">
+            <option value="strict" selected>🎯 Katı — Rejim Öncelikli (önerilen)</option>
+            <option value="soft">🪶 Yumuşak — Sadece ağırlık azalt</option>
+          </select>
+        </div>
       </div>
+      <details class="risk-info">
+        <summary>ℹ️ Açıklama</summary>
+        <div class="ri-body">
+          <b>🎯 Katı (yeni mimari):</b> Önce piyasa rejimi belirlenir, sonra SADECE o rejime uygun aile oy kullanır. Trendde osilatörler (RSI, StochRSI, CCI, WillR, Boll, MFI) <b>tamamen susar</b> — "ucuzladı, al" diyip düşen bıçağı tutturamazlar; "düşen coine long" hatasının kökü budur. Yatayda trend göstergeleri (Supertrend, Ichimoku, MA Cross, PSAR, EMA Trend, MACD, ADX, Keltner, Donchian) <b>tamamen susar</b> — sahte kırılım kovalatamazlar. Hacim/akış/formasyon ailesi (Hacim, OBV, CMF, VWAP, Uyuşmazlıklar, Mum Formasyonu) her rejimde konuşur. Onay eşiği de konuşan göstergelere göre yeniden hesaplanır — bot kilitlenmez.<br>
+          <b>🪶 Yumuşak (eski davranış):</b> kimse susmaz, sadece uygun olmayanların sesi kısılır (0.5x / 0.7x).
+        </div>
+      </details>
 
       <div class="acc-divider"></div>
 
@@ -3015,6 +3028,18 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <span style="font-size:10px;color:var(--muted);" id="v46RejCount">0 kayıt</span>
     </summary>
     <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0;">Her engellenen sinyal buraya işlenir. 30 dk sonra fiyat kontrol edilir: giriş yapılsaydı ne olurdu? Böylece her filtrenin <b>gerçek değeri</b> ölçülür — kaçınılan zarar mı, kaçırılan kâr mı? Ölçemediğini optimize edemezsin.</div>
+    <div class="card-title" style="margin-top:4px;">
+      <span>💤 Otomatik Kalkan Uyutma (Karne Hakimi)</span>
+      <span class="optional-badge" style="background:rgba(106,72,232,0.2);color:var(--accent2);border-color:rgba(106,72,232,0.4);">v50.2 — YENİ</span>
+      <label class="regime-toggle-switch">
+        <input type="checkbox" id="gateAutoSleepToggle" checked>
+        <span class="regime-toggle-slider"></span>
+      </label>
+    </div>
+    <details class="risk-info">
+      <summary>ℹ️ Açıklama</summary>
+      <div class="ri-body">Defter artık sadece rapor değil, <b>hakim</b>. Bir kapının uyanışından bu yana biriken <b>taze kanıtı</b> (en az 6 değerlendirilmiş red) net olarak <b>−2%'nin altındaysa</b> — yani kaçırdığı kâr, kaçındığı zarardan belirgin fazlaysa — o kapı <b>24 saat uyutulur</b>, veto edemez. Ertesi gün kendiliğinden uyanır ve sıfırdan kanıt toplar (eski kayıtlar hükümde kullanılmaz). Uyuyan kapılar tabloda 💤 ile görünür. Ölçmeden eklenen her kalkan bir inançtır; ölçünce bilgi olur.</div>
+    </details>
     <div id="v46RejGateTable" style="margin-bottom:12px;"></div>
     <div class="ra-section-title">Son Redler</div>
     <div id="v46RejRecent" style="font-family:var(--mono);font-size:10.5px;line-height:1.7;"></div>
@@ -4005,7 +4030,7 @@ function clearPerfLog() {
 const SETTINGS_FIELD_IDS = [
   'interval', 'tradeAmount', 'stopLoss', 'takeProfit',
   'minConfirmPct', 'notifMode', 'tradeMode', 'leverage',
-  'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle',
+  'telegramToken', 'telegramChatId', 'telegramToggle', 'regimeFilterToggle', 'regimeMode', 'gateAutoSleepToggle',
   'mathGateToggle', 'mathGateCostMult', 'mathGateMinRR', 'manualCooldownMin', 'entryConfirmToggle', 'entryConfirmTicks', 'trailingStopToggle', 'trailingStopPct', 'trailingActivationPct', 'autoScaleTrailingActivation', 'partialTpToggle', 'partialTpPct',
   'ratchetToggle', 'ratchetStepPct', 'ratchetLockRatio',
   'dailyLossLimitToggle', 'dailyLossLimitPct', 'perCoinLossLimitToggle', 'perCoinLossLimitPct',
@@ -4664,8 +4689,45 @@ function detectMarketRegime(ctx) {
 // Rejime göre hangi gösterge kategorisinin daha güvenilir olduğunu belirler.
 // Yatay piyasada trend göstergeleri (Supertrend, Ichimoku, MA Cross) zayıflatılır,
 // yükseliş/düşüş trendinde ise momentum göstergeleri (RSI, StochRSI gibi ters-sinyal verenler) zayıflatılır.
-const TREND_INDICATORS = ['supertrend', 'ichimoku', 'macross', 'adx'];
-const MOMENTUM_INDICATORS = ['rsi', 'stochrsi'];
+// ───────── v50.2: REJİM-ÖNCELİKLİ MİMARİ ─────────
+// Eski felsefe: "herkes oylasın, rejim sadece sesini kıssın" (0.5x / 0.7x).
+// Yeni felsefe (Katı mod): ÖNCE piyasa rejimi belirlenir, SONRA sadece o rejime
+// uygun gösterge ailesi konuşur. Trendde osilatörler TAMAMEN susar ("ucuzladı, al"
+// diyip düşen bıçağı tutturamazlar), yatayda trend göstergeleri TAMAMEN susar
+// (sahte kırılım kovalatamazlar). Hacim/akış/formasyon ailesi her rejimde konuşur.
+const REGIME_TREND_FAMILY = ['supertrend','ichimoku','macross','adx','psar','ematrend','macd','keltner','donchian'];
+const REGIME_OSC_FAMILY   = ['rsi','stochrsi','williamsr','cci','boll','mfi'];
+// Her rejimde aktif: vol, obv, cmf, vwap, DIV_RSI, DIV_MACD, candlerev (hacim/akış/formasyon)
+
+function getRegimeMode(){ return document.getElementById('regimeMode')?.value || 'strict'; }
+
+// Bir göstergenin bu rejimdeki katsayısı: Katı modda 0 veya 1, Yumuşak modda 0.5/0.7/1.
+function regimeWeightFactor(id, regime) {
+  const trending = (regime === 'uptrend' || regime === 'downtrend');
+  if (getRegimeMode() === 'soft') {
+    if (regime === 'sideways' && REGIME_TREND_FAMILY.includes(id)) return 0.5;
+    if (trending && REGIME_OSC_FAMILY.includes(id)) return 0.7;
+    return 1;
+  }
+  // Katı (rejim-öncelikli): uygun olmayan aile sıfırlanır
+  if (regime === 'sideways' && REGIME_TREND_FAMILY.includes(id)) return 0;
+  if (trending && REGIME_OSC_FAMILY.includes(id)) return 0;
+  return 1;
+}
+
+// Geriye uyumluluk için eski isimler korunuyor (soft modun referans listeleri)
+const TREND_INDICATORS = REGIME_TREND_FAMILY;
+const MOMENTUM_INDICATORS = REGIME_OSC_FAMILY;
+
+function applyRegimeWeighting(signals, regime) {
+  // signals: { id: 'buy'|'sell'|'hold' } şeklinde bir obje
+  // regimeFilterEnabled kontrolü çağıran yerde yapılır
+  const weighted = {};
+  Object.keys(signals).forEach(id => {
+    weighted[id] = { signal: signals[id], weight: regimeWeightFactor(id, regime) };
+  });
+  return weighted;
+}
 
 // ───────── Gösterge Ağırlık Sistemi (v32) ─────────
 // Eski sistem: her gösterge 1 eşit oy → RSI/Boll/CCI gibi 5 osilatör düşüşte hep "AL" der,
@@ -4690,19 +4752,6 @@ const INDICATOR_TIER_WEIGHTS = {
 
 function getIndicatorWeight(id) {
   return INDICATOR_TIER_WEIGHTS[id] || 1.0;
-}
-
-function applyRegimeWeighting(signals, regime) {
-  // signals: { id: 'buy'|'sell'|'hold' } şeklinde bir obje
-  // regimeFilterEnabled kontrolü çağıran yerde yapılır
-  const weighted = {};
-  Object.keys(signals).forEach(id => {
-    let weight = 1;
-    if (regime === 'sideways' && TREND_INDICATORS.includes(id)) weight = 0.5;
-    if (regime !== 'sideways' && MOMENTUM_INDICATORS.includes(id)) weight = 0.7;
-    weighted[id] = { signal: signals[id], weight };
-  });
-  return weighted;
 }
 
 const INDICATOR_ORDER = ['rsi','macd','boll','vol','supertrend','ichimoku','adx','stochrsi','macross','obv','cci','williamsr','psar','cmf','ematrend','vwap','mfi','keltner','donchian','DIV_RSI','DIV_MACD','candlerev'];
@@ -9546,6 +9595,7 @@ function computeEffectiveTpSl(stopLossDefault, takeProfitDefault, atr, price, le
 function isSidewaysEntryBlocked(regime) {
   const toggle = document.getElementById('sidewaysBlockToggle');
   if (!toggle || !toggle.checked) return false;
+  try { if (window.isGateAsleep && isGateAsleep('Yatay Piyasa')) return false; } catch(e){} // v50.2: karne uyuttu
   return regime === 'sideways';
 }
 
@@ -9562,6 +9612,7 @@ function isSidewaysEntryBlocked(regime) {
 function exhaustionEntryBlocked(direction, highs, lows, closes, atr, price) {
   const toggle = document.getElementById('exhaustionGuardToggle');
   if (!toggle || !toggle.checked) return null;
+  try { if (window.isGateAsleep && isGateAsleep('Tükenme Kalkanı')) return null; } catch(e){} // v50.2: karne uyuttu
   if (!atr || !price || price <= 0 || !Array.isArray(closes) || closes.length < 25) return null;
 
   const lookback = Math.max(10, Math.min(200, parseInt(document.getElementById('exhaustionLookback')?.value) || 50));
@@ -9651,6 +9702,7 @@ function detectReversalPattern(direction, klines, atr) {
 function candleReversalBlocked(direction, klines, atr) {
   const toggle = document.getElementById('candleGuardToggle');
   if (!toggle || !toggle.checked) return null;
+  try { if (window.isGateAsleep && isGateAsleep('Mum Kalkanı')) return null; } catch(e){} // v50.2: karne uyuttu
   return detectReversalPattern(direction, klines, atr);
 }
 
@@ -9667,6 +9719,7 @@ function calcCandleReversalSignal(klines, atr) {
 function isTrendGateBlocked(direction, rawSignals) {
   const toggle = document.getElementById('trendGateToggle');
   if (!toggle || !toggle.checked) return false;
+  try { if (window.isGateAsleep && isGateAsleep('Trend Gate')) return false; } catch(e){} // v50.2: karne uyuttu
   // EMA Trend aktif değilse gate çalışmaz (kullanıcı seçmemişse)
   if (!rawSignals.hasOwnProperty('ematrend')) return false;
   const emaTrend = rawSignals['ematrend'];
@@ -10923,9 +10976,16 @@ async function coinTickInner(coin, state) {
   }
 
   // minConfirm artık ağırlıklı toplam skora göre: aktif göstergelerin toplam max ağırlığının %minPct'i
-  const totalMaxWeight = activeList.reduce((sum, id) => sum + getIndicatorWeight(id), 0);
+  // v50.2 KRİTİK: Katı rejim modunda susturulan göstergeler PAYDA'dan da düşülmeli —
+  // yoksa 21 göstergenin 9'u susmuşken eşik hâlâ 21'e göre hesaplanır ve bot asla işlem açamaz.
+  const totalMaxWeight = activeList.reduce((sum, id) => {
+    const f = regimeFilterOn ? regimeWeightFactor(id, regimeInfo.regime) : 1;
+    return sum + getIndicatorWeight(id) * f;
+  }, 0);
   const minConfirmPct = parseFloat(document.getElementById('minConfirmPct').value) || 0.6;
-  const weightedMinConfirm = totalMaxWeight * minConfirmPct;
+  // Güvenlik: bu rejimde konuşabilen hiç gösterge kalmadıysa (ör. sadece osilatör seçilmiş
+  // + trend rejimi + katı mod) eşik sonsuz olur → sıfır skorla pozisyon açılması imkânsızlaşır.
+  const weightedMinConfirm = totalMaxWeight > 0 ? totalMaxWeight * minConfirmPct : Infinity;
 
   updateScoreBar(coin, buyCount, sellCount, weightedMinConfirm, totalMaxWeight);
 
@@ -10934,7 +10994,8 @@ async function coinTickInner(coin, state) {
 
   // ── v36.8: Multi-Timeframe Analizi (cache'li, async) ──
   let mtfLongOk = true, mtfShortOk = true;
-  const mtfOn = document.getElementById('mtfToggle')?.checked;
+  let mtfOn = document.getElementById('mtfToggle')?.checked;
+  try { if (mtfOn && window.isGateAsleep && isGateAsleep('MTF Onayı')) mtfOn = false; } catch(e){} // v50.2: karne uyuttu
   if (mtfOn && !state.openPosition) {
     const tf2 = document.getElementById('mtfTf2')?.value || '1h';
     const tf3 = document.getElementById('mtfTf3')?.value || '4h';
@@ -10965,6 +11026,7 @@ async function coinTickInner(coin, state) {
       // ── v41: Funding Rate Filtresi (yön duyarlı) ──
       const fundOn = document.getElementById('fundingFilterToggle')?.checked;
       if (!fundOn) return false;
+      try { if (window.isGateAsleep && isGateAsleep('Funding')) return false; } catch(e){} // v50.2: karne uyuttu
       const rate = getFundingRate(cfg.symbol);
       if (rate === null) return false; // veri yoksa fail-open
       const thresh = parseFloat(document.getElementById('fundingThreshold')?.value) || 0.05;
@@ -10992,6 +11054,7 @@ async function coinTickInner(coin, state) {
     } else if ((() => {
       // ── v36.7: BTC Korelasyon Filtresi ──
       const btcOn = document.getElementById('btcCorrToggle')?.checked;
+      try { if (btcOn && window.isGateAsleep && isGateAsleep('BTC Korelasyon')) return false; } catch(e){} // v50.2: karne uyuttu
       const btcThresh = parseFloat(document.getElementById('btcCorrThreshold')?.value) || 3;
       if (btcOn && coin !== 'BTC' && btcCorrCache.change <= -btcThresh) {
         log(`🔗 [BTC Korelasyon] ${coin} — BTC son 4s'te %${btcCorrCache.change.toFixed(2)} düştü (eşik: -%${btcThresh}). LONG engellendi.`, 'warn', coin);
@@ -11003,6 +11066,7 @@ async function coinTickInner(coin, state) {
     else if ((() => {
       // ── v36.7: Fear & Greed Filtresi ──
       const fgOn = document.getElementById('fgFilterToggle')?.checked;
+      try { if (fgOn && window.isGateAsleep && isGateAsleep('Fear&Greed')) return false; } catch(e){} // v50.2: karne uyuttu
       const fgThresh = parseFloat(document.getElementById('fgThreshold')?.value) || 25;
       if (fgOn && fearGreedData.value <= fgThresh && fearGreedData.lastFetch > 0) {
         log(`😱 [Fear & Greed] ${coin} — F&G endeksi ${fearGreedData.value} (Aşırı Korku eşiği: ${fgThresh}). LONG engellendi.`, 'warn', coin);
@@ -12193,21 +12257,29 @@ async function runScanner() {
         if (tv > 1000) flowRatio = Math.max(-1, Math.min(1, (2 * tb - tv) / tv)); // güvenlik kelepçesi
       } catch(e) {}
 
-      let buyScore = 0, sellScore = 0;
+      let buyScore = 0, sellScore = 0, effTotal = 0;
       if (regimeFilterOn) {
+        // v50.2: canlı döngüyle AYNI matematik — rejim katsayısı × tier ağırlığı,
+        // eşik de konuşan göstergelerin toplamına göre (katı modda susanlar paydadan düşer).
         const weighted = applyRegimeWeighting(rawSignals, regimeInfo.regime);
-        Object.values(weighted).forEach(({ signal, weight }) => {
-          if (signal === 'buy') buyScore += weight;
-          else if (signal === 'sell') sellScore += weight;
+        Object.keys(weighted).forEach(id => {
+          const { signal, weight } = weighted[id];
+          const eff = weight * getIndicatorWeight(id);
+          effTotal += eff;
+          if (signal === 'buy') buyScore += eff;
+          else if (signal === 'sell') sellScore += eff;
         });
       } else {
         Object.values(rawSignals).forEach(s => {
+          effTotal += 1;
           if (s === 'buy') buyScore++; else if (s === 'sell') sellScore++;
         });
       }
+      const minConfirmPctS = parseFloat(document.getElementById('minConfirmPct').value) || 0.6;
+      const threshold = effTotal > 0 ? effTotal * minConfirmPctS : Infinity;
 
       return {
-        coinDef, price, buyScore, sellScore, regimeInfo, flowRatio,
+        coinDef, price, buyScore, sellScore, regimeInfo, flowRatio, effTotal, threshold,
         netScore: buyScore - sellScore,
         dominantSignal: buyScore > sellScore ? 'buy' : sellScore > buyScore ? 'sell' : 'hold'
       };
@@ -12220,8 +12292,20 @@ async function runScanner() {
   const scanResults = await Promise.all(scanUniverse.map(scanOneCoin));
   const results = scanResults.filter(r => r !== null);
 
-  // En güçlü AL sinyalinden en güçlü SAT sinyaline doğru sırala
-  results.sort((a, b) => b.netScore - a.netScore);
+  // v50.2: Sıralama düzeltildi — eskiden netScore'a göre sıralanıyordu, bu güçlü SAT
+  // sinyallerini listenin EN ALTINA atıyordu (nötr yığının bile altına). Artık:
+  // 1) "Bu Sinyali Uygula" çıkabilecek coinler (onay eşiğini geçenler) EN ÜSTTE,
+  //    kendi içinde sinyal gücüne göre (AL veya SAT farketmez — güç önemli).
+  // 2) Kalanlar altta, yine güce göre.
+  results.forEach(r => {
+    r.sigStrength = Math.max(r.buyScore, r.sellScore);
+    r.actionable = (r.dominantSignal === 'buy' && r.buyScore >= r.threshold) ||
+                   (r.dominantSignal === 'sell' && r.sellScore >= r.threshold);
+  });
+  results.sort((a, b) => {
+    if (a.actionable !== b.actionable) return a.actionable ? -1 : 1;
+    return b.sigStrength - a.sigStrength;
+  });
 
   if (results.length === 0) {
     content.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px;">⚠️ Hiçbir coin için veri alınamadı.</div>';
@@ -12229,10 +12313,11 @@ async function runScanner() {
   }
 
   const rows = results.map(res => {
-    const { coinDef, price, buyScore, sellScore, dominantSignal, regimeInfo, flowRatio } = res;
-    const rowCls = dominantSignal === 'buy' && buyScore >= minConfirm ? 'scan-buy' : dominantSignal === 'sell' && sellScore >= minConfirm ? 'scan-sell' : '';
-    const sigLabel = dominantSignal === 'buy' ? `🟢 AL ${buyScore.toFixed(1)}/${activeList.length}` : dominantSignal === 'sell' ? `🔴 SAT ${sellScore.toFixed(1)}/${activeList.length}` : '— Nötr';
-    const strongEnough = (dominantSignal === 'buy' && buyScore >= minConfirm) || (dominantSignal === 'sell' && sellScore >= minConfirm);
+    const { coinDef, price, buyScore, sellScore, dominantSignal, regimeInfo, flowRatio, effTotal, threshold, actionable } = res;
+    const rowCls = actionable ? (dominantSignal === 'buy' ? 'scan-buy' : 'scan-sell') : '';
+    const denom = (effTotal || activeList.length).toFixed(1);
+    const sigLabel = dominantSignal === 'buy' ? `🟢 AL ${buyScore.toFixed(1)}/${denom}` : dominantSignal === 'sell' ? `🔴 SAT ${sellScore.toFixed(1)}/${denom}` : '— Nötr';
+    const strongEnough = actionable;
     const applyBtn = strongEnough
       ? `<button class="btn-apply-signal" onclick="event.stopPropagation(); applyScannerSignal('${coinDef.symbol}','${coinDef.short}','${coinDef.color}')">Bu Sinyali Uygula</button>`
       : `<span style="color:var(--muted);font-size:10.5px">Yetersiz onay</span>`;
@@ -12268,7 +12353,7 @@ async function runScanner() {
 
   // v45.2: OI + L/S zenginleştirmesi — önce güçlü sinyalliler, sonra sıradakiler; toplam ilk 15.
   try {
-    const enrichList = [...results.filter(r => (r.dominantSignal === 'buy' && r.buyScore >= minConfirm) || (r.dominantSignal === 'sell' && r.sellScore >= minConfirm)), ...results].map(r => r.coinDef.symbol);
+    const enrichList = [...results.filter(r => r.actionable), ...results].map(r => r.coinDef.symbol);
     enrichScannerPositioning([...new Set(enrichList)].slice(0, 15));
   } catch(e) {}
 
@@ -12937,7 +13022,7 @@ window.addEventListener('resize', () => { drawChart(); drawMiniEquityChart(); dr
     const symEl = document.getElementById('qtChartSym');
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let symbol = 'BTCUSDT', interval = '1m', candles = [], lastPrice = 0, dispPrice = 0;
+    let symbol = 'BTCUSDT', interval = '15m', candles = [], lastPrice = 0, dispPrice = 0;
     let flashDir = 0, flashT = 0, t0 = performance.now();
     let klineTimer = null, priceTimer = null, rafId = null;
 
@@ -13383,8 +13468,11 @@ async function scoreSymbol(symbol){
   const weighted = applyRegimeWeighting(rawSignals, regimeInfo.regime);
   Object.keys(weighted).forEach(id => {
     const { signal, weight } = weighted[id];
-    total += getIndicatorWeight(id);
-    if (signal === 'buy') buy += weight; else if (signal === 'sell') sell += weight;
+    // v50.2: pay ve payda aynı birimde — rejim katsayısı × tier ağırlığı.
+    // (Eskiden pay sadece rejim katsayısıydı, payda sadece tier ağırlığı — elma/armut.)
+    const eff = weight * getIndicatorWeight(id);
+    total += eff;
+    if (signal === 'buy') buy += eff; else if (signal === 'sell') sell += eff;
   });
   const netPct = total > 0 ? ((buy - sell) / total) * 100 : 0;
   let adx = null;
@@ -14259,6 +14347,64 @@ function v46RejEvaluate(){
     r.evalAt = now; changed = true;
   });
   if (changed) { v46RejSave(); renderRejectionLedger(); }
+  try { v50GateAutoSleep(); } catch(e){}
+}
+
+/* ═══ v50.2: 💤 KALKAN KARNESİ + OTOMATİK UYUTMA ═══
+   Red Defteri artık sadece rapor değil, HAKİM. Bir kapının, uyanışından bu yana
+   biriken TAZE kanıtı (≥6 değerlendirilmiş red) net NEGATİFSE (kaçırılan kâr,
+   kaçınılan zarardan ≥2 puan fazlaysa) o kapı 24 saat UYUTULUR — veto edemez.
+   24 saat sonra kendiliğinden uyanır ve sıfırdan kanıt toplamaya başlar (eski
+   kayıtlar hükümde kullanılmaz — wakeAt damgası). Ölçmeden eklenen her kalkan
+   bir inançtır; ölçünce bilgi olur. */
+const SK_GATESLEEP = 'v50_gateSleep';
+const GATE_SLEEP_MS = 24 * 60 * 60 * 1000;   // uyku süresi
+const GATE_MIN_EVIDENCE = 6;                  // hüküm için gereken taze değerlendirme
+const GATE_NET_THRESHOLD = -2;                // net % bu eşiğin altındaysa uyut
+window.v50GateState = {};
+try { v50GateState = JSON.parse(localStorage.getItem(SK_GATESLEEP) || '{}'); } catch(e){}
+function v50GateSave(){ try { localStorage.setItem(SK_GATESLEEP, JSON.stringify(v50GateState)); } catch(e){} }
+
+window.isGateAsleep = function(gate){
+  try {
+    const t = document.getElementById('gateAutoSleepToggle');
+    if (t && !t.checked) return false; // sistem kapalıysa kimse uyumaz
+    const g = v50GateState[gate];
+    return !!(g && g.sleepUntil && Date.now() < g.sleepUntil);
+  } catch(e){ return false; }
+};
+
+function v50GateAutoSleep(){
+  const t = document.getElementById('gateAutoSleepToggle');
+  if (t && !t.checked) return;
+  const now = Date.now();
+  // 1) Süresi dolan uykuları uyandır + taze-kanıt damgası vur
+  Object.keys(v50GateState).forEach(g => {
+    const st = v50GateState[g];
+    if (st.sleepUntil && now >= st.sleepUntil) {
+      st.sleepUntil = null; st.wakeAt = now; v50GateSave();
+      try { log(`💤→⏰ [Kalkan Karnesi] "${g}" uyandı — 24 saatlik uyku bitti, sıfırdan kanıt topluyor.`, 'system'); } catch(e){}
+    }
+  });
+  // 2) Uyanık kapılar için taze kanıtı topla ve hüküm ver
+  const fresh = {};
+  v46Rej.items.forEach(r => {
+    if (r.pct === null || r.dir === 'both') return;
+    const st = v50GateState[r.gate];
+    if (st && st.sleepUntil && now < st.sleepUntil) return;      // zaten uyuyor
+    if (st && st.wakeAt && r.ts <= st.wakeAt) return;            // eski kanıt — hükümde kullanma
+    const f = fresh[r.gate] = fresh[r.gate] || { n:0, net:0 };
+    f.n++; f.net += -r.pct; // engel değeri = kaçınılan hareketin tersi
+  });
+  Object.entries(fresh).forEach(([gate, f]) => {
+    if (f.n >= GATE_MIN_EVIDENCE && f.net <= GATE_NET_THRESHOLD) {
+      const st = v50GateState[gate] = v50GateState[gate] || {};
+      st.sleepUntil = now + GATE_SLEEP_MS;
+      v50GateSave();
+      try { log(`💤 [Kalkan Karnesi] "${gate}" 24 saat UYUTULDU — ${f.n} taze kanıtta net ${f.net.toFixed(1)}% (kâr yiyor, korumuyor). Yarın uyanıp yeniden denenecek.`, 'warn'); } catch(e){}
+      try { renderRejectionLedger(); } catch(e){}
+    }
+  });
 }
 
 window.renderRejectionLedger = function(){
@@ -14285,7 +14431,14 @@ window.renderRejectionLedger = function(){
   });
   let html = '<table class="v46-rej-table"><tr><th>KAPI</th><th>RED</th><th>KAÇINILAN</th><th>KAÇIRILAN</th><th>NET DEĞER</th><th></th></tr>';
   Object.entries(gates).sort((a,b)=>b[1].net-a[1].net).forEach(([g,s])=>{
-    const verdict = s.evald < 3 ? '⏳' : (s.net > 1 ? '🛡️ koruyor' : (s.net < -1 ? '⚠️ fırsat yiyor' : '➖ nötr'));
+    let verdict = s.evald < 3 ? '⏳' : (s.net > 1 ? '🛡️ koruyor' : (s.net < -1 ? '⚠️ fırsat yiyor' : '➖ nötr'));
+    try {
+      const gs = window.v50GateState && v50GateState[g];
+      if (gs && gs.sleepUntil && Date.now() < gs.sleepUntil) {
+        const remH = Math.ceil((gs.sleepUntil - Date.now()) / 3600000);
+        verdict = `💤 uyuyor (${remH}s)`;
+      }
+    } catch(e){}
     const netC = s.net > 0.5 ? 'var(--green)' : (s.net < -0.5 ? 'var(--red)' : 'var(--muted)');
     html += `<tr><td><b>${g}</b></td><td>${s.n}</td><td style="color:var(--green)">${s.saved.toFixed(1)}%</td><td style="color:var(--red)">${s.missed.toFixed(1)}%</td><td style="color:${netC};font-weight:700">${s.net>=0?'+':''}${s.net.toFixed(1)}%</td><td>${verdict}</td></tr>`;
   });
