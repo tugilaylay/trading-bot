@@ -2284,10 +2284,14 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
           <label>Kapatılacak oran %</label>
           <input type="number" id="partialLossClosePct" value="50" min="20" max="80" step="5" />
         </div>
+        <div class="form-group">
+          <label>Kesim sonrası kalanı sıkılaştır %</label>
+          <input type="number" id="partialLossTightenPct" value="50" min="0" max="90" step="5" />
+        </div>
       </div>
       <details class="risk-info">
           <summary>ℹ️ Açıklama</summary>
-          <div class="ri-body">Kısmi TP zaten var: kâr TP'nin yarısına gelince pozisyonun yarısı kapanıyor. Bunun zarar tarafındaki simetriği ise YOKTU — kaybeden pozisyon SL'e kadar tam boy koşuyordu. Artık zarar SL mesafesinin %50'sine (tetik ayarı) ulaştığında pozisyonun %50'si (oran ayarı) kapanır; kalan yarı toparlanma şansını SL'e kadar korur. Sonuç: tam SL yenen işlemin gerçek kaybı ~%75'e iner, toparlanıp kâra dönen işlemde ise küçük bir sigorta maliyeti ödenmiş olur. Kuyruk riskini (kepçe) doğrudan küçültür. Pozisyon başına bir kez tetiklenir; kayıt işlem geçmişine "✂️ Kısmi Zarar" olarak düşer.</div>
+          <div class="ri-body">Kısmi TP zaten var: kâr TP'nin yarısına gelince pozisyonun yarısı kapanıyor. Bunun zarar tarafındaki simetriği ise YOKTU — kaybeden pozisyon SL'e kadar tam boy koşuyordu. Artık zarar SL mesafesinin %50'sine (tetik ayarı) ulaştığında pozisyonun %50'si (oran ayarı) kapanır. v50.5: eskiden kalan yarı, orijinal SL'e kadar TAM eski mesafeyle koşmaya devam ediyordu ("toparlanma şansı" adına) — ama bu, tek bir kötü işlemde önce küçük ısırık sonra tam ısırık yemek demekti (kaşık-kepçe asimetrisini büyütüyordu). Artık kesim sonrası kalan pozisyonun stop'u da "Kesim sonrası kalanı sıkılaştır %" oranında içeri çekiliyor — %50'de, kalan yarıya eski mesafenin sadece yarısı kadar ek alan bırakılır. %0 = eski davranış (hiç sıkılaştırma yok), %90 = neredeyse hemen kapat. Kayıt işlem geçmişine "✂️ Kısmi Zarar" olarak düşer.</div>
         </details>
 
       <div class="acc-divider"></div>
@@ -11158,7 +11162,11 @@ async function coinTickInner(coin, state) {
       // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
       if (!mathGateOk(coin, 'long', slTp, leverage)) return;
       // v50.4: buraya kadar gelen sinyal TÜM giriş kapılarını geçmiş demektir — kanıtı sakla
-      const passedGatesL = ['Skor ✓', 'Trend Gate ✓'];
+      // v50.5 FIX: "Trend Gate ✓" eskiden toggle açıksa hep yazılıyordu — ama Trend Gate,
+      // 'ematrend' (EMA Trend) aktif değilse hiçbir şeyi değerlendirmez (bkz. isTrendGateBlocked).
+      // Artık sadece gerçekten veri varken "geçti" diyoruz; yoksa rozet hiç eklenmiyor.
+      const trendGateReallyOn = document.getElementById('trendGateToggle')?.checked && rawSignals.hasOwnProperty('ematrend');
+      const passedGatesL = trendGateReallyOn ? ['Skor ✓', 'Trend Gate ✓'] : ['Skor ✓'];
       if (mtfOn) passedGatesL.push('MTF ✓');
       if (document.getElementById('cvdFilterToggle')?.checked) passedGatesL.push('CVD Akış ✓');
       if (document.getElementById('crowdFilterToggle')?.checked) passedGatesL.push('Kalabalık ✓');
@@ -11201,8 +11209,9 @@ async function coinTickInner(coin, state) {
       if (flowConfluenceBlocked(coin, 'short')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
-      // v50.4: geçilen giriş kapılarının kanıtı
-      const passedGatesS = ['Skor ✓', 'Trend Gate ✓'];
+      // v50.4: geçilen giriş kapılarının kanıtı — v50.5: Trend Gate rozeti sadece gerçekten değerlendirildiyse
+      const trendGateReallyOnS = document.getElementById('trendGateToggle')?.checked && rawSignals.hasOwnProperty('ematrend');
+      const passedGatesS = trendGateReallyOnS ? ['Skor ✓', 'Trend Gate ✓'] : ['Skor ✓'];
       if (mtfOn) passedGatesS.push('MTF ✓');
       if (document.getElementById('cvdFilterToggle')?.checked) passedGatesS.push('CVD Akış ✓');
       if (document.getElementById('crowdFilterToggle')?.checked) passedGatesS.push('Kalabalık ✓');
@@ -11531,8 +11540,25 @@ async function coinTickInner(coin, state) {
         const { netPnl: cutPnl, cost: cutCost } = calculateNetPnl(grossCutPnl, cutAmount, pos.leverage || 1, coin);
 
         addTrade(coin, price, cutAmount, cutPnl, pos.confirms, pos.entryPrice, dir, pos.leverage || 1, Date.now() - (pos.openedAt || Date.now()), 'partial_sl', pos.entryRegime || null, pos.entrySignals || null, pos.autopilot, { maeLc: pos.maeLc ?? null, riskUsd: (pos.riskUsd != null ? pos.riskUsd * cutPct : null) });
-        log(`✂️ KISMİ ZARAR KESİLDİ (%${(cutPct*100).toFixed(0)}) | ${coin} ${dir==='long'?'LONG':'SHORT'} | Zarar SL mesafesinin %${(atRatio*100).toFixed(0)}'ine ulaştı (%${(leveragedChange*100).toFixed(2)}). Net: ${cutPnl.toFixed(2)}$ — kalan %${((1-cutPct)*100).toFixed(0)} toparlanma şansını SL'e kadar koruyor.`, 'sell', coin);
-        sendTelegramMessage(`✂️ <b>${coin} Kısmi Zarar Kesildi</b> (%${(cutPct*100).toFixed(0)})\nZarar: %${(leveragedChange*100).toFixed(2)} · Net: ${cutPnl.toFixed(2)} USDT\nKalan pozisyon SL'e kadar devam ediyor.`);
+
+        // v50.5: TRUMP/RE otopsisi bunu ortaya çıkardı — kalan pozisyon eskiden orijinal SL
+        // mesafesiyle koşmaya devam ediyordu, yani "küçük ısırık + sonra tam ısırık" oluyordu.
+        // Artık kalanın stop'u da tetik noktasıyla orijinal SL arasındaki mesafenin bir kısmını
+        // kapatarak içeri çekiliyor — kaşık/kepçe asimetrisini büyütmeden gerçek bir "sigorta".
+        const rawTighten = parseFloat(document.getElementById('partialLossTightenPct')?.value) || 50;
+        const tightenRatio = Math.min(Math.max(rawTighten, 0), 90) / 100;
+        if (tightenRatio > 0) {
+          const triggerDist = effStopLossAdj * atRatio;
+          const newStopLossPct = triggerDist + (1 - tightenRatio) * (effStopLossAdj - triggerDist);
+          const oldStopLossPct = (pos.stopLossPct !== undefined && pos.stopLossPct !== null) ? pos.stopLossPct : effStopLossAdj;
+          if (newStopLossPct < oldStopLossPct) {
+            pos.stopLossPct = newStopLossPct;
+            log(`🔒 [Kısmi Zarar sonrası sıkılaştırma] ${coin} — kalan pozisyonun stop'u %${(oldStopLossPct*100).toFixed(2)} → %${(newStopLossPct*100).toFixed(2)}'e çekildi (eskisi gibi tam SL mesafesine kadar koşmayacak).`, 'system', coin);
+          }
+        }
+        log(`✂️ KISMİ ZARAR KESİLDİ (%${(cutPct*100).toFixed(0)}) | ${coin} ${dir==='long'?'LONG':'SHORT'} | Zarar SL mesafesinin %${(atRatio*100).toFixed(0)}'ine ulaştı (%${(leveragedChange*100).toFixed(2)}). Net: ${cutPnl.toFixed(2)}$ — kalan %${((1-cutPct)*100).toFixed(0)} sıkılaştırılmış stop'a kadar devam ediyor.`, 'sell', coin);
+        sendTelegramMessage(`✂️ <b>${coin} Kısmi Zarar Kesildi</b> (%${(cutPct*100).toFixed(0)})\nZarar: %${(leveragedChange*100).toFixed(2)} · Net: ${cutPnl.toFixed(2)} USDT\nKalan pozisyonun stop'u sıkılaştırıldı.`);
+
 
         pos.amount = pos.amount - cutAmount;
         if (pos.riskUsd != null) pos.riskUsd = pos.riskUsd * (1 - cutPct); // kalan riski küçült
