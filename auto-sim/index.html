@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v50.3 MATEMATİK KAPISI TERMOSTATI</title>
+<title>TUGAY × QUANT · v50.4 NEDEN AÇILDI — TETİKLEYİCİ ŞEFFAFLIĞI</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.3 🎚️</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.4 🔍</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -7027,11 +7027,40 @@ function buildEntryReasonHtml(pos) {
   if (snap && snap.oiPct != null) extraBits.push(`OI: <b>${snap.oiPct >= 0 ? '+' : ''}%${snap.oiPct}</b>`);
   if (snap && snap.ls != null) extraBits.push(`L/S: <b>${snap.ls}</b>`);
   const extraLine = extraBits.length ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${extraBits.join(' · ')}</div>` : '';
+
+  // v50.4: TETİKLEYİCİ ÖZETİ — "neden açıldı" artık tek satırda okunur.
+  // Karar güveni bir SONUÇ; asıl sebep hangi kapıların geçildiği + akışın yönü.
+  const dirTxt = dir === 'long' ? 'LONG' : 'SHORT';
+  const flowAligned = snap && snap.flowPct != null
+    ? (dir === 'long' ? snap.flowPct >= 0 : snap.flowPct <= 0)
+    : null;
+  const triggerParts = [];
+  if (snap && snap.score != null && snap.threshold != null) {
+    triggerParts.push(`${agree}/${ids.length} gösterge ${dir === 'long' ? 'AL' : 'SAT'} (skor ${snap.score}${snap.scoreMax != null ? '/' + snap.scoreMax : ''} ≥ eşik ${snap.threshold})`);
+  }
+  if (flowAligned === true) triggerParts.push(`akış yönü onayladı`);
+  else if (flowAligned === false) triggerParts.push(`<span style="color:var(--yellow)">akışa rağmen açıldı</span>`);
+  const triggerLine = triggerParts.length
+    ? `<div style="font-size:10.5px;color:var(--text);margin-bottom:6px;line-height:1.5;">⚡ <b>${dirTxt} tetiği:</b> ${triggerParts.join(' · ')}</div>`
+    : '';
+
+  // Geçilen kapılar rozet şeridi
+  let gatesLine = '';
+  if (snap && Array.isArray(snap.passedGates) && snap.passedGates.length) {
+    const chips = snap.passedGates.map(g =>
+      `<span style="display:inline-block;font-size:9px;padding:1px 6px;margin:1px;border-radius:6px;background:rgba(var(--green-rgb),0.12);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);white-space:nowrap;">${g}</span>`
+    ).join('');
+    gatesLine = `<div style="margin-bottom:8px;">
+      <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px;">Geçilen kapılar (hepsi onay verdi):</div>
+      <div style="display:flex;flex-wrap:wrap;">${chips}</div>
+    </div>`;
+  }
+
   return `
     <details style="margin-top:8px;">
       <summary style="cursor:pointer;font-size:10.5px;color:var(--accent);font-weight:700;list-style:none;">🔍 Neden Açıldı? — Karar Güveni: <span style="color:${confColor}">${confidencePct}/100</span></summary>
       <div style="margin-top:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;">
-        ${extraLine}${rows}
+        ${triggerLine}${gatesLine}${extraLine}${rows}
       </div>
     </details>`;
 }
@@ -7570,7 +7599,7 @@ function playTradeFeedback(kind) {
 // Pozisyon açıldığı anda tüm gösterge değerleri + bağlam (saat, gün, rejim, oynaklık)
 // dondurulup pozisyona iliştirilir; kapanışta işlem kaydına geçer. Otopsi motoru bu
 // fotoğrafları madenleyerek "hangi koşullarda kazanıyorum/kaybediyorum" desenlerini bulur.
-function buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin) {
+function buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, extra) {
   const d = new Date();
   // v48.1: Giriş anındaki AKIŞ fotoğrafı — "girişten sonra akış döndü mü, yoksa bot
   // ters akışa mı girdi?" tartışması kanıtla çözülsün diye o saniyenin verisi saklanır.
@@ -7588,7 +7617,12 @@ function buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin) {
     atrPct: (price > 0 && atr) ? +(atr / price * 100).toFixed(3) : null,
     flowPct, oiPct, ls,
     hour: d.getHours(),
-    dow: d.getDay() // 0=Pazar
+    dow: d.getDay(), // 0=Pazar
+    // v50.4: "Neden Açıldı?" için tetikleyici kanıtı — geçilen kapılar + skor
+    passedGates: (extra && extra.passedGates) || null,
+    score: (extra && typeof extra.score === 'number') ? +extra.score.toFixed(1) : null,
+    scoreMax: (extra && typeof extra.scoreMax === 'number') ? +extra.scoreMax.toFixed(1) : null,
+    threshold: (extra && typeof extra.threshold === 'number') ? +extra.threshold.toFixed(1) : null
   };
 }
 
@@ -11111,7 +11145,16 @@ async function coinTickInner(coin, state) {
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       // ── v47.0: 🧮 MATEMATİK KAPISI — işlem, daha açılmadan matematiksel olarak kazanabilir mi? ──
       if (!mathGateOk(coin, 'long', slTp, leverage)) return;
-      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
+      // v50.4: buraya kadar gelen sinyal TÜM giriş kapılarını geçmiş demektir — kanıtı sakla
+      const passedGatesL = ['Skor ✓', 'Trend Gate ✓'];
+      if (mtfOn) passedGatesL.push('MTF ✓');
+      if (document.getElementById('cvdFilterToggle')?.checked) passedGatesL.push('CVD Akış ✓');
+      if (document.getElementById('crowdFilterToggle')?.checked) passedGatesL.push('Kalabalık ✓');
+      if (document.getElementById('flowGateToggle')?.checked) passedGatesL.push('Akış Uzlaşı ✓');
+      if (document.getElementById('exhaustionGuardToggle')?.checked) passedGatesL.push('Tükenme ✓');
+      if (document.getElementById('candleGuardToggle')?.checked) passedGatesL.push('Mum ✓');
+      if (document.getElementById('mathGateToggle')?.checked) passedGatesL.push('Matematik ✓');
+      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesL, score: buyCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const lvTxt = leverage > 1 ? ` ${leverage}x` : '';
@@ -11146,7 +11189,16 @@ async function coinTickInner(coin, state) {
       if (flowConfluenceBlocked(coin, 'short')) return; // v48.0: CVD+OI+L/S birleşik akış kanıtı karşıt
       const slTp = computeEffectiveTpSl(stopLoss, takeProfit, atr, price, leverage);
       if (!mathGateOk(coin, 'short', slTp, leverage)) return; // v47.0: 🧮 Matematik Kapısı
-      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
+      // v50.4: geçilen giriş kapılarının kanıtı
+      const passedGatesS = ['Skor ✓', 'Trend Gate ✓'];
+      if (mtfOn) passedGatesS.push('MTF ✓');
+      if (document.getElementById('cvdFilterToggle')?.checked) passedGatesS.push('CVD Akış ✓');
+      if (document.getElementById('crowdFilterToggle')?.checked) passedGatesS.push('Kalabalık ✓');
+      if (document.getElementById('flowGateToggle')?.checked) passedGatesS.push('Akış Uzlaşı ✓');
+      if (document.getElementById('exhaustionGuardToggle')?.checked) passedGatesS.push('Tükenme ✓');
+      if (document.getElementById('candleGuardToggle')?.checked) passedGatesS.push('Mum ✓');
+      if (document.getElementById('mathGateToggle')?.checked) passedGatesS.push('Matematik ✓');
+      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesS, score: sellCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
