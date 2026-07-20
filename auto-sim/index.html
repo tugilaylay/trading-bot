@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="QUANT">
 <meta name="theme-color" content="#C7C0A4">
-<title>TUGAY × QUANT · v50.4 NEDEN AÇILDI — TETİKLEYİCİ ŞEFFAFLIĞI</title>
+<title>TUGAY × QUANT · v50.7 MÜHENDİSLİK DENETİMİ — EMA/REPAINT/VWAP FIX</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
@@ -1355,7 +1355,7 @@ body { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
       <div class="qt-brand">
         <div class="qt-brand-mark">T</div>
         <div>
-          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.4 🔍</span></div>
+          <div class="qt-brand-name">TUGAY <span class="qt-x">×</span> QUANT <span class="qt-ver">v50.7 🔍</span></div>
           <div class="qt-brand-sub">BTC/ETH/SOL+12 · BINANCE 5M · @TUGILAYLAY</div>
         </div>
       </div>
@@ -2902,8 +2902,23 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6;">
         <b style="color:orange;">v35 — En kritik yeni kural.</b> ADX trend gücünü ölçer. ADX &lt; 25 ise piyasa yatay/trendsiz demektir ve hiçbir pozisyon açılmaz.
         Kripto %70 zamanı yatay hareket eder — bu dönemde açılan işlemlerin %80'i komisyona gider.
-        25+ = trend var, işlem aç. 20 altı = bekle. Log'da <b>⛔ ADX Filtresi</b> mesajı görünür.
-        <b>Not: ADX göstergesi aktif seçili olmasa bile bu filtre arka planda her zaman çalışır.</b>
+        25+ = trend var, işlem aç. 20 altı = bekle. Log'da <b>⛔ ADX Filtresi</b> mesajı görünür.        <b>Not: ADX göstergesi aktif seçili olmasa bile bu filtre arka planda her zaman çalışır.</b>
+      </div>
+
+      <div class="acc-divider"></div>
+
+      <div class="card-title">
+        <span>📊 VWAP Dinamik Eşik (ATR-Oranlı)</span>
+        <span class="optional-badge" style="background:rgba(80,200,120,0.2);color:var(--green);border-color:rgba(80,200,120,0.4);">v50.7</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>ATR Kesri (eşik = ATR% × bu)</label>
+          <input type="number" id="vwapAtrFrac" value="0.25" min="0.05" max="1" step="0.05" />
+        </div>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6;">
+        VWAP göstergesinin AL/SAT eşiği eskiden sabit <b>%0.15</b>'ti — BTC'de anlamlı ama PEPE gibi oynak coinlerde fiyat neredeyse hep bu eşiğin dışında kalıp VWAP'ı sürekli oy kullanan gürültülü bir üyeye çeviriyordu. Artık eşik her coinin <b>kendi oynaklığına</b> (ATR/fiyat) oranlı: sakin coinde otomatik daralır, oynak coinde genişler. <b>0.25</b> = "VWAP'tan en az ¼ ATR sapma anlamlıdır" demek. Düşürürsen VWAP daha çok konuşur (hassas), yükseltirsen sadece güçlü sapmalarda konuşur (seçici). ATR verisi yoksa güvenli şekilde eski %0.15'e döner.
       </div>
 
       <div class="acc-divider"></div>
@@ -4081,7 +4096,7 @@ const SETTINGS_FIELD_IDS = [
   'candleGuardToggle', 'candleWickMult', 'candleEngulfAtr',
   'logCriticalOnlyToggle',
   'maxLevLossToggle', 'maxLevLossPct',
-  'adxMinFilterToggle', 'adxMinValue', 'trendGateToggle', 'sidewaysBlockToggle',
+  'adxMinFilterToggle', 'adxMinValue', 'vwapAtrFrac', 'trendGateToggle', 'sidewaysBlockToggle',
   'exitConfirmToggle', 'exitConfirmTicks',
   // v36.7-36.9: Yeni özellikler — localStorage'a kaydedilir, yenilemede kaybolmaz
   'breakevenToggle', 'breakevenThreshold',
@@ -4636,9 +4651,19 @@ const INDICATOR_DEFS = {
     compute(ctx) {
       const vwap = calcVWAP(ctx.highs, ctx.lows, ctx.closes, ctx.klines, 96);
       const diff = (ctx.price - vwap) / vwap * 100;
+      // v50.7: Eşik artık SABİT %0.15 değil, ATR'ye oranlı. Sabit eşik BTC'de anlamlıydı ama
+      // oynak altcoinlerde fiyat neredeyse hep eşiğin dışında kalıp VWAP'ı sürekli oy kullanan
+      // gürültülü bir üyeye çeviriyordu. Artık eşik = coinin kendi oynaklığının (ATR/fiyat) bir
+      // kesri → sakin coinde dar, oynak coinde geniş. Böylece "VWAP'tan anlamlı sapma" her coin
+      // için kendi ölçeğinde değerlendirilir. ATR yoksa eski %0.15 tabanına düşer.
+      let atr = 0;
+      try { atr = calcATR(ctx.highs, ctx.lows, ctx.closes, 14); } catch(e) {}
+      const atrPct = (atr && ctx.price > 0) ? (atr / ctx.price * 100) : 0;
+      const vwapAtrFrac = Math.max(0.05, Math.min(1, parseFloat(document.getElementById('vwapAtrFrac')?.value) || 0.25));
+      const thr = atrPct > 0 ? Math.max(0.05, atrPct * vwapAtrFrac) : 0.15;
       let signal = 'hold', label = 'NÖTR';
-      if (diff > 0.15) { signal = 'buy'; label = '🟢 ÜSTÜNDE'; }
-      else if (diff < -0.15) { signal = 'sell'; label = '🔴 ALTINDA'; }
+      if (diff > thr) { signal = 'buy'; label = '🟢 ÜSTÜNDE'; }
+      else if (diff < -thr) { signal = 'sell'; label = '🔴 ALTINDA'; }
       return { value: (diff>=0?'+':'') + diff.toFixed(2) + '%', signal, label };
     }
   },
