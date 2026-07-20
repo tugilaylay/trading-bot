@@ -9674,7 +9674,12 @@ function autoScaleTrailingActivation() {
   const SAFETY_MULTIPLIER = 1.75; // taban ile eşik arasında rahat, koşturulabilir bir pay bırak
   const recommended = Math.max(0.1, Math.round(floorPct * SAFETY_MULTIPLIER * 10) / 10);
   const current = parseFloat(actEl.value);
-  if (current === recommended) return; // zaten güvenli seviyede, gereksiz log/kayıt yok
+  // v48.7 FIX: Eskiden current !== recommended olduğunda her seferinde TAM önerilen değere
+  // eziyordu — bu da kullanıcı elle (veya bir risk profili) daha yüksek/güvenli bir eşik
+  // seçtiğinde bile (örn. 1.5-2.0), profil uygulanır uygulanmaz ya da leverage/komisyon/kayma
+  // değiştiğinde eşiği görünmez şekilde geri 0.5 gibi bir tabana çekiyordu. Artık sadece
+  // GERÇEKTEN tabanın altına düşerse yükseltiyor; zaten güvenli veya üstündeyse dokunmuyor.
+  if (current >= recommended) return; // zaten güvenli tarafta (veya üstünde) — kullanıcının/profilin değerine dokunma
   actEl.value = recommended;
   log(`🔗 [Oto-Ölçek] Kaldıraç ${leverage}x → Aktivasyon Eşiği otomatik %${recommended}'e ayarlandı (taban: %${floorPct.toFixed(2)}, güvenlik payı: ${SAFETY_MULTIPLIER}x). Kapatmak için "Kaldıraçla Otomatik Ölçekle" kutusunun işaretini kaldır.`, 'system');
   saveSettings();
