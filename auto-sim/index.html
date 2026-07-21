@@ -2100,7 +2100,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
 
       <!-- v50.7: Standart Risk Ayarlarına Sıfırlama -->
       <button class="btn-toggle-all" style="width:100%;padding:11px;margin-bottom:10px;background:rgba(12,107,64,0.15);border-color:rgba(12,107,64,0.4);color:var(--green);font-weight:600;"
-        onclick="if(confirm('Kayan risk alanları (Max Kaldıraçlı Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar Limiti, Kısmi Zarar Tetiği vb.) önerilen standart değerlere dönecek VE ⚖️ Asimetri Bekçisi kapatılacak (açık pozisyonların SL eşiğini artık canlı sıkılaştırmayacak). Devam edilsin mi?')){resetAllRiskToStandard();}">
+        onclick="if(confirm('Kayan risk alanları (Max Kaldıraçlı Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar Limiti, Kısmi Zarar Tetiği vb.) önerilen standart değerlere dönecek. Devam edilsin mi?')){resetAllRiskToStandard();}">
         🔄 Risk Ayarlarını Standarda Sıfırla
       </button>
 
@@ -2307,7 +2307,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <span>⚖️ Asimetri Bekçisi (Adaptif K/Z Dengesi)</span>
         <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v50.0 — Kendini kalibre eder</span>
         <label class="regime-toggle-switch">
-          <input type="checkbox" id="asymGuardToggle">
+          <input type="checkbox" id="asymGuardToggle" checked>
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
@@ -2319,7 +2319,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
       </div>
       <details class="risk-info">
           <summary>ℹ️ Açıklama</summary>
-          <div class="ri-body">Son N işlemin <b>ortalama kazanç / ortalama kayıp</b> oranını canlı izler. Oran 1'in altına düşerse (kaşık-kepçe alarmı) bot kendini otomatik kalibre eder: <b>1)</b> Kâr Merdiveni basamağı ×1.5 genişler — kazananlar erken kilitlenmez, nefes alır. <b>2)</b> Aktif SL ×0.75 sıkılaşır — kaybedenlere daha az yol verilir. Oran tekrar 1'in üzerine çıkınca her şey normale döner. Her geçiş log'a yazılır. Bu bir kontrolcüdür: sen ayara dokunmadan sistem, gerçekleşen asimetriye göre kendi çıkış geometrisini büker.</div>
+          <div class="ri-body">Son N işlemin <b>ortalama kazanç / ortalama kayıp</b> oranını canlı izler. Oran 1'in altına düşerse (kaşık-kepçe alarmı) bot kendini otomatik kalibre eder: <b>1)</b> Kâr Merdiveni basamağı ×1.5 genişler — kazananlar erken kilitlenmez, nefes alır. <b>2)</b> Yeni açılan pozisyonların SL'i <u>açılış anında kilitlenir</u> — artık sabit bir oranla değil, <b>kademeli</b> sıkılır: oran ne kadar kötüyse (1'e yakın = hafif, 0'a yakın = ciddi) o kadar sert (×0.90 ile ×0.55 arası). <b>3) v50.9:</b> Coin'in kendi oynaklığı da hesaba katılır — Referans Oynaklık'tan (ATR/Fiyat) daha sakin bir coinde tam sıkılık uygulanır (kayıp muhtemelen gerçek trend), daha oynak bir coinde sıkılık otomatik yumuşatılır (normal gürültü erken kesilmesin diye). Oran tekrar 1'in üzerine çıkınca yeni açılan pozisyonlar için normale döner. Her geçiş log'a yazılır. Bu sıkılaştırma zaten AÇIK olan pozisyonlara geriye dönük uygulanmaz — sadece o an açtığın/açılan yeni işlemi etkiler.</div>
         </details>
 
       <div class="acc-divider"></div>
@@ -4431,16 +4431,17 @@ function runInputClampSweep() {
   }
 }
 
-// ───────── v50.7: 🔄 Standart Risk Ayarlarına Sıfırlama ─────────
+// ───────── v50.7/v50.8: 🔄 Standart Risk Ayarlarına Sıfırlama ─────────
 // 21.07.2026 vakası: Manuel işlem açılışıyla aynı anda (ama AYRI bir açık pozisyonda) -25$'lık
 // ani bir Stop-Loss oluştu. Kök neden: ⚖️ Asimetri Bekçisi aktifken TÜM açık pozisyonların
-// SL kontrol eşiği HER TICK'TE canlı ×0.75 sıkılaştırılıyor (bkz. asymGuardStatus / effStopLossAdj) —
-// pozisyonun kendi SL'i hiç değişmez ama "kontrol edilen" eşik sessizce daralır, bu da rastgele/
-// beklenmedik bir anda kapanış gibi görünür. Ayrıca zamanla birkaç risk alanı (Max Kaldıraçlı
-// Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar Limiti, Kısmi Zarar Tetiği,
-// Tükenme Kalkanı Mum Sayısı) koddaki kendi önerilen değerlerinden (INPUT_CLAMP_RULES / def)
-// uzaklaşmıştı. Bu fonksiyon ikisini de tek tıkla düzeltir: kayan alanları önerilen standarda
-// çeker VE Asimetri Bekçisi'ni kapatır (açık pozisyonlara artık sessizce dokunmaz).
+// SL kontrol eşiği HER TICK'TE canlı ×0.75 sıkılaştırılıyordu — pozisyonun kendi SL'i hiç
+// değişmezken "kontrol edilen" eşik sessizce daralıyor, bu da rastgele bir anda kapanış gibi
+// görünüyordu. v50.8'de bu KÖKTEN düzeltildi: sıkılaştırma artık sadece pozisyon AÇILDIĞI ANDA
+// bir kere kilitleniyor (bkz. asymSlLockAtOpen), zaten açık pozisyonlara asla geriye dönük
+// uygulanmıyor — yani Bekçi artık güvenle AÇIK kalabilir. Bu fonksiyon sadece zamanla kodun
+// kendi önerilen değerlerinden (INPUT_CLAMP_RULES / RECOMMENDED_RISK_DEFAULTS) kaymış sayısal
+// alanları (Max Kaldıraçlı Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar
+// Limiti, Kısmi Zarar Tetiği, Tükenme Kalkanı Mum Sayısı vb.) tek tıkla toparlar.
 const STANDARD_RISK_DEFAULTS = (() => {
   const m = {};
   // Önce eski (v38.1) önerilen değerler, sonra üzerine daha yeni (v50) INPUT_CLAMP_RULES
@@ -4458,15 +4459,11 @@ function resetAllRiskToStandard() {
       if (!el) return;
       if (String(el.value) !== String(val)) { changed.push(`${id}: ${el.value} → ${val}`); el.value = val; }
     });
-    // Asimetri Bekçisi: açık pozisyonların SL eşiğini canlı sıkılaştırıp beklenmedik anlık
-    // kapanışlara yol açtığı kanıtlandığı için standart sıfırlamada KAPATILIR.
-    const asymEl = document.getElementById('asymGuardToggle');
-    if (asymEl && asymEl.checked) { asymEl.checked = false; changed.push('asymGuardToggle: açık → kapalı'); }
     saveSettings();
     try { renderRiskChips(); } catch(e) {}
     if (changed.length) {
-      log(`🔄 [Standart Ayarlar] ${changed.length} risk alanı önerilen standarda döndürüldü ve Asimetri Bekçisi kapatıldı: ${changed.join(' | ')}.`, 'system');
-      alert(`✅ ${changed.length} risk ayarı standart değerlere döndürüldü.\n⚖️ Asimetri Bekçisi kapatıldı (açık pozisyonların SL'ini artık canlı sıkılaştırmaz).\n\nDetaylar Bot Günlüğü'nde.`);
+      log(`🔄 [Standart Ayarlar] ${changed.length} risk alanı önerilen standarda döndürüldü: ${changed.join(' | ')}.`, 'system');
+      alert(`✅ ${changed.length} risk ayarı standart değerlere döndürüldü.\n\nDetaylar Bot Günlüğü'nde.`);
     } else {
       alert('✅ Tüm risk ayarları zaten standart değerlerde.');
     }
@@ -7865,6 +7862,34 @@ function computeMaeStopThreshold(coin, leverage) {
 // (kaşık-kepçe alarmı) merdiven basamağını genişletir (kazanana nefes) ve SL'i sıkılaştırır
 // (kaybedene daha az yol). Oran düzelince otomatik normale döner.
 let _asymGuardWasActive = false;
+
+// v50.9: 21.07.2026 talebi — sabit ×0.75 yerine Bekçi artık iki eksende KENDİ AYARINI YAPAR:
+// 1) DENGESİZLİĞİN ŞİDDETİ: oran 1'e ne kadar yakınsa o kadar hafif sıkar, 0'a ne kadar
+//    yakınsa (felaket derecesinde kötü K/Z) o kadar sert sıkar — sabit tek basamak yerine
+//    kademeli bir eğri (0.90 → 0.60 arası).
+// 2) COIN'İN OYNAKLIĞI: sakin bir coinde SL'i sıkmak anlamlı (kayıp muhtemelen gerçek bir
+//    trend, gürültü değil). Oynak bir coinde (referans oynaklıktan belirgin yüksek ATR/Fiyat)
+//    aynı sıkılığı uygulamak normal gürültüyü bile erken keser — bu yüzden oynaklık arttıkça
+//    sıkılaştırma otomatik yumuşatılır (1'e doğru geri çekilir).
+function asymSlLockAtOpen(atr, price) {
+  try {
+    const g = (typeof asymGuardStatus === 'function') ? asymGuardStatus() : null;
+    if (!g || !g.active) return null;
+    let mult = g.slMult;
+    if (atr && price) {
+      const volPct = (atr / price) * 100;
+      const refPct = parseFloat(document.getElementById('atrReferencePct')?.value) || 1.5;
+      const volRatio = volPct / refPct; // 1 = referans kadar oynak, 2 = 2 katı oynak...
+      if (volRatio > 1) {
+        // Oynaklık referansın üzerindeyse sıkılaştırmayı kademeli olarak etkisizleştir
+        // (en oynak durumlarda bile en az %30'u korunur — tamamen sıfırlanmaz).
+        const soften = Math.min(volRatio - 1, 1); // 0..1 aralığına kırp
+        mult = mult + (1 - mult) * soften * 0.7;
+      }
+    }
+    return mult;
+  } catch (e) { return null; }
+}
 function asymGuardStatus() {
   const off = { active: false, stepMult: 1, slMult: 1, ratio: null };
   try {
@@ -7877,7 +7902,16 @@ function asymGuardStatus() {
     const aw = w.reduce((sum, t) => sum + t.pnl, 0) / w.length;
     const al = Math.abs(l.reduce((sum, t) => sum + t.pnl, 0) / l.length);
     const ratio = al > 0 ? aw / al : null;
-    if (ratio !== null && ratio < 1) return { active: true, stepMult: 1.5, slMult: 0.75, ratio };
+    if (ratio !== null && ratio < 1) {
+      // Kademeli sıkılaştırma eğrisi: 0.75 tek basamağı yerine oranın şiddetine göre kayan skala.
+      let slMult;
+      if      (ratio >= 0.85) slMult = 0.90;  // hafif dengesizlik → hafif sıkma
+      else if (ratio >= 0.70) slMult = 0.80;
+      else if (ratio >= 0.50) slMult = 0.70;
+      else if (ratio >= 0.30) slMult = 0.62;
+      else                    slMult = 0.55;  // ciddi dengesizlik → sert sıkma
+      return { active: true, stepMult: 1.5, slMult, ratio };
+    }
     return { ...off, ratio };
   } catch (e) { return off; }
 }
@@ -9198,7 +9232,7 @@ async function manualBuy(coin) {
   }
 
   if (typeof v40FundsOk === 'function' && !v40FundsOk(tradeAmount, coin)) { alert('💰 Kasa: kullanılabilir bakiye yetersiz. Önce para ekle veya pozisyon kapat.'); return; } // v40
-  state.openPosition = { direction: 'long', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss };
+  state.openPosition = { direction: 'long', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss, asymSlMultAtOpen: asymSlLockAtOpen(atr, price) };
   const atrTxt = slTp.atrBased ? ` | SL/TP (ATR): -%${(slTp.stopLoss*100).toFixed(2)} / +%${(slTp.takeProfit*100).toFixed(2)}` : '';
   log(`👆 MANUEL LONG${leverage>1?' '+leverage+'x':''} | Giriş: ${formatPrice(price)} | Kullanıcı tarafından açıldı${atrTxt}`, 'buy', coin);
   flashPanel(coin, 'buy');
@@ -9265,7 +9299,7 @@ async function manualSell(coin) {
     }
 
     if (typeof v40FundsOk === 'function' && !v40FundsOk(tradeAmount, coin)) { alert('💰 Kasa: kullanılabilir bakiye yetersiz. Önce para ekle veya pozisyon kapat.'); return; } // v40
-    state.openPosition = { direction: 'short', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss };
+    state.openPosition = { direction: 'short', entryPrice: price, amount: tradeAmount, leverage, confirms: 0, entryCandleCloseTime, openedAt: Date.now(), manual: true, stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, riskUsd: tradeAmount * slTp.stopLoss, asymSlMultAtOpen: asymSlLockAtOpen(atr, price) };
     const atrTxt = slTp.atrBased ? ` | SL/TP (ATR): -%${(slTp.stopLoss*100).toFixed(2)} / +%${(slTp.takeProfit*100).toFixed(2)}` : '';
     log(`👆 MANUEL SHORT ${leverage}x | Giriş: ${formatPrice(price)} | Kullanıcı tarafından açıldı${atrTxt}`, 'sell', coin);
     flashPanel(coin, 'sell');
@@ -11405,7 +11439,7 @@ async function coinTickInner(coin, state) {
       if (document.getElementById('exhaustionGuardToggle')?.checked) passedGatesL.push('Tükenme ✓');
       if (document.getElementById('candleGuardToggle')?.checked) passedGatesL.push('Mum ✓');
       if (document.getElementById('mathGateToggle')?.checked) passedGatesL.push('Matematik ✓');
-      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesL, score: buyCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
+      state.openPosition = { direction: 'long', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: buyCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesL, score: buyCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss, asymSlMultAtOpen: asymSlLockAtOpen(atr, price) };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const lvTxt = leverage > 1 ? ` ${leverage}x` : '';
@@ -11455,7 +11489,7 @@ async function coinTickInner(coin, state) {
       if (document.getElementById('exhaustionGuardToggle')?.checked) passedGatesS.push('Tükenme ✓');
       if (document.getElementById('candleGuardToggle')?.checked) passedGatesS.push('Mum ✓');
       if (document.getElementById('mathGateToggle')?.checked) passedGatesS.push('Matematik ✓');
-      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesS, score: sellCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss };
+      state.openPosition = { direction: 'short', entryPrice: price, amount: effectiveTradeAmount, leverage, confirms: sellCount, entryCandleCloseTime: lastCandleCloseTime, openedAt: Date.now(), stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased, entryRegime: regimeInfo.regime, entrySignals: { ...rawSignals }, entrySnapshot: buildEntrySnapshot(rawValues, regimeInfo, atr, price, coin, { passedGates: passedGatesS, score: sellCount, scoreMax: totalMaxWeight, threshold: weightedMinConfirm }), interval: iv, riskUsd: effectiveTradeAmount * slTp.stopLoss, asymSlMultAtOpen: asymSlLockAtOpen(atr, price) };
       try { arenaShadowOpen(coin, state.openPosition); } catch(e) {} // v45.0: gölge varyantlar aynı girişi kopyalar
       state.tradeCount++;
       const sizeTxt = effectiveTradeAmount !== tradeAmount ? ` (ATR ile ${(effectiveTradeAmount/tradeAmount).toFixed(2)}x ölçeklendi)` : '';
@@ -11622,7 +11656,7 @@ async function coinTickInner(coin, state) {
     const asymG = (typeof asymGuardStatus === 'function') ? asymGuardStatus() : { active: false, stepMult: 1, slMult: 1, ratio: null };
     if (asymG.active !== _asymGuardWasActive) {
       if (asymG.active) {
-        log(`⚖️ [Asimetri Bekçisi] AKTİF — son işlemlerde ort. kazanç / ort. kayıp = ${asymG.ratio.toFixed(2)} (< 1). Merdiven basamağı ×1.5 genişletildi, aktif SL ×0.75 sıkılaştırıldı. Denge düzelince otomatik normale döner.`, 'warn');
+        log(`⚖️ [Asimetri Bekçisi] AKTİF — son işlemlerde ort. kazanç / ort. kayıp = ${asymG.ratio.toFixed(2)} (< 1). Merdiven basamağı ×1.5 genişledi. Bundan sonra AÇILACAK pozisyonların SL'i dengesizliğin şiddetine ve coin'in oynaklığına göre ×${asymG.slMult.toFixed(2)}'e kadar sıkılaşabilir (açık pozisyonlara dokunmaz). Denge düzelince otomatik normale döner.`, 'warn');
       } else {
         log(`⚖️ [Asimetri Bekçisi] Devre dışı — K/Z dengesi düzeldi${asymG.ratio !== null ? ' (oran: ' + asymG.ratio.toFixed(2) + ')' : ''}. Merdiven ve SL normal ayarlarına döndü.`, 'system');
       }
@@ -11672,10 +11706,12 @@ async function coinTickInner(coin, state) {
     const effStopLoss   = (pos.stopLossPct   !== undefined && pos.stopLossPct   !== null) ? pos.stopLossPct   : stopLoss;
     const effTakeProfit = (pos.takeProfitPct !== undefined && pos.takeProfitPct !== null) ? pos.takeProfitPct : takeProfit;
 
-    // v50.0: Asimetri Bekçisi aktifse AKTİF SL sıkılaşır (×0.75). Pozisyonun kayıtlı
-    // stopLossPct'ine DOKUNULMAZ — sadece bu tick'teki kontrol eşiği bükülür; bekçi
-    // kapanınca sonraki tick'te orijinal SL kendiliğinden geri gelir.
-    const effStopLossAdj = asymG.active ? effStopLoss * asymG.slMult : effStopLoss;
+    // v50.8: Asimetri Bekçisi sıkılaştırması artık SADECE bu pozisyon AÇILIRKEN Bekçi
+    // aktifse uygulanır (pos.asymSlMultAtOpen, açılış anında kilitlenir — bkz. asymSlLockAtOpen).
+    // Bekçi bu pozisyon açıkken sonradan aktif/pasif olsa bile buraya etki etmez; böylece
+    // zaten açık bir pozisyon, senin hiçbir şey yapmadığın bir anda sessizce sıkılaşıp
+    // beklenmedik şekilde kapanmaz.
+    const effStopLossAdj = (pos.asymSlMultAtOpen != null) ? effStopLoss * pos.asymSlMultAtOpen : effStopLoss;
 
     const hitStopLoss   = leveragedChange <= -effStopLossAdj;
     const hitTakeProfit = leveragedChange >= effTakeProfit;
@@ -11882,7 +11918,7 @@ async function coinTickInner(coin, state) {
       else if (hitTrailingStop) { reason = `İz Süren Stop (en iyi: ${pos.bestPrice.toFixed(2)})`; reasonCategory = 'trailing'; }
       else if (hitBreakevenSL)  { reason = '🛡️ Breakeven Stop (giriş fiyatı koruması)'; reasonCategory = 'breakeven'; }
       else if (emergencyExit)   { reason = '🚨 Acil Çıkış (Max Zarar Cap)'; reasonCategory = 'sl'; }
-      else if (hitStopLoss)     { reason = asymG.active ? `Stop-Loss (⚖️ Bekçi sıkılaştırması: -%${(effStopLossAdj*100).toFixed(2)})` : 'Stop-Loss'; reasonCategory = 'sl'; }
+      else if (hitStopLoss)     { reason = (pos.asymSlMultAtOpen != null) ? `Stop-Loss (⚖️ Bekçi sıkılaştırması — açılışta kilitlendi: -%${(effStopLossAdj*100).toFixed(2)})` : 'Stop-Loss'; reasonCategory = 'sl'; }
       else if (hitMaeStop)      { reason = `🔻 Kayıp Merdiveni (MAE stop: -%${(maeThUsed*100).toFixed(2)} — kazananlar bu derinliğe inmez)`; reasonCategory = 'mae'; }
       else if (effHitTakeProfit) { reason = 'Take-Profit'; reasonCategory = 'tp'; }
       else if (hitTimeStop)     { reason = '⌛ Zaman Stopu (pozisyon yürümedi)'; reasonCategory = 'time'; }
@@ -13969,7 +14005,8 @@ async function autopilotOpen(short, symbol, direction, amount, scoreInfo){
     confirmCyclesRequired: scoreInfo.confirmCyclesRequired || 1,
     entryCandleCloseTime, openedAt: Date.now(), autopilot: true,
     stopLossPct: slTp.stopLoss, takeProfitPct: slTp.takeProfit, atrBased: slTp.atrBased,
-    entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }, entrySnapshot
+    entryRegime: scoreInfo.regime, entrySignals: { ...scoreInfo.rawSignals }, entrySnapshot,
+    asymSlMultAtOpen: asymSlLockAtOpen(atr, price)
   };
   try { state.tradeCount++; } catch(e){}
   startCoinBot(short); // risk motoru (SL/TP/trailing/acil çıkış) devralır
