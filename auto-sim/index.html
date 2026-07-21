@@ -2098,6 +2098,12 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <div class="rf-hint" id="rfHint">Basit mod: en önemli ayarlar görünür. Gelişmiş: hepsi açılır.</div>
       </div>
 
+      <!-- v50.7: Standart Risk Ayarlarına Sıfırlama -->
+      <button class="btn-toggle-all" style="width:100%;padding:11px;margin-bottom:10px;background:rgba(12,107,64,0.15);border-color:rgba(12,107,64,0.4);color:var(--green);font-weight:600;"
+        onclick="if(confirm('Kayan risk alanları (Max Kaldıraçlı Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar Limiti, Kısmi Zarar Tetiği vb.) önerilen standart değerlere dönecek VE ⚖️ Asimetri Bekçisi kapatılacak (açık pozisyonların SL eşiğini artık canlı sıkılaştırmayacak). Devam edilsin mi?')){resetAllRiskToStandard();}">
+        🔄 Risk Ayarlarını Standarda Sıfırla
+      </button>
+
       <!-- ── v41: Risk Profilleri — tek tıkla tüm ayarları set eder ── -->
       <div class="acc-divider"></div>
       <div class="card-title"><span>🎛️ Hazır Risk Profilleri</span><span class="optional-badge">v41 — YENİ</span></div>
@@ -2301,7 +2307,7 @@ html[data-theme="dark"] .v40-btn-gold { color:#14120C; }
         <span>⚖️ Asimetri Bekçisi (Adaptif K/Z Dengesi)</span>
         <span class="optional-badge" style="background:rgba(255,165,0,0.2);color:orange;border-color:rgba(255,165,0,0.4);">v50.0 — Kendini kalibre eder</span>
         <label class="regime-toggle-switch">
-          <input type="checkbox" id="asymGuardToggle" checked>
+          <input type="checkbox" id="asymGuardToggle">
           <span class="regime-toggle-slider"></span>
         </label>
       </div>
@@ -4423,6 +4429,48 @@ function runInputClampSweep() {
     saveSettings();
     log(`🔒 [Güvenlik Kilidi] Sayfa açılışında ${fixedCount} ayar geçersiz aralıktaydı ve otomatik düzeltildi. Ayarlar kartlarını gözden geçirmen önerilir.`, 'system');
   }
+}
+
+// ───────── v50.7: 🔄 Standart Risk Ayarlarına Sıfırlama ─────────
+// 21.07.2026 vakası: Manuel işlem açılışıyla aynı anda (ama AYRI bir açık pozisyonda) -25$'lık
+// ani bir Stop-Loss oluştu. Kök neden: ⚖️ Asimetri Bekçisi aktifken TÜM açık pozisyonların
+// SL kontrol eşiği HER TICK'TE canlı ×0.75 sıkılaştırılıyor (bkz. asymGuardStatus / effStopLossAdj) —
+// pozisyonun kendi SL'i hiç değişmez ama "kontrol edilen" eşik sessizce daralır, bu da rastgele/
+// beklenmedik bir anda kapanış gibi görünür. Ayrıca zamanla birkaç risk alanı (Max Kaldıraçlı
+// Zarar, Kayıp Sonrası Soğuma, Kâr Merdiveni Basamağı, Coin Zarar Limiti, Kısmi Zarar Tetiği,
+// Tükenme Kalkanı Mum Sayısı) koddaki kendi önerilen değerlerinden (INPUT_CLAMP_RULES / def)
+// uzaklaşmıştı. Bu fonksiyon ikisini de tek tıkla düzeltir: kayan alanları önerilen standarda
+// çeker VE Asimetri Bekçisi'ni kapatır (açık pozisyonlara artık sessizce dokunmaz).
+const STANDARD_RISK_DEFAULTS = (() => {
+  const m = {};
+  // Önce eski (v38.1) önerilen değerler, sonra üzerine daha yeni (v50) INPUT_CLAMP_RULES
+  // yazılır — iki liste çakıştığında (örn. atrTpMultiplier: 2.0 vs 2.5) güncel olan kazanır.
+  Object.entries(RECOMMENDED_RISK_DEFAULTS).forEach(([id, val]) => { m[id] = String(val); });
+  Object.entries(INPUT_CLAMP_RULES).forEach(([id, rule]) => { m[id] = String(rule.def); });
+  return m;
+})();
+
+function resetAllRiskToStandard() {
+  try {
+    const changed = [];
+    Object.entries(STANDARD_RISK_DEFAULTS).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (String(el.value) !== String(val)) { changed.push(`${id}: ${el.value} → ${val}`); el.value = val; }
+    });
+    // Asimetri Bekçisi: açık pozisyonların SL eşiğini canlı sıkılaştırıp beklenmedik anlık
+    // kapanışlara yol açtığı kanıtlandığı için standart sıfırlamada KAPATILIR.
+    const asymEl = document.getElementById('asymGuardToggle');
+    if (asymEl && asymEl.checked) { asymEl.checked = false; changed.push('asymGuardToggle: açık → kapalı'); }
+    saveSettings();
+    try { renderRiskChips(); } catch(e) {}
+    if (changed.length) {
+      log(`🔄 [Standart Ayarlar] ${changed.length} risk alanı önerilen standarda döndürüldü ve Asimetri Bekçisi kapatıldı: ${changed.join(' | ')}.`, 'system');
+      alert(`✅ ${changed.length} risk ayarı standart değerlere döndürüldü.\n⚖️ Asimetri Bekçisi kapatıldı (açık pozisyonların SL'ini artık canlı sıkılaştırmaz).\n\nDetaylar Bot Günlüğü'nde.`);
+    } else {
+      alert('✅ Tüm risk ayarları zaten standart değerlerde.');
+    }
+  } catch (e) { alert('Sıfırlama sırasında hata oluştu: ' + e.message); }
 }
 
 // ───────── Açık Pozisyonların Kalıcılığı ─────────
