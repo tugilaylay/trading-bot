@@ -14905,20 +14905,36 @@ function v50MathGateAdapt(){
   } else if (now - (A.adjustAt || 0) > 6 * 3600 * 1000) {
     // Kaşık-kepçe kontrolü (6 saatte en fazla bir kez): kapı çok mu gevşek?
     try {
-      const last = globalTradeHistory.filter(x => typeof x.pnl === 'number').slice(-10);
-      if (last.length >= 10) {
-        const wins = last.filter(x => x.pnl > 0), losses = last.filter(x => x.pnl < 0);
-        const avgW = wins.length ? wins.reduce((s,x)=>s+x.pnl,0)/wins.length : 0;
-        const avgL = losses.length ? Math.abs(losses.reduce((s,x)=>s+x.pnl,0)/losses.length) : 0;
-        const sum = last.reduce((s,x)=>s+x.pnl,0);
-        if (sum < 0 && avgL > 0 && avgW < avgL * 0.5 && cur.cost <= A.baseCost + 0.5 && cur.rr <= A.baseRR + 0.2) {
-          newCost = clamp(+(cur.cost + 0.5).toFixed(1), 2.0, A.baseCost + 1);
-          newRR   = clamp(+(cur.rr  + 0.1).toFixed(2), 1.2, A.baseRR + 0.3);
-          if (newCost !== cur.cost || newRR !== cur.rr) action = 'SIKILAŞTIRILDI (kaşık-kepçe bozuk: ort. kazanç ' + avgW.toFixed(2) + '$ < ort. kayıp ' + avgL.toFixed(2) + '$ yarısı)';
+      // v50.10 FIX (21.07.2026): Bu kol eskiden SADECE genel son-10-işlem performansına
+      // bakıp kapıyı sıkılaştırıyordu — kapının KENDİ Red Defteri karnesine hiç bakmadan.
+      // Sonuç: genel performans başka bir sebepten (ör. Asimetri Bekçisi'nin o zamanki
+      // hatası) kötüyken, bu kol suçsuz bir kapıyı (Matematik Kapısı) sıkılaştırıp onu
+      // "fırsat yiyen" bir kapıya çevirdi — Red Defteri'nin kendisi bunu net -8.3% olarak
+      // kanıtladı. Artık kapının TOPLAM (sadece taze değil, tüm) net değeri zaten negatifse
+      // ("fırsat yiyor" ispatlanmışsa), genel kaşık-kepçe bozukluğu bu kapıyı SIKILAŞTIRAMAZ.
+      let gateOwnNet = null, gateOwnN = 0;
+      v46Rej.items.forEach(r => {
+        if (r.gate !== 'Matematik Kapısı' || r.pct === null || r.dir === 'both') return;
+        gateOwnN++; gateOwnNet = (gateOwnNet || 0) + (-r.pct);
+      });
+      const gateAlreadyEatingOpportunity = (gateOwnN >= 3 && gateOwnNet !== null && gateOwnNet < 0);
+      if (!gateAlreadyEatingOpportunity) {
+        const last = globalTradeHistory.filter(x => typeof x.pnl === 'number').slice(-10);
+        if (last.length >= 10) {
+          const wins = last.filter(x => x.pnl > 0), losses = last.filter(x => x.pnl < 0);
+          const avgW = wins.length ? wins.reduce((s,x)=>s+x.pnl,0)/wins.length : 0;
+          const avgL = losses.length ? Math.abs(losses.reduce((s,x)=>s+x.pnl,0)/losses.length) : 0;
+          const sum = last.reduce((s,x)=>s+x.pnl,0);
+          if (sum < 0 && avgL > 0 && avgW < avgL * 0.5 && cur.cost <= A.baseCost + 0.5 && cur.rr <= A.baseRR + 0.2) {
+            newCost = clamp(+(cur.cost + 0.5).toFixed(1), 2.0, A.baseCost + 1);
+            newRR   = clamp(+(cur.rr  + 0.1).toFixed(2), 1.2, A.baseRR + 0.3);
+            if (newCost !== cur.cost || newRR !== cur.rr) action = 'SIKILAŞTIRILDI (kaşık-kepçe bozuk: ort. kazanç ' + avgW.toFixed(2) + '$ < ort. kayıp ' + avgL.toFixed(2) + '$ yarısı)';
+          }
         }
       }
     } catch(e){}
   }
+
 
   if (action) {
     costEl.value = newCost; rrEl.value = newRR;
